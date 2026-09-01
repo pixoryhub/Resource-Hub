@@ -146,53 +146,74 @@ export default function CreatorHubClient({
     { key: "unfinished", label: "Unfinished", count: unfinishedCount },
   ];
 
+  const progressPct = active.length === 0 ? 0 : Math.round((completedCount / active.length) * 100);
+
   return (
     <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 sm:px-6">
-      <div className="card p-5">
-        <h2 className="headline text-text">Welcome to the Breakthrough Program</h2>
-        <p className="mt-2 text-sm leading-relaxed text-text-muted">
-          You&apos;re in the recreation phase. Study these winning formats, choose your hook
-          variation, and execute with precision. Each video includes execution notes and audio
-          suggestions to help you nail the format. Tick off each video once you&apos;ve recreated
-          it!
-        </p>
-        <p className="mt-3 border-t border-border pt-3 text-xs text-text-faint">
-          Please note: this hub is designed for creators who have completed their first 30 days.
-          If you&apos;re still within your first month, focus on your 5-in-5 Recreation
-          Blueprints first — come back here once you&apos;ve built that foundation and are ready
-          to scale.
-        </p>
-      </div>
+      <div className="card space-y-4 p-5">
+        <div>
+          <p className="eyebrow mb-1.5">Creator Hub</p>
+          <h2 className="headline text-text">Welcome to the Breakthrough Program</h2>
+          <p className="mt-2 text-sm leading-relaxed text-text-muted">
+            You&apos;re in the recreation phase. Study these winning formats, choose your hook
+            variation, and execute with precision. Tick off each video once you&apos;ve recreated
+            it!
+          </p>
+          <p className="mt-2 text-xs text-text-faint">
+            Designed for creators past their first 30 days — still in your first month? Work
+            through your 5-in-5 Recreation Blueprints first.
+          </p>
+        </div>
 
-      <div className="rounded-xl bg-accent-tint p-3 text-sm text-text">
-        Keep a healthy mix of desired categories — try not to only do product desire or only
-        hybrid. Each category serves a different purpose in your content.
-      </div>
+        <div className="rounded-xl border border-border bg-bg p-3.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-sm font-semibold text-text">Your progress</span>
+            <span className="text-sm font-bold text-accent">
+              {completedCount} / {active.length} videos
+            </span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-border">
+            <div
+              className="h-full rounded-full transition-[width] duration-500 ease-out"
+              style={{ width: `${progressPct}%`, background: "linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%)" }}
+            />
+          </div>
+          <div className="mt-2.5 flex items-start gap-1.5 text-xs leading-relaxed text-text-faint">
+            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-accent" />
+            <span>
+              Keep a healthy mix of desired categories — try not to only do product desire or
+              only hybrid.
+            </span>
+          </div>
+        </div>
 
-      <div className="flex gap-1 rounded-full border border-border bg-surface p-1">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setTab(t.key)}
-            className={
-              "flex-1 rounded-full px-3 py-2 text-sm font-semibold transition-colors " +
-              (tab === t.key ? "bg-text text-bg" : "text-text-muted hover:bg-accent-tint")
-            }
-          >
-            {t.label} ({t.count})
-          </button>
-        ))}
-      </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex gap-1 rounded-full border border-border bg-surface p-1 sm:shrink-0">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTab(t.key)}
+                className={
+                  "flex-1 rounded-full px-3 py-2 text-sm font-semibold transition-colors sm:flex-none " +
+                  (tab === t.key ? "bg-text text-bg" : "text-text-muted hover:bg-accent-tint")
+                }
+              >
+                {t.label} ({t.count})
+              </button>
+            ))}
+          </div>
 
-      <input
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by creator name, desire category, or title..."
-        className="w-full rounded-full border border-border bg-surface px-4 py-3 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
-        style={{ fontSize: "16px" }}
-      />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by creator, category, or title..."
+            className="w-full min-w-0 flex-1 rounded-full border border-border bg-surface px-4 py-2.5 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
+            style={{ fontSize: "16px" }}
+          />
+        </div>
+      </div>
 
       <div className="space-y-3">
         {filtered.length === 0 && (
