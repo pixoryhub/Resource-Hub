@@ -175,7 +175,7 @@ export default function Header() {
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
   const { enabled: adminMode } = useAdminMode();
-  const navItems = adminMode ? [...NAV_ITEMS, { label: "Creators", href: "/admin" }] : NAV_ITEMS;
+  const navItems = adminMode ? [...NAV_ITEMS, { label: "Admin Dashboard", href: "/admin" }] : NAV_ITEMS;
 
   // Reports its own height as --header-h so other sticky elements (the
   // Shot List Generator's progress card) can pin themselves just below it,
