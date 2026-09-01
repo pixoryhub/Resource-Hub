@@ -12,15 +12,24 @@ export default function ResourceSection({
   initialResources,
   columns = 2,
   showThumbnail = true,
+  defaultVisibleCount,
 }: {
   section: string;
   initialResources: Resource[];
   columns?: 1 | 2;
   showThumbnail?: boolean;
+  // When set, only this many resources show by default, with the rest
+  // behind a "Show more" toggle — so a section that keeps growing doesn't
+  // keep growing the page itself.
+  defaultVisibleCount?: number;
 }) {
   const { enabled: adminMode } = useAdminMode();
   const [resources, setResources] = useState(initialResources);
   const [adding, setAdding] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const hasMore = typeof defaultVisibleCount === "number" && resources.length > defaultVisibleCount;
+  const visibleResources = hasMore && !expanded ? resources.slice(0, defaultVisibleCount) : resources;
 
   function addResource(data: { title: string; description: string; thumbnailUrl: string; links: ResourceLink[] }) {
     const newResource: Resource = {
@@ -51,7 +60,7 @@ export default function ResourceSection({
       )}
 
       <div className={"grid grid-cols-1 gap-3 " + (columns === 2 ? "sm:grid-cols-2" : "")}>
-        {resources.map((r, i) => (
+        {visibleResources.map((r, i) => (
           <ResourceCard
             key={r.id}
             resource={r}
@@ -62,6 +71,16 @@ export default function ResourceSection({
           />
         ))}
       </div>
+
+      {hasMore && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-3 text-sm font-semibold text-text-muted underline decoration-dotted underline-offset-2 hover:text-text"
+        >
+          {expanded ? "Show less" : `Show more (${resources.length - defaultVisibleCount!})`}
+        </button>
+      )}
 
       {adminMode && (
         <div className="mt-3">

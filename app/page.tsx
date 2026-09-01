@@ -39,7 +39,7 @@ export default async function ResourceHubPage() {
       <div id="educational-resources">
         <h2 className="headline mb-1.5 text-text">Educational Resources</h2>
         <p className="mb-4 text-sm text-text-muted">Workshops, tutorials, and explainer videos.</p>
-        <ResourceSection section="educational-resources" initialResources={educationalResources} />
+        <ResourceSection section="educational-resources" initialResources={educationalResources} defaultVisibleCount={4} />
       </div>
 
       <div>
