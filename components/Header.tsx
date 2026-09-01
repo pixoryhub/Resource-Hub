@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAdminMode } from "@/lib/adminMode";
 
 // §5 — nav order and verbatim labels are 🟢 confirmed.
@@ -67,24 +67,89 @@ function ThemeToggle() {
 }
 
 function AdminToggle() {
-  const { enabled, toggle } = useAdminMode();
+  const { enabled, ready, login, logout } = useAdminMode();
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    const result = await login(password);
+    setSubmitting(false);
+    if (result.ok) {
+      setOpen(false);
+      setPassword("");
+    } else {
+      setError(result.error ?? "Incorrect password.");
+    }
+  }
+
+  if (!ready) return <div className="h-9 w-[124px] shrink-0" aria-hidden />;
+
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      title="Preview the admin/coach controls on every page (dev only — real roles arrive with login)"
-      className={
-        "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold transition-colors " +
-        (enabled
-          ? "border-transparent bg-text text-bg"
-          : "border-border text-text-muted hover:bg-accent-tint")
-      }
-    >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-      </svg>
-      Admin mode
-    </button>
+    <div className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => (enabled ? logout() : setOpen((v) => !v))}
+        title={
+          enabled
+            ? "Turn off admin controls"
+            : "Enter the admin password to add, edit or remove content on any page"
+        }
+        className={
+          "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold transition-colors " +
+          (enabled
+            ? "border-transparent bg-text text-bg"
+            : "border-border text-text-muted hover:bg-accent-tint")
+        }
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        </svg>
+        {enabled ? "Admin mode: On" : "Admin mode"}
+      </button>
+
+      {open && !enabled && (
+        <form
+          onSubmit={handleSubmit}
+          className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 rounded-2xl border border-border bg-surface p-4 shadow-lg"
+        >
+          <label className="eyebrow mb-1.5 block">Admin password</label>
+          <input
+            type="password"
+            autoFocus
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-xl border border-border bg-bg px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-accent"
+            style={{ fontSize: "16px" }}
+          />
+          {error && <p className="mt-1.5 text-xs text-accent">{error}</p>}
+          <div className="mt-3 flex gap-2">
+            <button
+              type="submit"
+              disabled={submitting || !password}
+              className="rounded-full bg-text px-4 py-1.5 text-xs font-semibold text-bg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {submitting ? "Checking…" : "Unlock"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setError(null);
+                setPassword("");
+              }}
+              className="rounded-full border border-border px-4 py-1.5 text-xs font-semibold text-text-muted"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
   );
 }
 

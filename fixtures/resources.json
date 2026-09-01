@@ -1,7 +1,16 @@
 [
   {
+    "id": "res-guide-faq",
+    "section": "community-links",
+    "position": 1,
+    "title": "FAQ",
+    "description": "",
+    "thumbnailUrl": "",
+    "links": []
+  },
+  {
     "id": "res-guide-batch-create",
-    "section": "resources",
+    "section": "educational-resources",
     "position": 1,
     "title": "How to batch create",
     "description": "",
@@ -10,7 +19,7 @@
   },
   {
     "id": "res-guide-recreate",
-    "section": "resources",
+    "section": "educational-resources",
     "position": 2,
     "title": "How to recreate",
     "description": "",
@@ -18,18 +27,9 @@
     "links": []
   },
   {
-    "id": "res-guide-faq",
-    "section": "resources",
-    "position": 3,
-    "title": "FAQ",
-    "description": "",
-    "thumbnailUrl": "",
-    "links": []
-  },
-  {
     "id": "res-guide-visual-tutorials",
-    "section": "resources",
-    "position": 4,
+    "section": "educational-resources",
+    "position": 3,
     "title": "Visual Tutorials",
     "description": "",
     "thumbnailUrl": "",
@@ -37,8 +37,8 @@
   },
   {
     "id": "res-workshop-categories",
-    "section": "workshops",
-    "position": 1,
+    "section": "educational-resources",
+    "position": 4,
     "title": "Desired categories, explained",
     "description": "TOF, Product Desire, Lifestyle Desire, Hybrid Desire, Pillar 3 — what each means and when to use it. Referenced from every Creator Hub video.",
     "thumbnailUrl": "",
@@ -46,8 +46,8 @@
   },
   {
     "id": "res-workshop-filming",
-    "section": "workshops",
-    "position": 2,
+    "section": "educational-resources",
+    "position": 5,
     "title": "Filming days that actually work",
     "description": "Placeholder — confirm with Emma. A short workshop on batching filming days around the Shot List Generator's setup groups.",
     "thumbnailUrl": "",

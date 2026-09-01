@@ -1,48 +1,81 @@
 "use client";
 
-// Dev-preview admin mode — a stand-in for real coach/admin roles (CP8).
-// Toggled from the header, persisted in localStorage per browser. When on,
-// every page shows its own inline add/edit/delete controls — no separate
-// /admin route. Real role-based permissions replace this once auth exists.
+// Password-gated admin mode — a stand-in for real coach/admin roles (CP8).
+// The password check happens server-side (app/api/admin-auth); an httpOnly
+// cookie remembers the session, so it survives reloads but can't be read or
+// forged from page JavaScript. When on, every page shows its own inline
+// add/edit/delete controls — no separate /admin route needed for this.
 
 import { createContext, useContext, useEffect, useState } from "react";
 
-const STORAGE_KEY = "pixory-admin-mode";
+interface AdminModeState {
+  enabled: boolean;
+  ready: boolean; // false until the initial status check completes
+  login: (password: string) => Promise<{ ok: boolean; error?: string }>;
+  logout: () => Promise<void>;
+}
 
-const AdminModeContext = createContext<{ enabled: boolean; toggle: () => void }>({
+const AdminModeContext = createContext<AdminModeState>({
   enabled: false,
-  toggle: () => {},
+  ready: false,
+  login: async () => ({ ok: false, error: "Not available" }),
+  logout: async () => {},
 });
 
 export function AdminModeProvider({ children }: { children: React.ReactNode }) {
   const [enabled, setEnabled] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // One-time read of a value that can only be known on the client (there is
-    // no SSR-safe way to know localStorage ahead of mount) — intentionally
-    // not the "sync external store" pattern since this never changes outside
-    // of toggle() below, which already owns its own setState.
-    try {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setEnabled(localStorage.getItem(STORAGE_KEY) === "1");
-    } catch {
-      // localStorage unavailable — admin mode just won't persist
-    }
+    let cancelled = false;
+    fetch("/api/admin-auth")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled) setEnabled(!!data.enabled);
+      })
+      .catch(() => {
+        // network error — stay logged out
+      })
+      .finally(() => {
+        if (!cancelled) setReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  function toggle() {
-    setEnabled((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
-      } catch {
-        // ignore
+  async function login(password: string) {
+    try {
+      const res = await fetch("/api/admin-auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setEnabled(true);
+        return { ok: true };
       }
-      return next;
-    });
+      return { ok: false, error: data.error ?? "Incorrect password." };
+    } catch {
+      return { ok: false, error: "Couldn't reach the server — try again." };
+    }
   }
 
-  return <AdminModeContext.Provider value={{ enabled, toggle }}>{children}</AdminModeContext.Provider>;
+  async function logout() {
+    setEnabled(false);
+    try {
+      await fetch("/api/admin-auth", { method: "DELETE" });
+    } catch {
+      // already logged out client-side; cookie will just linger until it expires
+    }
+  }
+
+  return (
+    <AdminModeContext.Provider value={{ enabled, ready, login, logout }}>
+      {children}
+    </AdminModeContext.Provider>
+  );
 }
 
 export function useAdminMode() {

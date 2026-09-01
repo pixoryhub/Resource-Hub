@@ -121,7 +121,7 @@ export default function VideoRow({
               <p className="eyebrow mb-2">Desired category</p>
               <div className="flex items-center gap-2">
                 <CategoryChip category={video.desiredCategory} />
-                <Link href="/#workshops" className="text-xs font-semibold text-accent hover:underline">
+                <Link href="/#educational-resources" className="text-xs font-semibold text-accent hover:underline">
                   What does this mean?
                 </Link>
               </div>
