@@ -27,6 +27,13 @@ interface MostActiveEntry {
   activityCount: number;
 }
 
+interface VideoStat {
+  id: string;
+  position: number;
+  title: string;
+  completions: number;
+}
+
 interface DashboardData {
   kpis: {
     totalCreators: number;
@@ -38,6 +45,8 @@ interface DashboardData {
   weekly: WeekBucket[];
   needsAttention: NeedsAttentionEntry[];
   mostActive: MostActiveEntry[];
+  topVideos: VideoStat[];
+  needsPush: VideoStat[];
 }
 
 function formatWeek(iso: string) {
@@ -183,6 +192,50 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
                   {entry.activityCount} action{entry.activityCount === 1 ? "" : "s"}
                 </span>
               </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <p className="eyebrow mb-2">Top {data.topVideos.length} most crossed-off videos</p>
+        {data.topVideos.length === 0 || data.topVideos[0].completions === 0 ? (
+          <p className="text-sm text-text-faint">Nothing&apos;s been crossed off yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {data.topVideos.map((v, i) => (
+              <div key={v.id} className="card flex items-center justify-between gap-3 p-3">
+                <p className="min-w-0 truncate font-semibold text-text">
+                  #{i + 1} &ldquo;{v.title}&rdquo;
+                </p>
+                <span className="shrink-0 rounded-full bg-accent-tint px-2.5 py-1 text-xs font-semibold text-accent">
+                  {v.completions} cross-off{v.completions === 1 ? "" : "s"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <p className="eyebrow mb-2">Needs a push</p>
+        <p className="mb-2 text-xs text-text-faint">
+          The {data.needsPush.length} least crossed-off active videos — worth promoting or
+          revisiting with creators.
+        </p>
+        {data.needsPush.length === 0 ? (
+          <p className="text-sm text-text-faint">No active videos yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {data.needsPush.map((v) => (
+              <div key={v.id} className="card flex items-center justify-between gap-3 p-3">
+                <p className="min-w-0 truncate font-semibold text-text">
+                  #{v.position} &ldquo;{v.title}&rdquo;
+                </p>
+                <span className="shrink-0 rounded-full bg-border px-2.5 py-1 text-xs font-semibold text-text-muted">
+                  {v.completions} cross-off{v.completions === 1 ? "" : "s"}
+                </span>
+              </div>
             ))}
           </div>
         )}

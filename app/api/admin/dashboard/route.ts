@@ -12,6 +12,8 @@ import { getHubVideos } from "@/lib/data";
 const WEEKS_BACK = 8;
 const INACTIVE_DAYS_THRESHOLD = 7;
 const FLAG_OVERDUE_HOURS = 48;
+const TOP_VIDEOS_LIMIT = 10;
+const NEEDS_PUSH_LIMIT = 5;
 
 export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) {
@@ -37,11 +39,16 @@ export async function GET(req: NextRequest) {
 
     const needsAttention: { id: string; firstName: string; lastName: string; reason: string }[] = [];
     const activityCountThisWeek = new Map<string, number>();
+    const completionsByVideoId = new Map<string, number>();
 
     for (const { creator, activity } of perCreator) {
       totalCompletions += activity.completions.length;
       totalShotsFilmed += activity.filmedShotCount;
       openFlagCount += activity.flags.filter((f) => f.status === "open").length;
+
+      for (const c of activity.completions) {
+        completionsByVideoId.set(c.videoId, (completionsByVideoId.get(c.videoId) ?? 0) + 1);
+      }
 
       for (const event of activity.events) {
         const weekKey = mondayOf(event.at);
@@ -87,6 +94,24 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => b.activityCount - a.activityCount)
       .slice(0, 5);
 
+    // Active videos only — a retired video showing up as "needs a push" would be noise, not signal.
+    const activeVideos = videos.filter((v) => v.status === "active");
+    const videoStats = activeVideos.map((v) => ({
+      id: v.id,
+      position: v.position,
+      title: v.title,
+      completions: completionsByVideoId.get(v.id) ?? 0,
+    }));
+
+    const topVideos = [...videoStats]
+      .sort((a, b) => b.completions - a.completions || a.position - b.position)
+      .slice(0, TOP_VIDEOS_LIMIT);
+
+    // Least crossed-off first — ties broken by position so it reads in a stable, familiar order.
+    const needsPush = [...videoStats]
+      .sort((a, b) => a.completions - b.completions || a.position - b.position)
+      .slice(0, NEEDS_PUSH_LIMIT);
+
     return NextResponse.json({
       kpis: {
         totalCreators: creators.length,
@@ -98,6 +123,8 @@ export async function GET(req: NextRequest) {
       weekly: weekKeys.map((w) => weekly.get(w)),
       needsAttention,
       mostActive,
+      topVideos,
+      needsPush,
     });
   } catch {
     return NextResponse.json({ error: "Couldn't reach storage — try again." }, { status: 500 });
