@@ -15,6 +15,7 @@ import goldenWeek from "@/fixtures/golden-week.json";
 import archivedWeek1 from "@/fixtures/archived-week-1.json";
 import archivedWeek2 from "@/fixtures/archived-week-2.json";
 import hubVideos from "@/fixtures/hub-videos.json";
+import coachingFlags from "@/fixtures/coaching-flags.json";
 
 const state = {
   creators: [
@@ -34,7 +35,7 @@ const state = {
     { creatorId: "creator-1", videoId: "video-1", completedAt: "2026-08-21T10:00:00.000Z" },
     { creatorId: "creator-1", videoId: "video-2", completedAt: "2026-08-23T14:30:00.000Z" },
   ] as VideoCompletion[],
-  coachingFlags: [] as CoachingFlag[],
+  coachingFlags: coachingFlags as CoachingFlag[],
   resources: [] as Resource[],
   events: [] as CalendarEvent[],
 };
@@ -76,7 +77,9 @@ export async function submitFlag(_flag: CoachingFlag): Promise<void> {
 }
 
 export async function getFlagsForCreator(creatorId: string): Promise<CoachingFlag[]> {
-  return state.coachingFlags.filter((f) => f.creatorId === creatorId);
+  return state.coachingFlags
+    .filter((f) => f.creatorId === creatorId)
+    .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
 }
 
 export async function getAllFlags(): Promise<CoachingFlag[]> {

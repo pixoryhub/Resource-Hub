@@ -1,0 +1,35 @@
+[
+  {
+    "id": "flag-1",
+    "creatorId": "creator-1",
+    "selectedOptions": ["stuck-hooks", "overwhelmed"],
+    "note": "Feeling behind on this week's blueprint, could use a nudge on prioritising.",
+    "submittedAt": "2026-07-20T10:00:00.000Z",
+    "respondedAt": "2026-07-21T09:00:00.000Z",
+    "respondedBy": "Erriel",
+    "response": "Totally normal! Start with just 1 TOF video this week — small wins add up. You've got this 💛",
+    "status": "answered"
+  },
+  {
+    "id": "flag-2",
+    "creatorId": "creator-1",
+    "selectedOptions": ["struggling-consistent"],
+    "note": "",
+    "submittedAt": "2026-08-10T09:00:00.000Z",
+    "respondedAt": "2026-08-11T16:00:00.000Z",
+    "respondedBy": "Erriel",
+    "response": "Let's set a simple filming day each week — even 20 minutes counts. Message me your schedule and I'll help you block it out.",
+    "status": "answered"
+  },
+  {
+    "id": "flag-3",
+    "creatorId": "creator-1",
+    "selectedOptions": ["stuck-visuals", "not-feeling-well"],
+    "note": "Just feeling a bit burnt out this week, could use some grace + maybe simpler video ideas.",
+    "submittedAt": "2026-08-31T15:00:00.000Z",
+    "respondedAt": null,
+    "respondedBy": null,
+    "response": null,
+    "status": "open"
+  }
+]
