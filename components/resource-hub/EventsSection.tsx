@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { CalendarEvent } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
+import { saveContentAction } from "@/lib/adminContentClient";
 
 function formatEventDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -98,6 +99,7 @@ export default function EventsSection({ initialEvents }: { initialEvents: Calend
     const event: CalendarEvent = { id: `event-${Date.now()}`, ...data };
     setEvents((prev) => [...prev, event].sort((a, b) => a.startsAt.localeCompare(b.startsAt)));
     setAdding(false);
+    saveContentAction("events", { action: "add", item: event });
   }
 
   function updateEvent(id: string, data: { title: string; startsAt: string; rsvpUrl: string }) {
@@ -107,10 +109,12 @@ export default function EventsSection({ initialEvents }: { initialEvents: Calend
         .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
     );
     setEditingId(null);
+    saveContentAction("events", { action: "update", id, patch: data });
   }
 
   function deleteEvent(id: string) {
     setEvents((prev) => prev.filter((e) => e.id !== id));
+    saveContentAction("events", { action: "delete", id });
   }
 
   return (

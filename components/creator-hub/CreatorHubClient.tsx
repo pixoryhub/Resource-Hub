@@ -5,6 +5,7 @@ import type { HubVideo } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
 import { useAuth } from "@/lib/localAuth";
 import { loadCreatorData, saveCreatorData } from "@/lib/creatorStorage";
+import { saveContentAction } from "@/lib/adminContentClient";
 import VideoRow from "./VideoRow";
 import HubVideoForm, { type HubVideoFormData } from "./HubVideoForm";
 
@@ -79,31 +80,40 @@ export default function CreatorHubClient({
     };
     setVideos((prev) => [...prev, video]);
     setAdding(false);
+    saveContentAction("hubVideos", { action: "add", item: video });
   }
 
   function updateVideo(id: string, data: HubVideoFormData) {
-    setVideos((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, ...data, updatedAt: new Date().toISOString() } : v))
-    );
+    const patch = { ...data, updatedAt: new Date().toISOString() };
+    setVideos((prev) => prev.map((v) => (v.id === id ? { ...v, ...patch } : v)));
+    saveContentAction("hubVideos", { action: "update", id, patch });
   }
 
   function deleteVideo(id: string) {
     setVideos((prev) => prev.filter((v) => v.id !== id));
+    saveContentAction("hubVideos", { action: "delete", id });
   }
 
   function moveVideo(id: string, direction: -1 | 1) {
-    setVideos((prev) => {
-      const sorted = [...prev].sort((a, b) => a.position - b.position);
-      const i = sorted.findIndex((v) => v.id === id);
-      const j = i + direction;
-      if (i === -1 || j < 0 || j >= sorted.length) return prev;
-      const a = sorted[i];
-      const b = sorted[j];
-      return prev.map((v) => {
+    const sorted = [...videos].sort((a, b) => a.position - b.position);
+    const i = sorted.findIndex((v) => v.id === id);
+    const j = i + direction;
+    if (i === -1 || j < 0 || j >= sorted.length) return;
+    const a = sorted[i];
+    const b = sorted[j];
+    setVideos((prev) =>
+      prev.map((v) => {
         if (v.id === a.id) return { ...v, position: b.position };
         if (v.id === b.id) return { ...v, position: a.position };
         return v;
-      });
+      })
+    );
+    saveContentAction("hubVideos", {
+      action: "reorder",
+      positions: [
+        { id: a.id, position: b.position },
+        { id: b.id, position: a.position },
+      ],
     });
   }
 

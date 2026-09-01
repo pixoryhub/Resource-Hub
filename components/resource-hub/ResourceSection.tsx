@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Resource, ResourceLink } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
+import { saveContentAction } from "@/lib/adminContentClient";
 import ResourceCard from "./ResourceCard";
 import ResourceForm from "./ResourceForm";
 
@@ -30,14 +31,17 @@ export default function ResourceSection({
     };
     setResources((prev) => [...prev, newResource]);
     setAdding(false);
+    saveContentAction("resources", { action: "add", item: newResource });
   }
 
   function updateResource(id: string, data: { title: string; description: string; thumbnailUrl: string; links: ResourceLink[] }) {
     setResources((prev) => prev.map((r) => (r.id === id ? { ...r, ...data } : r)));
+    saveContentAction("resources", { action: "update", id, patch: data });
   }
 
   function deleteResource(id: string) {
     setResources((prev) => prev.filter((r) => r.id !== id));
+    saveContentAction("resources", { action: "delete", id });
   }
 
   return (
