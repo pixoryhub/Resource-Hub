@@ -2,7 +2,15 @@
 // No component may import this file directly; go through lib/data/index.ts.
 /* eslint-disable @typescript-eslint/no-unused-vars -- params kept for shape parity with fixtures.ts until CP8 */
 
-import type { Creator, Week, HubVideo, CoachingFlag, Resource, CalendarEvent } from "./types";
+import type {
+  Creator,
+  Week,
+  HubVideo,
+  VideoCompletion,
+  CoachingFlag,
+  Resource,
+  CalendarEvent,
+} from "./types";
 
 const NOT_READY = "supabase data source not implemented until CP8";
 
@@ -23,6 +31,14 @@ export async function getHubVideos(): Promise<HubVideo[]> {
 }
 
 export async function getHubVideo(_id: string): Promise<HubVideo | null> {
+  throw new Error(NOT_READY);
+}
+
+export async function getVideoCompletions(_creatorId: string): Promise<VideoCompletion[]> {
+  throw new Error(NOT_READY);
+}
+
+export async function getAllVideoCompletions(): Promise<VideoCompletion[]> {
   throw new Error(NOT_READY);
 }
 

@@ -1,13 +1,12 @@
 // In-memory fixture data source — §3.5.
-// Seeded from fixtures/*.json (added in CP2+) and mutable during a session so
-// ticking a box or typing a note actually works on screen. Resets on reload.
-//
-// CP1 only sets up the shape; there is no seed data to load yet.
+// Seeded from fixtures/*.json and mutable during a session so ticking a box
+// or typing a note actually works on screen. Resets on reload.
 
 import type {
   Creator,
   Week,
   HubVideo,
+  VideoCompletion,
   CoachingFlag,
   Resource,
   CalendarEvent,
@@ -15,6 +14,7 @@ import type {
 import goldenWeek from "@/fixtures/golden-week.json";
 import archivedWeek1 from "@/fixtures/archived-week-1.json";
 import archivedWeek2 from "@/fixtures/archived-week-2.json";
+import hubVideos from "@/fixtures/hub-videos.json";
 
 const state = {
   creators: [
@@ -29,7 +29,11 @@ const state = {
   ] as Creator[],
   // The §12 golden case — also the `Example` fixture and the CP11 regression test.
   weeks: [goldenWeek, archivedWeek1, archivedWeek2] as Week[],
-  hubVideos: [] as HubVideo[],
+  hubVideos: hubVideos as HubVideo[],
+  videoCompletions: [
+    { creatorId: "creator-1", videoId: "video-1", completedAt: "2026-08-21T10:00:00.000Z" },
+    { creatorId: "creator-1", videoId: "video-2", completedAt: "2026-08-23T14:30:00.000Z" },
+  ] as VideoCompletion[],
   coachingFlags: [] as CoachingFlag[],
   resources: [] as Resource[],
   events: [] as CalendarEvent[],
@@ -52,11 +56,19 @@ export async function saveWeek(_week: Week): Promise<void> {
 }
 
 export async function getHubVideos(): Promise<HubVideo[]> {
-  return state.hubVideos;
+  return [...state.hubVideos].sort((a, b) => a.position - b.position);
 }
 
 export async function getHubVideo(id: string): Promise<HubVideo | null> {
   return state.hubVideos.find((v) => v.id === id) ?? null;
+}
+
+export async function getVideoCompletions(creatorId: string): Promise<VideoCompletion[]> {
+  return state.videoCompletions.filter((c) => c.creatorId === creatorId);
+}
+
+export async function getAllVideoCompletions(): Promise<VideoCompletion[]> {
+  return state.videoCompletions;
 }
 
 export async function submitFlag(_flag: CoachingFlag): Promise<void> {

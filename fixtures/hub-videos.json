@@ -1,0 +1,170 @@
+[
+  {
+    "id": "video-1",
+    "position": 1,
+    "title": "your reminder to turn all your trips into photo books",
+    "creatorName": "Julianne",
+    "originalUrl": "https://www.tiktok.com/@pixory/video/example-1",
+    "embedUrl": "https://www.tiktok.com/@pixory/video/example-1",
+    "desiredCategory": "Product Desire",
+    "hookVariations": [
+      "your reminder to turn all your trips into photo books",
+      "stop letting your trips live in your camera roll",
+      "you'll forget this trip in 5 years unless you do this"
+    ],
+    "formatLayers": "Format: POV · Emotion: Nostalgia, Urgency",
+    "visualElements": ["Camera roll scroll", "Photo book reveal", "Flicking through pages", "Close up of a favourite spread"],
+    "executionNotes": "• Start on a real camera roll scroll (not staged) so it feels relatable\n• Reveal the photo book at the beat drop\n• Slow page turns, let the images breathe\n• End on a close up, soft focus pull",
+    "collectionGuidance": "Works with any collection size — larger collections get a longer scroll before the reveal.",
+    "audioSuggestions": [{ "label": "Dreamy + nostalgic", "url": "https://www.tiktok.com/music/example-dreamy-nostalgic" }],
+    "status": "active",
+    "updatedAt": "2026-08-20T09:00:00.000Z"
+  },
+  {
+    "id": "video-2",
+    "position": 2,
+    "title": "mom, what was your dream in life?",
+    "creatorName": "Melissa",
+    "originalUrl": "https://www.instagram.com/reel/example-2",
+    "embedUrl": "https://www.instagram.com/reel/example-2",
+    "desiredCategory": "Hybrid Desire",
+    "hookVariations": [
+      "mom, what was your dream in life?",
+      "asking my mom what she wanted to be before she had us",
+      "the answer made me want to document everything"
+    ],
+    "formatLayers": "Format: Interview · Emotion: Tender, Reflective",
+    "visualElements": ["Sit-down interview shot", "Cutaway to old photos", "Photo book as the physical answer", "Reaction close up"],
+    "executionNotes": "• Ask the question off-camera, film the natural reaction\n• Cut to old photos or a photo book as she answers\n• Keep it unscripted — the pause before answering is the hook",
+    "collectionGuidance": "Best with a medium collection — enough photos to cut away to without repeating.",
+    "audioSuggestions": [{ "label": "Soft piano, no lyrics", "url": "https://www.tiktok.com/music/example-soft-piano" }],
+    "status": "active",
+    "updatedAt": "2026-08-20T09:00:00.000Z"
+  },
+  {
+    "id": "video-3",
+    "title": "Making sure social media isn't my ONLY archive",
+    "position": 3,
+    "creatorName": "Sarah",
+    "originalUrl": "https://www.tiktok.com/@pixory/video/example-3",
+    "embedUrl": "https://www.tiktok.com/@pixory/video/example-3",
+    "desiredCategory": "Product Desire",
+    "hookVariations": [
+      "Making sure social media isn't my ONLY archive",
+      "what happens to your memories if the app disappears?",
+      "backing up my life outside of my camera roll"
+    ],
+    "formatLayers": "Format: POV · Emotion: FOMO, Rebellion",
+    "visualElements": ["ASMR unboxing", "Collection showcase", "Emotional payoff"],
+    "executionNotes": "• ASMR box open, let the sound carry it\n• Fan through the collection slowly\n• End on the emotional payoff — the reason this matters",
+    "collectionGuidance": "Quicker turn to books with longer expression works best for a small collection.",
+    "audioSuggestions": [{ "label": "Dreamy + nostalgic", "url": "https://www.tiktok.com/music/example-dreamy-nostalgic" }],
+    "status": "active",
+    "updatedAt": "2026-08-20T09:00:00.000Z"
+  },
+  {
+    "id": "video-4",
+    "position": 4,
+    "title": "We don't want to be rich, we want THIS",
+    "creatorName": "Jodie",
+    "originalUrl": "https://www.instagram.com/reel/example-4",
+    "embedUrl": "https://www.instagram.com/reel/example-4",
+    "desiredCategory": "Hybrid Desire",
+    "hookVariations": [
+      "We don't want to be rich, we want THIS",
+      "redefining what \"wealthy\" means for our family",
+      "this is the version of rich we're chasing"
+    ],
+    "formatLayers": "Format: Voiceover · Emotion: Warmth, Contrast",
+    "visualElements": ["Everyday moment b-roll", "Photo book flatlay", "Family flicking through together"],
+    "executionNotes": "• Open on an ordinary, unglamorous moment\n• Voiceover reframes it as the real wealth\n• Cut to the family looking through the book together",
+    "collectionGuidance": "Works for any size — the point is the moment, not the volume.",
+    "audioSuggestions": [{ "label": "Warm acoustic", "url": "https://www.tiktok.com/music/example-warm-acoustic" }],
+    "status": "active",
+    "updatedAt": "2026-08-20T09:00:00.000Z"
+  },
+  {
+    "id": "video-5",
+    "position": 5,
+    "title": "my parents vs me at this age",
+    "creatorName": "Maiween",
+    "originalUrl": "https://www.tiktok.com/@pixory/video/example-5",
+    "embedUrl": "https://www.tiktok.com/@pixory/video/example-5",
+    "desiredCategory": "Lifestyle Desire",
+    "hookVariations": [
+      "my parents vs me at this age",
+      "comparing my life now to my parents' at 25",
+      "they'd never believe what my life looks like now"
+    ],
+    "formatLayers": "Format: Split comparison · Emotion: Pride, Nostalgia",
+    "visualElements": ["Old family photo", "Present-day equivalent shot", "Photo book side by side"],
+    "executionNotes": "• Pair an old photo with a present-day recreation\n• Keep the framing/angle consistent between the two\n• Let the book physically hold both eras",
+    "collectionGuidance": "Best with a medium-to-large collection so the comparison has range.",
+    "audioSuggestions": [{ "label": "Then-and-now trending sound", "url": "https://www.tiktok.com/music/example-then-and-now" }],
+    "status": "active",
+    "updatedAt": "2026-08-20T09:00:00.000Z"
+  },
+  {
+    "id": "video-6",
+    "position": 6,
+    "title": "imagine showing these to your future kids",
+    "creatorName": "Priya",
+    "originalUrl": "https://www.instagram.com/reel/example-6",
+    "embedUrl": "https://www.instagram.com/reel/example-6",
+    "desiredCategory": "Product Desire",
+    "hookVariations": [
+      "imagine showing these to your future kids",
+      "your future kids are going to love this",
+      "one day this is what you'll hand them"
+    ],
+    "formatLayers": "Format: POV · Emotion: Future-focused warmth",
+    "visualElements": ["Hands holding the book", "Page turn reveal", "Close up of a milestone photo"],
+    "executionNotes": "• Frame it as a future memory, not a current one\n• Slow, deliberate page turns\n• Land on a photo that feels like a milestone",
+    "collectionGuidance": "Any size works — pick your most meaningful photos regardless of volume.",
+    "audioSuggestions": [{ "label": "Emotional strings", "url": "https://www.tiktok.com/music/example-emotional-strings" }],
+    "status": "active",
+    "updatedAt": "2026-08-20T09:00:00.000Z"
+  },
+  {
+    "id": "video-7",
+    "position": 7,
+    "title": "pov: you turned 1000+ screenshots into THIS",
+    "creatorName": "Mika",
+    "originalUrl": "https://www.tiktok.com/@pixory/video/example-7",
+    "embedUrl": "https://www.tiktok.com/@pixory/video/example-7",
+    "desiredCategory": "TOF",
+    "hookVariations": [
+      "pov: you turned 1000+ screenshots into THIS",
+      "1000+ screenshots, one photo book",
+      "stop hoarding screenshots, do this instead"
+    ],
+    "formatLayers": "Format: Before/after · Emotion: Satisfaction, Relief",
+    "visualElements": ["Camera roll storage warning", "Photo book on the desk", "Flatlay of the finished product"],
+    "executionNotes": "• Open on the relatable \"storage full\" moment\n• Cut hard to the finished photo book\n• Flatlay close, clean shot to end on",
+    "collectionGuidance": "Great TOF hook regardless of collection size — the joke is universal.",
+    "audioSuggestions": [{ "label": "Upbeat trending sound", "url": "https://www.tiktok.com/music/example-upbeat" }],
+    "status": "active",
+    "updatedAt": "2026-08-20T09:00:00.000Z"
+  },
+  {
+    "id": "video-8",
+    "position": 8,
+    "title": "imagine showing your kids how you lived in your 20s",
+    "creatorName": "Sophie",
+    "originalUrl": "https://www.instagram.com/reel/example-8",
+    "embedUrl": "https://www.instagram.com/reel/example-8",
+    "desiredCategory": "Pillar 3",
+    "hookVariations": [
+      "imagine showing your kids how you lived in your 20s",
+      "this is going to be so funny to explain one day",
+      "documenting my 20s before I forget it"
+    ],
+    "formatLayers": "Format: Direct to camera · Emotion: Humour, Nostalgia",
+    "visualElements": ["Direct to camera intro", "Photo book flip-through", "Reaction laugh"],
+    "executionNotes": "• Open direct to camera, playful tone\n• Flip through the book, pause on the funniest photo\n• Genuine reaction laugh to close",
+    "collectionGuidance": "Small collection works best — pick 8-10 genuinely funny or chaotic photos.",
+    "audioSuggestions": [{ "label": "Comedic trending sound", "url": "https://www.tiktok.com/music/example-comedic" }],
+    "status": "active",
+    "updatedAt": "2026-08-20T09:00:00.000Z"
+  }
+]

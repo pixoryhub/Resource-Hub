@@ -43,11 +43,17 @@
   --group-tint-3: rgba(63, 167, 156, 0.08);
 }
 
+:root {
+  --group-color-4: #d99a3f; /* amber — Pillar 3 */
+  --group-tint-4: rgba(217, 154, 63, 0.09);
+}
+
 [data-theme="dark"] {
   --group-tint-0: rgba(232, 85, 155, 0.16);
   --group-tint-1: rgba(91, 135, 224, 0.16);
   --group-tint-2: rgba(140, 133, 120, 0.18);
   --group-tint-3: rgba(63, 167, 156, 0.16);
+  --group-tint-4: rgba(217, 154, 63, 0.18);
 }
 
 @theme inline {

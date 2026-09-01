@@ -16,6 +16,8 @@ export const {
   saveWeek,
   getHubVideos,
   getHubVideo,
+  getVideoCompletions,
+  getAllVideoCompletions,
   submitFlag,
   getFlagsForCreator,
   getAllFlags,

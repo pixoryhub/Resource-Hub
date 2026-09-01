@@ -1,12 +1,18 @@
-export default function CreatorHubPage() {
+import { getHubVideos, getVideoCompletions } from "@/lib/data";
+import { getSessionCreatorId } from "@/lib/session";
+import CreatorHubClient from "@/components/creator-hub/CreatorHubClient";
+
+export default async function CreatorHubPage() {
+  const creatorId = getSessionCreatorId();
+  const [videos, completions] = await Promise.all([
+    getHubVideos(),
+    getVideoCompletions(creatorId),
+  ]);
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-      <p className="eyebrow mb-3">Creator Hub</p>
-      <h1 className="text-3xl font-bold tracking-tight">Coming in CP5</h1>
-      <p className="mt-3 text-text-muted">
-        The ordered video library with completion tracking, Completed /
-        Unfinished tabs, and full video entries lands here.
-      </p>
-    </div>
+    <CreatorHubClient
+      videos={videos}
+      initialCompletedIds={completions.map((c) => c.videoId)}
+    />
   );
 }

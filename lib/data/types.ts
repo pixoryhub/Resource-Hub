@@ -67,8 +67,9 @@ export interface AudioSuggestion {
 
 export interface HubVideo {
   id: string;
-  position: number;
+  position: number; // defines the creator-facing number
   title: string;
+  creatorName: string; // "by {name}" attribution, confirmed from the Loom walkthrough
   originalUrl: string;
   embedUrl: string;
   desiredCategory: DesiredCategory;
@@ -82,10 +83,32 @@ export interface HubVideo {
   updatedAt: string;
 }
 
+export interface VideoCompletion {
+  creatorId: string;
+  videoId: string;
+  completedAt: string;
+}
+
+// The preset "what's going on" checklist — confirmed from the Loom walkthrough.
+// The brief guessed a free-text box; the real screen is this checklist plus
+// one optional free-text field.
+export const COACHING_FLAG_OPTIONS = [
+  { id: "stuck-visuals", emoji: "🎯", label: "I feel stuck with visuals" },
+  { id: "stuck-hooks", emoji: "📝", label: "I feel stuck with text hooks" },
+  { id: "struggling-film", emoji: "🎥", label: "I'm struggling to film" },
+  { id: "struggling-consistent", emoji: "📅", label: "I'm struggling to stay consistent" },
+  { id: "overwhelmed", emoji: "⚡", label: "Overwhelmed with resources / prioritisation" },
+  { id: "speak-personally", emoji: "🗣️", label: "I'd like to speak to someone personally" },
+  { id: "not-feeling-well", emoji: "💙", label: "I'm not feeling well personally" },
+] as const;
+
+export type CoachingFlagOptionId = (typeof COACHING_FLAG_OPTIONS)[number]["id"];
+
 export interface CoachingFlag {
   id: string;
   creatorId: string;
-  body: string;
+  selectedOptions: CoachingFlagOptionId[];
+  note: string; // "Anything else you'd like to share? (optional)"
   submittedAt: string;
   respondedAt: string | null;
   respondedBy: string | null;
