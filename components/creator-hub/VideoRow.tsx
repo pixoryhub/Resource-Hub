@@ -172,21 +172,21 @@ export default function VideoRow({
             the hook and the audio, for one of the options below.
           </p>
 
-          <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
-            <div>
-              <p className="eyebrow mb-1.5">Category</p>
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-border bg-surface p-4">
+              <p className="eyebrow mb-2">Category</p>
               <CategoryChip category={video.desiredCategory} />
-              <Link href="/#educational-resources" className="mt-1 block text-xs font-semibold text-accent hover:underline">
+              <Link href="/#educational-resources" className="mt-2 block text-xs font-semibold text-accent hover:underline">
                 What does this mean?
               </Link>
             </div>
-            <div className="col-span-2 sm:col-span-3">
-              <p className="eyebrow mb-1.5">Format &amp; emotion</p>
+            <div className="rounded-xl border border-border bg-surface p-4">
+              <p className="eyebrow mb-2">Format &amp; emotion</p>
               <p className="text-sm text-text">{video.formatLayers}</p>
             </div>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-3 rounded-xl border border-border bg-surface p-4">
             <p className="eyebrow mb-2">Hook variations</p>
             <ul className="space-y-2 text-sm text-text">
               {video.hookVariations.map((hook) => (
@@ -197,7 +197,7 @@ export default function VideoRow({
             </ul>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-3 rounded-xl border border-border bg-surface p-4">
             <p className="eyebrow mb-2">Visual elements, in order</p>
             <p className="text-sm leading-relaxed text-text">
               {video.visualElements.map((el, i) => (
@@ -211,20 +211,20 @@ export default function VideoRow({
             </p>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-border bg-surface p-4">
               <p className="eyebrow mb-2">Execution notes</p>
               <p className="whitespace-pre-line text-sm leading-relaxed text-text-muted">
                 {video.executionNotes}
               </p>
             </div>
-            <div>
+            <div className="rounded-xl border border-border bg-surface p-4">
               <p className="eyebrow mb-2">Collection-size guidance</p>
               <p className="text-sm leading-relaxed text-text-muted">{video.collectionGuidance}</p>
             </div>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-3 rounded-xl border border-border bg-surface p-4">
             <p className="eyebrow mb-2">Audio suggestions</p>
             <div className="-mx-1">
               {video.audioSuggestions.map((a) => (
@@ -233,7 +233,7 @@ export default function VideoRow({
                   href={a.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between gap-2 rounded-lg px-1 py-1.5 text-sm font-medium text-text transition-colors hover:bg-surface hover:text-accent"
+                  className="flex items-center justify-between gap-2 rounded-lg px-1 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg hover:text-accent"
                 >
                   <span className="truncate">🎵 {a.label}</span>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
