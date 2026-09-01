@@ -28,7 +28,7 @@ export default function CreatorHubClient({
   useEffect(() => {
     if (!creator || loadedForCreator.current === creator.id) return;
     loadedForCreator.current = creator.id;
-    setCompleted(new Set(loadCreatorData<string[]>("completions", creator.id, [])));
+    loadCreatorData<string[]>("completions", creator.id, []).then((c) => setCompleted(new Set(c)));
   }, [creator]);
 
   useEffect(() => {

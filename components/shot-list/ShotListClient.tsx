@@ -51,16 +51,18 @@ export default function ShotListClient({
   useEffect(() => {
     if (!creator || loadedForCreator.current === creator.id) return;
     loadedForCreator.current = creator.id;
-    const savedWeek = loadCreatorData<Week | null>("shotlist-week", creator.id, null);
-    const savedArchived = loadCreatorData<Week[]>("shotlist-archived", creator.id, []);
-    setWeek(savedWeek ?? blankWeek(creator.id));
-    setArchived(savedArchived);
-    const last = (savedWeek?.shots ?? [])
-      .map((s) => s.filmedAt)
-      .filter((v): v is string => Boolean(v))
-      .sort()
-      .at(-1);
-    setSavedAt(new Date(last ?? savedWeek?.createdAt ?? Date.now()));
+    (async () => {
+      const savedWeek = await loadCreatorData<Week | null>("shotlist-week", creator.id, null);
+      const savedArchived = await loadCreatorData<Week[]>("shotlist-archived", creator.id, []);
+      setWeek(savedWeek ?? blankWeek(creator.id));
+      setArchived(savedArchived);
+      const last = (savedWeek?.shots ?? [])
+        .map((s) => s.filmedAt)
+        .filter((v): v is string => Boolean(v))
+        .sort()
+        .at(-1);
+      setSavedAt(new Date(last ?? savedWeek?.createdAt ?? Date.now()));
+    })();
   }, [creator]);
 
   // Debounced autosave simulation — §7.4. Local-only for now (see

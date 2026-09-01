@@ -26,17 +26,23 @@ directory** to that subfolder in the site's build settings.
 
 ## 3. Set environment variables
 
-**This is the step that's easy to miss** — without it, the site will build
-and load fine, but Admin mode will be silently switched off everywhere.
+**This is the step that's easy to miss** — without these, the site will
+build and load fine, but Admin mode and creator sign-up/login will be
+silently switched off.
 
 In Netlify: **Site configuration → Environment variables**, add:
 
 | Key | Value |
 |---|---|
 | `ADMIN_PASSWORD` | Whatever password coaches should use for Admin mode |
+| `AUTH_SECRET` | A long random string — signs creator session cookies. Generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 
 `DATA_SOURCE` doesn't need to be set — it defaults to the seeded fixture
 content, which is what's live right now.
+
+Creator profiles and per-creator data are stored in **Netlify Blobs**,
+which Netlify provisions automatically for every site — nothing to set up
+or sign up for separately, as long as `AUTH_SECRET` above is set.
 
 ## 4. Deploy
 
@@ -52,23 +58,25 @@ Push to `main` (or trigger a deploy in the Netlify dashboard) and it builds.
 
 ## Why this should just work
 
-- All the interactive pages (Creator Hub, Shot List, Coaching Flag) run
-  entirely in the visitor's browser — ticking things, logging in, all of
-  it — so there's nothing server-side to break there.
-- The two things that do run server-side are small Next.js API routes
-  (`/api/admin-auth`, `/api/link-preview`). Netlify's Next.js plugin turns
-  these into serverless functions automatically — same code, same
-  behaviour, just running on Netlify's infrastructure instead of the local
-  dev server.
+- The pages themselves (Creator Hub, Shot List, Coaching Flag) run
+  entirely in the visitor's browser — ticking things, expanding cards, all
+  of it.
+- Sign-up/login and everything a creator saves (ticks, shot lists, coaching
+  flags) go through small Next.js API routes (`/api/auth`,
+  `/api/creator-data`, `/api/admin-auth`, `/api/link-preview`) backed by
+  Netlify Blobs. Netlify's Next.js plugin turns these into serverless
+  functions automatically — same code, same behaviour, just running on
+  Netlify's infrastructure instead of the local dev server.
 
-## The honest limitation
+## Creator accounts now work from any device
 
-Creator profiles and their data (ticks, shot lists, coaching flags) live in
-each person's own browser (see `docs/BRIEF.md` and `lib/localAuth.tsx`),
-not in a shared database. That means:
+A creator's name + 4-digit PIN, and everything they save, live in Netlify
+Blobs — not in one browser's `localStorage` — so logging in from a new
+phone or a different computer picks up the same profile and data, as long
+as `AUTH_SECRET` (see step 3) stays the same across deploys of this site.
 
-- A creator's data won't follow them to a different device or browser.
-- Clearing browser data / a new device means starting fresh.
-
-This is intentional for now — it's what lets the app work today without a
-database. Real accounts that sync everywhere come with CP8/CP9 (Supabase).
+Locally (`next dev`), sign-up/login will show "Couldn't reach storage" —
+Netlify doesn't inject Blobs credentials outside its own infrastructure.
+Either run `netlify dev` instead (after `netlify link`), or set
+`NETLIFY_SITE_ID` / `NETLIFY_AUTH_TOKEN` in `.env.local` to point at the
+deployed site's blob store. See `.env.local.example` for details.

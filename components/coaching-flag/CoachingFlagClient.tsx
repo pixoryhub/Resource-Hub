@@ -25,7 +25,7 @@ export default function CoachingFlagClient() {
   useEffect(() => {
     if (!creator || loadedForCreator.current === creator.id) return;
     loadedForCreator.current = creator.id;
-    setFlags(loadCreatorData<CoachingFlag[]>("flags", creator.id, []));
+    loadCreatorData<CoachingFlag[]>("flags", creator.id, []).then(setFlags);
   }, [creator]);
 
   useEffect(() => {
