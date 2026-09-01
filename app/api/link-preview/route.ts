@@ -76,6 +76,19 @@ async function tryOEmbed(target: URL, rawUrl: string, signal: AbortSignal): Prom
   }
 }
 
+// Some platforms always return the same "logged out" / app-shell image for
+// a page the fetcher can't actually see (private Notion pages are the case
+// that surfaced this) — better to say so than to silently show the wrong
+// picture.
+const KNOWN_GENERIC_IMAGES = [
+  /app\.notion\.com\/images\/meta\/default\.png/i,
+  /\/(default|placeholder|fallback|og-default|social-default)\.(png|jpe?g)(\?|$)/i,
+];
+
+function isGenericFallbackImage(imageUrl: string): boolean {
+  return KNOWN_GENERIC_IMAGES.some((re) => re.test(imageUrl));
+}
+
 function extractMetaImage(html: string): string | null {
   const patterns = [
     /<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["'][^>]*>/i,
@@ -110,12 +123,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ image: null, error: "That address isn't allowed." });
   }
 
+  if (target.hostname === "app.notion.com") {
+    return NextResponse.json({
+      image: null,
+      error:
+        "This is a private Notion link (copied from inside the app) — it needs a login to view, so there's no page to preview. In Notion, use Share → Publish to web and paste that link instead, or paste an image below.",
+    });
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6000);
 
   try {
     const oEmbedImage = await tryOEmbed(target, urlParam, controller.signal);
-    if (oEmbedImage) {
+    if (oEmbedImage && !isGenericFallbackImage(oEmbedImage)) {
       return NextResponse.json({ image: oEmbedImage });
     }
 
@@ -138,8 +159,16 @@ export async function GET(req: NextRequest) {
     }
 
     const html = await res.text();
-    const image = extractMetaImage(html);
-    return NextResponse.json({ image, error: image ? undefined : "No preview image found for that link." });
+    const rawImage = extractMetaImage(html);
+    const image = rawImage && !isGenericFallbackImage(rawImage) ? rawImage : null;
+    return NextResponse.json({
+      image,
+      error: image
+        ? undefined
+        : rawImage
+          ? "That link only has a generic preview image — try pasting one manually below."
+          : "No preview image found for that link.",
+    });
   } catch (err) {
     const timedOut = err instanceof Error && err.name === "AbortError";
     return NextResponse.json({

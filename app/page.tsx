@@ -16,15 +16,17 @@ export default async function ResourceHubPage() {
       </div>
 
       <div>
-        <div className="mb-4 flex items-baseline justify-between gap-3">
+        <div className="mb-1 flex items-baseline justify-between gap-3">
           <h2 className="text-lg font-bold text-text">Community Links</h2>
           <span className="text-xs text-text-faint">Placeholder name — tell me what to call this</span>
         </div>
+        <p className="mb-4 text-sm text-text-muted">Spreadsheets, links, and FAQs.</p>
         <ResourceSection section="community-links" initialResources={communityLinks} />
       </div>
 
       <div id="educational-resources">
-        <h2 className="mb-4 text-lg font-bold text-text">Educational Resources</h2>
+        <h2 className="mb-1 text-lg font-bold text-text">Educational Resources</h2>
+        <p className="mb-4 text-sm text-text-muted">Workshops, tutorials, and explainer videos.</p>
         <ResourceSection section="educational-resources" initialResources={educationalResources} />
       </div>
 
