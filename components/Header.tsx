@@ -195,9 +195,9 @@ export default function Header() {
       ref={headerRef}
       className="sticky top-0 z-40 border-b border-border bg-bg/95 backdrop-blur"
     >
-      <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:gap-4">
+      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:gap-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="headline text-lg text-text">
+          <Link href="/" className="headline shrink-0 text-2xl text-text">
             pixory
           </Link>
           <div className="flex items-center gap-2 lg:hidden">
@@ -207,7 +207,7 @@ export default function Header() {
           </div>
         </div>
 
-        <nav className="flex flex-wrap gap-1 lg:order-2 lg:gap-2">
+        <nav className="flex flex-wrap gap-1 lg:order-2 lg:flex-nowrap lg:gap-1">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
             return (
@@ -215,7 +215,7 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 className={
-                  "rounded-full px-4 py-2 text-sm font-medium transition-colors " +
+                  "shrink-0 rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors lg:px-4 " +
                   (active
                     ? "bg-text text-bg"
                     : "text-text-muted hover:bg-accent-tint hover:text-text")
@@ -231,7 +231,7 @@ export default function Header() {
           <input
             type="search"
             placeholder="Search videos & resources..."
-            className="w-full min-w-0 rounded-full border border-border bg-surface px-4 py-2 text-sm text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent lg:w-56"
+            className="w-full min-w-0 rounded-full border border-border bg-surface px-4 py-2 text-sm text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent lg:w-44 xl:w-56"
             style={{ fontSize: "16px" }}
           />
           <div className="hidden items-center gap-2 lg:flex">
