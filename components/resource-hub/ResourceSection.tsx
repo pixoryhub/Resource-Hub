@@ -10,10 +10,12 @@ export default function ResourceSection({
   section,
   initialResources,
   columns = 2,
+  showThumbnail = true,
 }: {
   section: string;
   initialResources: Resource[];
   columns?: 1 | 2;
+  showThumbnail?: boolean;
 }) {
   const { enabled: adminMode } = useAdminMode();
   const [resources, setResources] = useState(initialResources);
@@ -50,6 +52,7 @@ export default function ResourceSection({
             key={r.id}
             resource={r}
             colourIndex={i}
+            showThumbnail={showThumbnail}
             onUpdate={(data) => updateResource(r.id, data)}
             onDelete={() => deleteResource(r.id)}
           />
@@ -59,7 +62,11 @@ export default function ResourceSection({
       {adminMode && (
         <div className="mt-3">
           {adding ? (
-            <ResourceForm onSave={addResource} onCancel={() => setAdding(false)} />
+            <ResourceForm
+              showThumbnail={showThumbnail}
+              onSave={addResource}
+              onCancel={() => setAdding(false)}
+            />
           ) : (
             <button
               type="button"

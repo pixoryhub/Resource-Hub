@@ -9,11 +9,13 @@ import ResourceForm from "./ResourceForm";
 export default function ResourceCard({
   resource,
   colourIndex,
+  showThumbnail = true,
   onUpdate,
   onDelete,
 }: {
   resource: Resource;
   colourIndex: number;
+  showThumbnail?: boolean;
   onUpdate: (data: { title: string; description: string; thumbnailUrl: string; links: ResourceLink[] }) => void;
   onDelete: () => void;
 }) {
@@ -25,6 +27,7 @@ export default function ResourceCard({
     return (
       <ResourceForm
         initial={resource}
+        showThumbnail={showThumbnail}
         onSave={(data) => {
           onUpdate(data);
           setEditing(false);
@@ -61,9 +64,11 @@ export default function ResourceCard({
         </div>
       )}
 
-      <ResourceThumbnail thumbnailUrl={resource.thumbnailUrl} title={resource.title} colourIndex={colourIndex} />
+      {showThumbnail && (
+        <ResourceThumbnail thumbnailUrl={resource.thumbnailUrl} title={resource.title} colourIndex={colourIndex} />
+      )}
 
-      <div className="p-5">
+      <div className={"p-5 " + (!showThumbnail && adminMode ? "pr-20" : "")}>
         <h3 className="font-bold text-text">{resource.title}</h3>
         {resource.description && (
           <p className="mt-1 text-sm text-text-muted">{resource.description}</p>

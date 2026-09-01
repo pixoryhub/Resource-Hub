@@ -5,10 +5,12 @@ import type { Resource, ResourceLink } from "@/lib/data/types";
 
 export default function ResourceForm({
   initial,
+  showThumbnail = true,
   onSave,
   onCancel,
 }: {
   initial?: Resource;
+  showThumbnail?: boolean;
   onSave: (data: { title: string; description: string; thumbnailUrl: string; links: ResourceLink[] }) => void;
   onCancel: () => void;
 }) {
@@ -118,14 +120,16 @@ export default function ResourceForm({
                   ×
                 </button>
               </div>
-              <button
-                type="button"
-                onClick={() => fetchLinkImage(i)}
-                disabled={!link.url.trim() || fetchingIndex === i}
-                className="mt-1.5 text-xs font-semibold text-accent hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline"
-              >
-                {fetchingIndex === i ? "Checking…" : "Use as thumbnail"}
-              </button>
+              {showThumbnail && (
+                <button
+                  type="button"
+                  onClick={() => fetchLinkImage(i)}
+                  disabled={!link.url.trim() || fetchingIndex === i}
+                  className="mt-1.5 text-xs font-semibold text-accent hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline"
+                >
+                  {fetchingIndex === i ? "Checking…" : "Use as thumbnail"}
+                </button>
+              )}
             </div>
           ))}
           <button
@@ -138,32 +142,34 @@ export default function ResourceForm({
         </div>
       </div>
 
-      <div>
-        <label className="eyebrow mb-1.5 block">Thumbnail</label>
-        {thumbnailUrl ? (
-          <div className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary external preview image, not a local/optimizable asset */}
-            <img src={thumbnailUrl} alt="" className="h-16 w-16 rounded-lg object-cover" />
-            <button
-              type="button"
-              onClick={() => setThumbnailUrl("")}
-              className="text-xs font-semibold text-text-muted hover:text-accent"
-            >
-              Remove
-            </button>
-          </div>
-        ) : (
-          <input
-            type="text"
-            value={thumbnailUrl}
-            onChange={(e) => setThumbnailUrl(e.target.value)}
-            placeholder="Or paste an image URL"
-            className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
-            style={{ fontSize: "16px" }}
-          />
-        )}
-        {fetchError && <p className="mt-1.5 text-xs text-accent">{fetchError}</p>}
-      </div>
+      {showThumbnail && (
+        <div>
+          <label className="eyebrow mb-1.5 block">Thumbnail</label>
+          {thumbnailUrl ? (
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary external preview image, not a local/optimizable asset */}
+              <img src={thumbnailUrl} alt="" className="h-16 w-16 rounded-lg object-cover" />
+              <button
+                type="button"
+                onClick={() => setThumbnailUrl("")}
+                className="text-xs font-semibold text-text-muted hover:text-accent"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <input
+              type="text"
+              value={thumbnailUrl}
+              onChange={(e) => setThumbnailUrl(e.target.value)}
+              placeholder="Or paste an image URL"
+              className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
+              style={{ fontSize: "16px" }}
+            />
+          )}
+          {fetchError && <p className="mt-1.5 text-xs text-accent">{fetchError}</p>}
+        </div>
+      )}
 
       <div className="flex gap-2 border-t border-border pt-4">
         <button

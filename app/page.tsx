@@ -18,7 +18,12 @@ export default async function ResourceHubPage() {
       <div>
         <h2 className="mb-1 text-lg font-bold text-text">Community Essentials</h2>
         <p className="mb-4 text-sm text-text-muted">Spreadsheets, community info, and FAQs.</p>
-        <ResourceSection section="community-links" initialResources={communityLinks} />
+        <ResourceSection
+          section="community-links"
+          initialResources={communityLinks}
+          showThumbnail={false}
+          columns={1}
+        />
       </div>
 
       <div id="educational-resources">
