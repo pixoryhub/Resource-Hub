@@ -76,7 +76,6 @@
   --color-accent-light: var(--accent-light);
   --color-accent-tint: var(--accent-tint);
   --font-sans: var(--font-poppins);
-  --font-display: var(--font-fraunces);
 }
 
 html {
@@ -128,11 +127,13 @@ body {
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.32);
 }
 
-/* Headline voice — Fraunces, used only for genuine section/page headings.
-   Everything else (nav, body, buttons, labels) stays Poppins. */
+/* Headline voice — bold Poppins, matching the original app's look (confirmed
+   from Emma's screenshots of the lost original — bold sans throughout, no
+   serif). Kept as one utility class so the whole site's heading style stays
+   consistent and easy to adjust from one place. */
 .headline {
-  font-family: var(--font-display), Georgia, serif;
-  font-weight: 600;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.15;
 }

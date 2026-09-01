@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins, Fraunces } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import { AdminModeProvider } from "@/lib/adminMode";
 import { AuthProvider } from "@/lib/localAuth";
@@ -9,17 +9,6 @@ const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-});
-
-// A warm, soft-contrast serif used sparingly for headlines only — gives the
-// hub a distinct editorial voice instead of reading as another sans-only
-// app template. Everything else (nav, body, buttons, forms) stays Poppins.
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  weight: "variable",
-  style: ["normal", "italic"],
-  axes: ["opsz", "SOFT"],
 });
 
 export const metadata: Metadata = {
@@ -42,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${poppins.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${poppins.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
