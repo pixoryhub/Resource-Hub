@@ -82,7 +82,6 @@ export default function ResourceForm({
           rows={2}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="A short line about what this is"
           className="w-full resize-y rounded-xl border border-border bg-bg px-3 py-2.5 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
           style={{ fontSize: "16px" }}
         />
@@ -90,21 +89,16 @@ export default function ResourceForm({
 
       <div>
         <label className="eyebrow mb-1.5 block">Links</label>
-        <p className="mb-2 text-xs text-text-faint">
-          Add as many as you need — a video, a Canva template, a PDF, whatever this resource
-          actually is. Use &ldquo;Use as thumbnail&rdquo; to pull that link&apos;s own preview
-          image instead of pasting one by hand.
-        </p>
-        <div className="space-y-2">
+        <div className="divide-y divide-border rounded-xl border border-border">
           {links.map((link, i) => (
-            <div key={i} className="rounded-xl border border-border p-2.5">
+            <div key={i} className="p-3">
               <div className="flex flex-col gap-2 sm:flex-row">
                 <input
                   type="text"
                   value={link.label}
                   onChange={(e) => updateLink(i, { label: e.target.value })}
                   placeholder="Label, e.g. Watch video"
-                  className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="min-w-0 flex-1 rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
                   style={{ fontSize: "16px" }}
                 />
                 <input
@@ -112,14 +106,14 @@ export default function ResourceForm({
                   value={link.url}
                   onChange={(e) => updateLink(i, { url: e.target.value })}
                   placeholder="https://..."
-                  className="min-w-0 flex-[2] rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="min-w-0 flex-[2] rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
                   style={{ fontSize: "16px" }}
                 />
                 <button
                   type="button"
                   onClick={() => removeLink(i)}
                   aria-label="Remove link"
-                  className="shrink-0 self-start rounded-full px-2 text-lg text-text-faint hover:text-accent sm:self-center"
+                  className="shrink-0 self-start rounded-full px-2 text-lg leading-none text-text-faint hover:text-accent sm:self-center"
                 >
                   ×
                 </button>
@@ -130,18 +124,18 @@ export default function ResourceForm({
                 disabled={!link.url.trim() || fetchingIndex === i}
                 className="mt-1.5 text-xs font-semibold text-accent hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline"
               >
-                {fetchingIndex === i ? "Checking that link…" : "📷 Use as thumbnail"}
+                {fetchingIndex === i ? "Checking…" : "Use as thumbnail"}
               </button>
             </div>
           ))}
+          <button
+            type="button"
+            onClick={addLink}
+            className="block w-full p-3 text-left text-sm font-semibold text-accent hover:bg-bg"
+          >
+            + Add a link
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={addLink}
-          className="mt-2 text-xs font-semibold text-accent hover:underline"
-        >
-          + add another link
-        </button>
       </div>
 
       <div>
@@ -163,7 +157,7 @@ export default function ResourceForm({
             type="text"
             value={thumbnailUrl}
             onChange={(e) => setThumbnailUrl(e.target.value)}
-            placeholder="Or paste an image link directly — Canva export, Notion, anywhere public"
+            placeholder="Or paste an image URL"
             className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
             style={{ fontSize: "16px" }}
           />

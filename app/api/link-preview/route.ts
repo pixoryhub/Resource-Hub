@@ -1,6 +1,10 @@
-// Fetches a URL server-side and pulls its og:image/twitter:image meta tag,
-// so an admin can use a linked video/Canva/etc.'s own preview image as the
-// resource thumbnail instead of hunting down an image URL by hand.
+// Fetches a URL server-side and returns a thumbnail for that specific page —
+// not the platform's own branding. For platforms with an oEmbed API (Canva,
+// Loom, YouTube, Vimeo, TikTok, Figma) we call that directly, since it
+// returns the actual content thumbnail; those apps are client-rendered and
+// scraping their static HTML mostly finds the generic app-shell image
+// instead. Everything else falls back to reading the page's own
+// og:image/twitter:image tag.
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -15,6 +19,61 @@ function isPrivateHostname(hostname: string): boolean {
   if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)) return true;
   if (hostname.endsWith(".local")) return true;
   return false;
+}
+
+interface OEmbedProvider {
+  name: string;
+  match: (url: URL) => boolean;
+  endpoint: (rawUrl: string) => string;
+}
+
+const OEMBED_PROVIDERS: OEmbedProvider[] = [
+  {
+    name: "YouTube",
+    match: (u) => /(^|\.)youtube\.com$/.test(u.hostname) || u.hostname === "youtu.be",
+    endpoint: (raw) => `https://www.youtube.com/oembed?url=${encodeURIComponent(raw)}&format=json`,
+  },
+  {
+    name: "Vimeo",
+    match: (u) => /(^|\.)vimeo\.com$/.test(u.hostname),
+    endpoint: (raw) => `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(raw)}`,
+  },
+  {
+    name: "Loom",
+    match: (u) => /(^|\.)loom\.com$/.test(u.hostname),
+    endpoint: (raw) => `https://www.loom.com/v1/oembed?url=${encodeURIComponent(raw)}`,
+  },
+  {
+    name: "Canva",
+    match: (u) => /(^|\.)canva\.com$/.test(u.hostname),
+    endpoint: (raw) => `https://www.canva.com/_oembed?url=${encodeURIComponent(raw)}&format=json`,
+  },
+  {
+    name: "TikTok",
+    match: (u) => /(^|\.)tiktok\.com$/.test(u.hostname),
+    endpoint: (raw) => `https://www.tiktok.com/oembed?url=${encodeURIComponent(raw)}`,
+  },
+  {
+    name: "Figma",
+    match: (u) => /(^|\.)figma\.com$/.test(u.hostname),
+    endpoint: (raw) => `https://www.figma.com/api/oembed?url=${encodeURIComponent(raw)}`,
+  },
+];
+
+async function tryOEmbed(target: URL, rawUrl: string, signal: AbortSignal): Promise<string | null> {
+  const provider = OEMBED_PROVIDERS.find((p) => p.match(target));
+  if (!provider) return null;
+  try {
+    const res = await fetch(provider.endpoint(rawUrl), {
+      signal,
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return typeof data?.thumbnail_url === "string" ? data.thumbnail_url : null;
+  } catch {
+    return null;
+  }
 }
 
 function extractMetaImage(html: string): string | null {
@@ -55,6 +114,11 @@ export async function GET(req: NextRequest) {
   const timeout = setTimeout(() => controller.abort(), 6000);
 
   try {
+    const oEmbedImage = await tryOEmbed(target, urlParam, controller.signal);
+    if (oEmbedImage) {
+      return NextResponse.json({ image: oEmbedImage });
+    }
+
     const res = await fetch(target.toString(), {
       signal: controller.signal,
       redirect: "follow",

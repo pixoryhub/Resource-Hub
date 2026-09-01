@@ -69,16 +69,19 @@ export default function ResourceCard({
           <p className="mt-1 text-sm text-text-muted">{resource.description}</p>
         )}
         {resource.links.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
+          <div className="mt-3 -mx-1 border-t border-border pt-1">
             {resource.links.map((link, i) => (
               <a
                 key={i}
                 href={link.url || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full border border-border px-2.5 py-1 text-xs font-semibold text-text hover:border-accent hover:text-accent"
+                className="flex items-center justify-between gap-2 rounded-lg px-1 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg hover:text-accent"
               >
-                {link.label || link.url}
+                <span className="truncate">{link.label || link.url}</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <path d="M7 17 17 7M8 7h9v9" />
+                </svg>
               </a>
             ))}
           </div>

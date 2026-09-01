@@ -16,21 +16,15 @@ export default async function ResourceHubPage() {
       </div>
 
       <div>
-        <h2 className="mb-1 text-lg font-bold text-text">Community Links</h2>
-        <p className="mb-4 text-sm text-text-muted">
-          The commission spreadsheet, the Discord server, FAQs — the practical links that don&apos;t
-          fit anywhere else. <em>(&ldquo;Community Links&rdquo; is my placeholder name for this
-          section — tell me if you want it called something else.)</em>
-        </p>
+        <div className="mb-4 flex items-baseline justify-between gap-3">
+          <h2 className="text-lg font-bold text-text">Community Links</h2>
+          <span className="text-xs text-text-faint">Placeholder name — tell me what to call this</span>
+        </div>
         <ResourceSection section="community-links" initialResources={communityLinks} />
       </div>
 
       <div id="educational-resources">
-        <h2 className="mb-1 text-lg font-bold text-text">Educational Resources</h2>
-        <p className="mb-4 text-sm text-text-muted">
-          Workshops, Loom explainer videos, and how-to guides — including the desired-categories
-          explainer linked from every Creator Hub video.
-        </p>
+        <h2 className="mb-4 text-lg font-bold text-text">Educational Resources</h2>
         <ResourceSection section="educational-resources" initialResources={educationalResources} />
       </div>
 
