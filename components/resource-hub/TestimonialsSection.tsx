@@ -151,8 +151,8 @@ function TestimonialCard({
   }
 
   return (
-    <div className="card overflow-hidden">
-      <div className="relative aspect-[9/16] w-full bg-black">
+    <div className="card flex items-center gap-3 overflow-hidden p-3">
+      <div className="relative aspect-[9/16] w-24 shrink-0 overflow-hidden rounded-xl bg-black sm:w-28">
         <video
           src={`/api/testimonial-video/${testimonial.videoAssetId}`}
           controls
@@ -161,7 +161,7 @@ function TestimonialCard({
           className="h-full w-full object-cover"
         />
       </div>
-      <div className="p-4">
+      <div className="min-w-0 flex-1">
         <p className="font-bold text-text">{testimonial.creatorName}</p>
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
           {testimonial.avgEarnings && (
