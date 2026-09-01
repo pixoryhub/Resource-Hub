@@ -37,12 +37,7 @@ function daysAgo(iso: string): string {
   return `Posted ${days}d ago`;
 }
 
-function OpportunityBody({ body }: { body: string }) {
-  const lines = body
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
-
+function OpportunityBody({ lines }: { lines: string[] }) {
   return (
     <div className="space-y-2">
       {lines.map((line, i) => {
@@ -145,6 +140,7 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
   const { enabled: adminMode } = useAdminMode();
   const [opportunity, setOpportunity] = useState(initial);
   const [editing, setEditing] = useState(false);
+  const [open, setOpen] = useState(false);
 
   function handleSave(value: WeeklyOpportunity) {
     setOpportunity(value);
@@ -169,6 +165,12 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
     );
   }
 
+  const lines = opportunity.body
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+  const [teaserLine, ...restLines] = lines;
+
   return (
     <div
       className="relative overflow-hidden rounded-[24px] p-6 shadow-lg sm:p-7"
@@ -187,16 +189,43 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
         </button>
       )}
 
-      <span className="animate-pulse-slow inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-accent">
-        🚨 This week&apos;s opportunity
-      </span>
+      <button type="button" onClick={() => setOpen((v) => !v)} className="block w-full text-left" aria-expanded={open}>
+        <span className="animate-pulse-slow inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-accent">
+          🚨 This week&apos;s opportunity
+        </span>
 
-      <h2 className="mt-3 text-xl font-extrabold leading-tight text-white sm:text-2xl">{opportunity.title}</h2>
-      <p className="mt-1 text-xs font-semibold text-white/70">{daysAgo(opportunity.updatedAt)}</p>
+        <h2 className="mt-3 pr-8 text-xl font-extrabold leading-tight text-white sm:text-2xl">{opportunity.title}</h2>
+        <p className="mt-1 text-xs font-semibold text-white/70">{daysAgo(opportunity.updatedAt)}</p>
 
-      <div className="mt-4">
-        <OpportunityBody body={opportunity.body} />
-      </div>
+        {teaserLine && <p className="mt-4 text-[15px] font-semibold leading-snug text-white">{teaserLine}</p>}
+
+        <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-white/80">
+          {open ? "Show less" : "Show more"}
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={"transition-transform " + (open ? "rotate-180" : "")}
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </span>
+      </button>
+
+      {restLines.length > 0 && (
+        <div className={"accordion-rows " + (open ? "is-open" : "")}>
+          <div>
+            <div className="mt-4 border-t border-white/20 pt-4" inert={!open}>
+              <OpportunityBody lines={restLines} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
