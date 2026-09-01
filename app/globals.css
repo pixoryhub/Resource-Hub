@@ -30,6 +30,26 @@
   --shadow-card: 0 8px 22px rgba(0, 0, 0, 0.28);
 }
 
+/* Group colour rotation — §4: "pink, blue, grey, teal, pink, pink".
+   Used for the Shot List Generator's group header tints and number chips. */
+:root {
+  --group-color-0: #e8559b; /* pink */
+  --group-tint-0: rgba(232, 85, 155, 0.07);
+  --group-color-1: #5b87e0; /* blue */
+  --group-tint-1: rgba(91, 135, 224, 0.08);
+  --group-color-2: #8c8578; /* grey */
+  --group-tint-2: rgba(140, 133, 120, 0.1);
+  --group-color-3: #3fa79c; /* teal */
+  --group-tint-3: rgba(63, 167, 156, 0.08);
+}
+
+[data-theme="dark"] {
+  --group-tint-0: rgba(232, 85, 155, 0.16);
+  --group-tint-1: rgba(91, 135, 224, 0.16);
+  --group-tint-2: rgba(140, 133, 120, 0.18);
+  --group-tint-3: rgba(63, 167, 156, 0.16);
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);

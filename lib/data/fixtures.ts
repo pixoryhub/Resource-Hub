@@ -12,10 +12,21 @@ import type {
   Resource,
   CalendarEvent,
 } from "./types";
+import goldenWeek from "@/fixtures/golden-week.json";
 
 const state = {
-  creators: [] as Creator[],
-  weeks: [] as Week[],
+  creators: [
+    {
+      id: "creator-1",
+      firstName: "Jess",
+      lastName: "Freeman",
+      role: "creator",
+      createdAt: "2026-06-01T09:00:00.000Z",
+      lastSeenAt: "2026-08-31T18:00:00.000Z",
+    },
+  ] as Creator[],
+  // The §12 golden case — also the `Example` fixture and the CP11 regression test.
+  weeks: [goldenWeek as Week] as Week[],
   hubVideos: [] as HubVideo[],
   coachingFlags: [] as CoachingFlag[],
   resources: [] as Resource[],

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 // §5 — nav order and verbatim labels are 🟢 confirmed.
 const NAV_ITEMS = [
@@ -66,9 +67,28 @@ function ThemeToggle() {
 
 export default function Header() {
   const pathname = usePathname();
+  const headerRef = useRef<HTMLElement>(null);
+
+  // Reports its own height as --header-h so other sticky elements (the
+  // Shot List Generator's progress card) can pin themselves just below it,
+  // regardless of whether the header is one row or stacked on mobile.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const setHeight = () => {
+      document.documentElement.style.setProperty("--header-h", `${el.offsetHeight}px`);
+    };
+    setHeight();
+    const observer = new ResizeObserver(setHeight);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-bg/95 backdrop-blur">
+    <header
+      ref={headerRef}
+      className="sticky top-0 z-40 border-b border-border bg-bg/95 backdrop-blur"
+    >
       <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:gap-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="text-xl font-bold tracking-tight text-text">

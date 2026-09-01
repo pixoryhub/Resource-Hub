@@ -1,0 +1,79 @@
+{
+  "id": "week-golden",
+  "creatorId": "creator-1",
+  "label": "This week",
+  "sourceText": null,
+  "createdAt": "2026-08-25T09:00:00.000Z",
+  "archivedAt": null,
+  "opportunities": [
+    { "id": "opp-1", "weekId": "week-golden", "index": 1, "title": "side profile reaction turning to book stack (solo)", "source": "blueprint" },
+    { "id": "opp-2", "weekId": "week-golden", "index": 2, "title": "Avatar hug turning to book stack", "source": "blueprint" },
+    { "id": "opp-3", "weekId": "week-golden", "index": 3, "title": "Did you fulfil your dreams?", "source": "blueprint" }
+  ],
+  "groups": [
+    { "id": "group-1", "weekId": "week-golden", "position": 1, "name": "Turning to book stack", "colourIndex": 0 },
+    { "id": "group-2", "weekId": "week-golden", "position": 2, "name": "Flicking through pages", "colourIndex": 1 },
+    { "id": "group-3", "weekId": "week-golden", "position": 3, "name": "Paper tear and wrapping", "colourIndex": 2 },
+    { "id": "group-4", "weekId": "week-golden", "position": 4, "name": "Pushing and pulling", "colourIndex": 3 },
+    { "id": "group-5", "weekId": "week-golden", "position": 5, "name": "Shelf and stack", "colourIndex": 0 },
+    { "id": "group-6", "weekId": "week-golden", "position": 6, "name": "Close ups and detail", "colourIndex": 0 }
+  ],
+  "shots": [
+    {
+      "id": "shot-1", "weekId": "week-golden", "groupId": "group-1", "position": 1,
+      "title": "Side profile reaction turning to book stack",
+      "variationNotes": "(1) Kitchen; Red Shirt AND (2) Kitchen; Blue Shirt",
+      "filmed": false, "filmedAt": null, "isCustom": false,
+      "opportunityTags": ["Opportunity 1", "Opportunity 3"]
+    },
+    {
+      "id": "shot-2", "weekId": "week-golden", "groupId": "group-1", "position": 2,
+      "title": "Avatar hug turning to the book stack",
+      "variationNotes": "",
+      "filmed": false, "filmedAt": null, "isCustom": false,
+      "opportunityTags": ["Opportunity 2"]
+    },
+    {
+      "id": "shot-3", "weekId": "week-golden", "groupId": "group-2", "position": 1,
+      "title": "Flicking through the pages",
+      "variationNotes": "",
+      "filmed": true, "filmedAt": "2026-08-26T10:00:00.000Z", "isCustom": false,
+      "opportunityTags": ["Opportunity 1"]
+    },
+    {
+      "id": "shot-4", "weekId": "week-golden", "groupId": "group-3", "position": 1,
+      "title": "Tearing open the wrapping paper",
+      "variationNotes": "",
+      "filmed": false, "filmedAt": null, "isCustom": false,
+      "opportunityTags": ["Opportunity 1"]
+    },
+    {
+      "id": "shot-5", "weekId": "week-golden", "groupId": "group-3", "position": 2,
+      "title": "Wrapping the gift box",
+      "variationNotes": "",
+      "filmed": false, "filmedAt": null, "isCustom": false,
+      "opportunityTags": ["Opportunity 2"]
+    },
+    {
+      "id": "shot-6", "weekId": "week-golden", "groupId": "group-4", "position": 1,
+      "title": "Pushing the box across the floor",
+      "variationNotes": "",
+      "filmed": false, "filmedAt": null, "isCustom": false,
+      "opportunityTags": ["Opportunity 3"]
+    },
+    {
+      "id": "shot-7", "weekId": "week-golden", "groupId": "group-5", "position": 1,
+      "title": "Stop motion on the shelf",
+      "variationNotes": "",
+      "filmed": false, "filmedAt": null, "isCustom": false,
+      "opportunityTags": ["Opportunity 3"]
+    },
+    {
+      "id": "shot-8", "weekId": "week-golden", "groupId": "group-6", "position": 1,
+      "title": "Close up of the cover",
+      "variationNotes": "",
+      "filmed": true, "filmedAt": "2026-08-26T10:05:00.000Z", "isCustom": false,
+      "opportunityTags": ["Opportunity 2"]
+    }
+  ]
+}
