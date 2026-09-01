@@ -174,6 +174,8 @@ function CreatorMenu() {
 export default function Header() {
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
+  const { enabled: adminMode } = useAdminMode();
+  const navItems = adminMode ? [...NAV_ITEMS, { label: "Creators", href: "/admin" }] : NAV_ITEMS;
 
   // Reports its own height as --header-h so other sticky elements (the
   // Shot List Generator's progress card) can pin themselves just below it,
@@ -208,7 +210,7 @@ export default function Header() {
         </div>
 
         <nav className="flex flex-wrap gap-1 lg:order-2 lg:flex-nowrap lg:gap-1">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const active = pathname === item.href;
             return (
               <Link

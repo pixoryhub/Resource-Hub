@@ -1,6 +1,7 @@
 // Real creator identity — signup/login/session, backed by Netlify Blobs
-// (see lib/serverStore.ts) instead of localStorage, so the same name + PIN
-// works from any device, not just the browser someone first signed up in.
+// (see lib/serverStore.ts, lib/creatorRegistry.ts) instead of localStorage,
+// so the same name + PIN works from any device, not just the browser
+// someone first signed up in.
 //
 // The PIN is hashed before it's stored (never kept in plain text); the
 // session cookie holds only a profile id plus an HMAC signature (using
@@ -10,23 +11,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash, createHmac, randomUUID } from "crypto";
 import { getBlobStore } from "@/lib/serverStore";
+import {
+  PROFILES_STORE,
+  type Profile,
+  loadProfileByNameKey,
+  loadProfileById,
+  addToCreatorIndex,
+  toPublicCreator,
+} from "@/lib/creatorRegistry";
 
 const COOKIE_NAME = "pixory_session";
-const PROFILES_STORE = "pixory-profiles";
-
-interface Profile {
-  id: string;
-  firstName: string;
-  lastName: string;
-  nameKey: string;
-  pinHash: string;
-}
-
-interface PublicCreator {
-  id: string;
-  firstName: string;
-  lastName: string;
-}
 
 function normaliseName(first: string, last: string) {
   return `${first.trim().toLowerCase()}|${last.trim().toLowerCase()}`;
@@ -55,29 +49,13 @@ function verifySession(token: string | undefined, secret: string): string | null
   return sig === expected ? profileId : null;
 }
 
-async function loadProfileByNameKey(nameKey: string): Promise<Profile | null> {
-  const raw = await getBlobStore(PROFILES_STORE).get(nameKey, { type: "text" });
-  return raw ? (JSON.parse(raw) as Profile) : null;
-}
-
-async function loadProfileById(id: string): Promise<Profile | null> {
-  const store = getBlobStore(PROFILES_STORE);
-  const nameKey = await store.get(`by-id:${id}`, { type: "text" });
-  if (!nameKey) return null;
-  return loadProfileByNameKey(nameKey);
-}
-
-function toPublic(p: Profile): PublicCreator {
-  return { id: p.id, firstName: p.firstName, lastName: p.lastName };
-}
-
 export async function GET(req: NextRequest) {
   const secret = authSecret();
   if (!secret) return NextResponse.json({ creator: null });
   const profileId = verifySession(req.cookies.get(COOKIE_NAME)?.value, secret);
   if (!profileId) return NextResponse.json({ creator: null });
   const profile = await loadProfileById(profileId).catch(() => null);
-  return NextResponse.json({ creator: profile ? toPublic(profile) : null });
+  return NextResponse.json({ creator: profile ? toPublicCreator(profile) : null });
 }
 
 export async function POST(req: NextRequest) {
@@ -120,6 +98,7 @@ export async function POST(req: NextRequest) {
       const store = getBlobStore(PROFILES_STORE);
       await store.set(nameKey, JSON.stringify(profile));
       await store.set(`by-id:${id}`, nameKey);
+      await addToCreatorIndex(id);
     } else {
       if (!profile) {
         return NextResponse.json({ ok: false, error: "No profile with that name yet — sign up first." }, { status: 404 });
@@ -135,7 +114,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const res = NextResponse.json({ ok: true, creator: toPublic(profile) });
+  const res = NextResponse.json({ ok: true, creator: toPublicCreator(profile) });
   res.cookies.set(COOKIE_NAME, signSession(profile.id, secret), {
     httpOnly: true,
     sameSite: "lax",
