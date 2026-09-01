@@ -1,5 +1,41 @@
 [
   {
+    "id": "res-guide-batch-create",
+    "section": "resources",
+    "position": 1,
+    "title": "How to batch create",
+    "description": "",
+    "url": "#",
+    "kind": "guide"
+  },
+  {
+    "id": "res-guide-recreate",
+    "section": "resources",
+    "position": 2,
+    "title": "How to recreate",
+    "description": "",
+    "url": "#",
+    "kind": "guide"
+  },
+  {
+    "id": "res-guide-faq",
+    "section": "resources",
+    "position": 3,
+    "title": "FAQ",
+    "description": "",
+    "url": "#",
+    "kind": "faq"
+  },
+  {
+    "id": "res-guide-visual-tutorials",
+    "section": "resources",
+    "position": 4,
+    "title": "Visual Tutorials",
+    "description": "",
+    "url": "#",
+    "kind": "video"
+  },
+  {
     "id": "res-workshop-categories",
     "section": "workshops",
     "position": 1,
@@ -16,41 +52,5 @@
     "description": "Placeholder — confirm with Emma. A short workshop on batching filming days around the Shot List Generator's setup groups.",
     "url": "#",
     "kind": "video"
-  },
-  {
-    "id": "res-guide-iteration",
-    "section": "resources",
-    "position": 1,
-    "title": "The Iteration Guide",
-    "description": "Placeholder — confirm with Emma. How to iterate on your own top-performing videos once you know what works for your account.",
-    "url": "#",
-    "kind": "guide"
-  },
-  {
-    "id": "res-guide-5in5",
-    "section": "resources",
-    "position": 2,
-    "title": "The 5-in-5 Framework",
-    "description": "Placeholder — confirm with Emma. Referenced in the Creator Hub's first-30-days note.",
-    "url": "#",
-    "kind": "guide"
-  },
-  {
-    "id": "res-guide-execution",
-    "section": "resources",
-    "position": 3,
-    "title": "Execution & filming guidance",
-    "description": "Placeholder — confirm with Emma. General camera, lighting and pacing guidance that applies across every video.",
-    "url": "#",
-    "kind": "guide"
-  },
-  {
-    "id": "res-guide-faq",
-    "section": "resources",
-    "position": 4,
-    "title": "FAQ",
-    "description": "Placeholder — confirm with Emma. Common questions from the community.",
-    "url": "#",
-    "kind": "faq"
   }
 ]
