@@ -33,19 +33,10 @@
     ]
   },
   {
-    "id": "res-guide-batch-create",
-    "section": "educational-resources",
-    "position": 1,
-    "title": "How to batch create",
-    "description": "",
-    "thumbnailUrl": "",
-    "links": []
-  },
-  {
     "id": "res-masterclass-1",
     "section": "educational-resources",
-    "position": 2,
-    "title": "#1 - Recreating Viral Videos With Intention",
+    "position": 1,
+    "title": "Recreating Viral Videos With Intention",
     "description": "",
     "thumbnailUrl": "https://www.canva.com/design/DAG_FTBSKMc/SdOeH9X-fBI3TTyrU7s5dQ/screen?type=thumbnail",
     "links": [
@@ -55,8 +46,8 @@
   {
     "id": "res-masterclass-2",
     "section": "educational-resources",
-    "position": 3,
-    "title": "#2 - Recreating with intention Part 2",
+    "position": 2,
+    "title": "Recreating with intention Part 2",
     "description": "",
     "thumbnailUrl": "https://www.canva.com/design/DAHAf55Wc8I/UVLpGn1_vCkP3Iy5RZGzEQ/screen?type=thumbnail",
     "links": [
@@ -66,8 +57,8 @@
   {
     "id": "res-masterclass-3",
     "section": "educational-resources",
-    "position": 4,
-    "title": "#3 - Mastering the Humanizing Visual Element",
+    "position": 3,
+    "title": "Mastering the Humanizing Visual Element",
     "description": "",
     "thumbnailUrl": "https://www.canva.com/design/DAHBh1a0kq4/9wxRCD0CH8SkKI2AYpriqA/screen?type=thumbnail",
     "links": [
@@ -78,19 +69,13 @@
   {
     "id": "res-guide-visual-tutorials",
     "section": "educational-resources",
-    "position": 5,
+    "position": 4,
     "title": "Visual Tutorials",
     "description": "",
     "thumbnailUrl": "",
-    "links": []
-  },
-  {
-    "id": "res-workshop-categories",
-    "section": "educational-resources",
-    "position": 6,
-    "title": "Desired categories, explained",
-    "description": "How each desired category is used.",
-    "thumbnailUrl": "",
-    "links": []
+    "links": [
+      { "label": "Camera Turn Visual Tutorial", "url": "https://drive.google.com/file/d/1yM_7SfLauVQdTnmqpyd8EfGCWYUTtnFx/view?usp=sharing" },
+      { "label": "How To Wrap Your Books", "url": "https://drive.google.com/file/d/10qP4tEC2afn74_jNHDBB1GxvS6o4ngYF/view?usp=sharing" }
+    ]
   }
 ]

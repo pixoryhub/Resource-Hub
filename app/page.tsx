@@ -9,12 +9,6 @@ export default async function ResourceHubPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-10 px-4 py-8 sm:px-6">
-      <div className="rounded-2xl border border-dashed border-border bg-surface p-4 text-sm text-text-muted">
-        🔴 This page is reconstructed, not verified — the brief itself says to confirm the full
-        resource list with Emma before finalising. Turn on <strong>Admin mode</strong> (top
-        right) to add, edit or remove anything on this page yourself.
-      </div>
-
       <div>
         <h2 className="mb-1 text-lg font-bold text-text">Community Essentials</h2>
         <p className="mb-4 text-sm text-text-muted">Spreadsheets, community info, and FAQs.</p>
