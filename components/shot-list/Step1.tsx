@@ -8,7 +8,7 @@ export default function Step1({
   onExample: () => void;
 }) {
   return (
-    <section className="card p-5 sm:p-6">
+    <section className="card p-4 sm:p-5">
       <button
         type="button"
         onClick={onToggleCollapsed}
@@ -16,7 +16,7 @@ export default function Step1({
         aria-expanded={!collapsed}
       >
         <div>
-          <h2 className="headline text-lg text-text">Get your shots in</h2>
+          <h2 className="headline text-text">Get your shots in</h2>
           <p className="text-sm text-text-muted">Use the Creator Hub, the Blueprint, or both.</p>
         </div>
         <svg

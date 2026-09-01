@@ -113,9 +113,9 @@ export default function CreatorHubClient({
   ];
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6">
-      <div className="card p-6">
-        <h2 className="headline text-lg text-text">Welcome to the Breakthrough Program</h2>
+    <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 sm:px-6">
+      <div className="card p-5">
+        <h2 className="headline text-text">Welcome to the Breakthrough Program</h2>
         <p className="mt-2 text-sm leading-relaxed text-text-muted">
           You&apos;re in the recreation phase. Study these winning formats, choose your hook
           variation, and execute with precision. Each video includes execution notes and audio
@@ -162,7 +162,7 @@ export default function CreatorHubClient({
 
       <div className="space-y-3">
         {filtered.length === 0 && (
-          <p className="card p-6 text-center text-text-muted">No videos match.</p>
+          <p className="card p-5 text-center text-text-muted">No videos match.</p>
         )}
         {filtered.map((video) => {
           const posIndex = sortedByPosition.findIndex((v) => v.id === video.id);

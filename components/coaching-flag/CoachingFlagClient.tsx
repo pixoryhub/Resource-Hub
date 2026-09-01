@@ -67,15 +67,15 @@ export default function CoachingFlagClient() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8 px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-2xl space-y-6 px-4 py-6 sm:px-6">
       <div>
         <p className="eyebrow mb-2">🚩 Coaching Flag</p>
         <p className="text-text-muted">Let your coach know how you&apos;re doing. Only coaches can see this.</p>
       </div>
 
       {justSubmitted ? (
-        <div className="card p-6">
-          <h2 className="headline text-lg text-text">Sent to your coach</h2>
+        <div className="card p-5">
+          <h2 className="headline text-text">Sent to your coach</h2>
           <p className="mt-2 text-sm text-text-muted">
             Submitted {formatDate(new Date(justSubmitted.submittedAt))}. Your coach will reply
             within 48 hours.
@@ -87,8 +87,8 @@ export default function CoachingFlagClient() {
           )}
         </div>
       ) : blocked && mostRecent ? (
-        <div className="card p-6">
-          <h2 className="headline text-lg text-text">You&apos;ve already flagged this window</h2>
+        <div className="card p-5">
+          <h2 className="headline text-text">You&apos;ve already flagged this window</h2>
           <p className="mt-2 text-sm text-text-muted">
             One flag every two weeks makes sure your coaches can get to everybody. Your next flag
             is available on <strong className="text-text">{formatDate(unlockDate!)}</strong>.
@@ -114,7 +114,7 @@ export default function CoachingFlagClient() {
           </div>
         </div>
       ) : (
-        <div className="card p-6">
+        <div className="card p-5">
           <p className="eyebrow mb-3">What&apos;s going on? Pick all that apply</p>
           <div className="space-y-2">
             {COACHING_FLAG_OPTIONS.map((opt) => {
@@ -165,7 +165,7 @@ export default function CoachingFlagClient() {
       )}
 
       <div>
-        <h2 className="mb-3 headline text-lg text-text">Your flag history</h2>
+        <h2 className="mb-3 headline text-text">Your flag history</h2>
         <FlagHistory flags={flags} />
       </div>
     </div>

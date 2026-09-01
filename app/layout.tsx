@@ -21,7 +21,7 @@ const themeInitScript = `
 (function () {
   try {
     var stored = localStorage.getItem("pixory-theme");
-    var theme = stored || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    var theme = stored === "dark" ? "dark" : "light";
     document.documentElement.setAttribute("data-theme", theme);
   } catch (e) {}
 })();

@@ -61,9 +61,9 @@ export default function LoginScreen() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg px-4 py-12">
       <div className="w-full max-w-sm">
-        <p className="headline mb-6 text-center text-xl text-text">pixory</p>
+        <p className="headline mb-6 text-center text-lg text-text">pixory</p>
 
-        <div className="card p-6 sm:p-7">
+        <div className="card p-5 sm:p-6">
           <div className="mb-6 flex gap-1 rounded-full border border-border bg-bg p-1">
             {(["login", "signup"] as const).map((t) => (
               <button
@@ -85,12 +85,12 @@ export default function LoginScreen() {
 
           {tab === "login" ? (
             <div key="login" className="animate-fade-in">
-              <h1 className="headline text-lg text-text">Welcome Back</h1>
+              <h1 className="headline text-text">Welcome Back</h1>
               <p className="mt-1.5 text-sm text-text-muted">Enter your name and 4-digit PIN to continue.</p>
             </div>
           ) : (
             <div key="signup" className="animate-fade-in">
-              <h1 className="headline text-lg text-text">Create Your Profile</h1>
+              <h1 className="headline text-text">Create Your Profile</h1>
               <p className="mt-1.5 text-sm text-text-muted">Enter your name and choose a 4-digit PIN.</p>
             </div>
           )}
