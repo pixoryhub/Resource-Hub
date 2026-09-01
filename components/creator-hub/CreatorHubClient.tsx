@@ -150,36 +150,36 @@ export default function CreatorHubClient({
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 sm:px-6">
-      <div className="card space-y-4 p-5">
+      <div className="card space-y-3 p-4">
         <div>
-          <p className="eyebrow mb-1.5">Creator Hub</p>
-          <h2 className="headline text-text">Welcome to the Breakthrough Program</h2>
-          <p className="mt-2 text-sm leading-relaxed text-text-muted">
+          <p className="eyebrow mb-1">Creator Hub</p>
+          <h2 className="headline text-base text-text">Welcome to the Breakthrough Program</h2>
+          <p className="mt-1.5 text-xs leading-relaxed text-text-muted">
             You&apos;re in the recreation phase. Study these winning formats, choose your hook
             variation, and execute with precision. Tick off each video once you&apos;ve recreated
             it!
           </p>
-          <p className="mt-2 text-xs text-text-faint">
+          <p className="mt-1.5 text-[11px] text-text-faint">
             Designed for creators past their first 30 days — still in your first month? Work
             through your 5-in-5 Recreation Blueprints first.
           </p>
         </div>
 
-        <div className="rounded-xl border border-border bg-bg p-3.5">
+        <div className="rounded-xl border border-border bg-bg p-3">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="text-sm font-semibold text-text">Your progress</span>
-            <span className="text-sm font-bold text-accent">
+            <span className="text-xs font-semibold text-text">Your progress</span>
+            <span className="text-xs font-bold text-accent">
               {completedCount} / {active.length} videos
             </span>
           </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-border">
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-border">
             <div
               className="h-full rounded-full transition-[width] duration-500 ease-out"
               style={{ width: `${progressPct}%`, background: "linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%)" }}
             />
           </div>
-          <div className="mt-2.5 flex items-start gap-1.5 text-xs leading-relaxed text-text-faint">
-            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-accent" />
+          <div className="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-text-faint">
+            <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-accent" />
             <span>
               Keep a healthy mix of desired categories — try not to only do product desire or
               only hybrid.
@@ -195,7 +195,7 @@ export default function CreatorHubClient({
                 type="button"
                 onClick={() => setTab(t.key)}
                 className={
-                  "flex-1 rounded-full px-3 py-2 text-sm font-semibold transition-colors sm:flex-none " +
+                  "flex-1 rounded-full px-2.5 py-1.5 text-xs font-semibold transition-colors sm:flex-none " +
                   (tab === t.key ? "bg-text text-bg" : "text-text-muted hover:bg-accent-tint")
                 }
               >
@@ -209,7 +209,7 @@ export default function CreatorHubClient({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by creator, category, or title..."
-            className="w-full min-w-0 flex-1 rounded-full border border-border bg-surface px-4 py-2.5 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
+            className="w-full min-w-0 flex-1 rounded-full border border-border bg-surface px-3.5 py-2 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
             style={{ fontSize: "16px" }}
           />
         </div>
