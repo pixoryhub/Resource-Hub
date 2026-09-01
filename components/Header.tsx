@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { useAdminMode } from "@/lib/adminMode";
 
 // §5 — nav order and verbatim labels are 🟢 confirmed.
 const NAV_ITEMS = [
@@ -65,6 +66,28 @@ function ThemeToggle() {
   );
 }
 
+function AdminToggle() {
+  const { enabled, toggle } = useAdminMode();
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      title="Preview the admin/coach controls on every page (dev only — real roles arrive with login)"
+      className={
+        "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold transition-colors " +
+        (enabled
+          ? "border-transparent bg-text text-bg"
+          : "border-border text-text-muted hover:bg-accent-tint")
+      }
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+      </svg>
+      Admin mode
+    </button>
+  );
+}
+
 export default function Header() {
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
@@ -94,7 +117,8 @@ export default function Header() {
           <Link href="/" className="text-xl font-bold tracking-tight text-text">
             pixory
           </Link>
-          <div className="lg:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
+            <AdminToggle />
             <ThemeToggle />
           </div>
         </div>
@@ -126,7 +150,8 @@ export default function Header() {
             className="w-full min-w-0 rounded-full border border-border bg-surface px-4 py-2 text-sm text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent lg:w-56"
             style={{ fontSize: "16px" }}
           />
-          <div className="hidden lg:block">
+          <div className="hidden items-center gap-2 lg:flex">
+            <AdminToggle />
             <ThemeToggle />
           </div>
         </div>

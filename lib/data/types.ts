@@ -116,14 +116,19 @@ export interface CoachingFlag {
   status: "open" | "answered" | "closed";
 }
 
+export interface ResourceLink {
+  label: string; // e.g. "Watch video", "Canva template", "Open guide"
+  url: string;
+}
+
 export interface Resource {
   id: string;
-  section: string;
+  section: string; // "resources" | "workshops" | admin can add more sections later
   position: number;
   title: string;
   description: string;
-  url: string;
-  kind: string;
+  thumbnailUrl: string; // "" = show a generated placeholder tile
+  links: ResourceLink[]; // flexible — a resource can carry a video link, a Canva link, etc. together
 }
 
 export interface CalendarEvent {

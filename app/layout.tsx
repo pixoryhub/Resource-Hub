@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { AdminModeProvider } from "@/lib/adminMode";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -33,9 +34,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-full flex flex-col bg-bg text-text">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <AdminModeProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </AdminModeProvider>
       </body>
     </html>
   );
