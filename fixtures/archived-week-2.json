@@ -1,0 +1,35 @@
+{
+  "id": "week-archived-2",
+  "creatorId": "creator-1",
+  "label": "Week of 4 Aug",
+  "sourceText": null,
+  "createdAt": "2026-08-04T09:00:00.000Z",
+  "archivedAt": "2026-08-11T19:00:00.000Z",
+  "opportunities": [
+    { "id": "opp-a2-1", "weekId": "week-archived-2", "index": 1, "title": "my parents vs me at this age", "source": "blueprint" }
+  ],
+  "groups": [
+    { "id": "group-a2-1", "weekId": "week-archived-2", "position": 1, "name": "Door opening reveal", "colourIndex": 3 },
+    { "id": "group-a2-2", "weekId": "week-archived-2", "position": 2, "name": "Desk flatlay", "colourIndex": 0 }
+  ],
+  "shots": [
+    {
+      "id": "shot-a2-1", "weekId": "week-archived-2", "groupId": "group-a2-1", "position": 1,
+      "title": "Door opening, turning to reveal the shelf", "variationNotes": "",
+      "filmed": true, "filmedAt": "2026-08-06T11:00:00.000Z", "isCustom": false,
+      "opportunityTags": ["Opportunity 1"]
+    },
+    {
+      "id": "shot-a2-2", "weekId": "week-archived-2", "groupId": "group-a2-2", "position": 1,
+      "title": "Flatlay of the desk setup", "variationNotes": "",
+      "filmed": true, "filmedAt": "2026-08-07T16:00:00.000Z", "isCustom": false,
+      "opportunityTags": ["Opportunity 1"]
+    },
+    {
+      "id": "shot-a2-3", "weekId": "week-archived-2", "groupId": "group-a2-2", "position": 2,
+      "title": "Hands typing, journal open beside laptop", "variationNotes": "",
+      "filmed": false, "filmedAt": null, "isCustom": false,
+      "opportunityTags": ["Opportunity 1"]
+    }
+  ]
+}

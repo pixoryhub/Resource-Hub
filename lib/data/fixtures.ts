@@ -13,6 +13,8 @@ import type {
   CalendarEvent,
 } from "./types";
 import goldenWeek from "@/fixtures/golden-week.json";
+import archivedWeek1 from "@/fixtures/archived-week-1.json";
+import archivedWeek2 from "@/fixtures/archived-week-2.json";
 
 const state = {
   creators: [
@@ -26,7 +28,7 @@ const state = {
     },
   ] as Creator[],
   // The §12 golden case — also the `Example` fixture and the CP11 regression test.
-  weeks: [goldenWeek as Week] as Week[],
+  weeks: [goldenWeek, archivedWeek1, archivedWeek2] as Week[],
   hubVideos: [] as HubVideo[],
   coachingFlags: [] as CoachingFlag[],
   resources: [] as Resource[],
@@ -38,7 +40,9 @@ export async function getCurrentWeek(_creatorId: string): Promise<Week | null> {
 }
 
 export async function getArchivedWeeks(_creatorId: string): Promise<Week[]> {
-  return state.weeks.filter((w) => w.creatorId === _creatorId && w.archivedAt);
+  return state.weeks
+    .filter((w) => w.creatorId === _creatorId && w.archivedAt)
+    .sort((a, b) => (b.archivedAt ?? "").localeCompare(a.archivedAt ?? ""));
 }
 
 export async function saveWeek(_week: Week): Promise<void> {

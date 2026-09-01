@@ -1,0 +1,38 @@
+{
+  "id": "week-archived-1",
+  "creatorId": "creator-1",
+  "label": "Week of 11 Aug",
+  "sourceText": null,
+  "createdAt": "2026-08-11T09:00:00.000Z",
+  "archivedAt": "2026-08-18T20:00:00.000Z",
+  "opportunities": [
+    { "id": "opp-a1-1", "weekId": "week-archived-1", "index": 1, "title": "pov: you turned 1000+ screenshots into THIS", "source": "blueprint" },
+    { "id": "opp-a1-2", "weekId": "week-archived-1", "index": 2, "title": "reasons to make a photo book before the year ends", "source": "creator_hub" }
+  ],
+  "groups": [
+    { "id": "group-a1-1", "weekId": "week-archived-1", "position": 1, "name": "ASMR unboxing", "colourIndex": 1 },
+    { "id": "group-a1-2", "weekId": "week-archived-1", "position": 2, "name": "Product close-ups", "colourIndex": 2 }
+  ],
+  "shots": [
+    {
+      "id": "shot-a1-1", "weekId": "week-archived-1", "groupId": "group-a1-1", "position": 1,
+      "title": "Peeling back the box lid", "variationNotes": "", "filmed": true,
+      "filmedAt": "2026-08-13T14:00:00.000Z", "isCustom": false, "opportunityTags": ["Opportunity 1"]
+    },
+    {
+      "id": "shot-a1-2", "weekId": "week-archived-1", "groupId": "group-a1-1", "position": 2,
+      "title": "Fanning through the pages, ASMR", "variationNotes": "", "filmed": true,
+      "filmedAt": "2026-08-13T14:05:00.000Z", "isCustom": false, "opportunityTags": ["Opportunity 1", "Video 2"]
+    },
+    {
+      "id": "shot-a1-3", "weekId": "week-archived-1", "groupId": "group-a1-2", "position": 1,
+      "title": "Close up of the embossed cover", "variationNotes": "", "filmed": true,
+      "filmedAt": "2026-08-14T09:30:00.000Z", "isCustom": false, "opportunityTags": ["Video 2"]
+    },
+    {
+      "id": "shot-a1-4", "weekId": "week-archived-1", "groupId": "group-a1-2", "position": 2,
+      "title": "Corner detail, soft focus pull", "variationNotes": "", "filmed": true,
+      "filmedAt": "2026-08-14T09:32:00.000Z", "isCustom": false, "opportunityTags": ["Video 2"]
+    }
+  ]
+}
