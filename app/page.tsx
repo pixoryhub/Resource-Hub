@@ -10,7 +10,7 @@ export default async function ResourceHubPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-12 px-4 py-8 sm:px-6">
       <div>
-        <h2 className="headline mb-1.5 text-xl text-text">Community Essentials</h2>
+        <h2 className="headline mb-1.5 text-lg text-text">Community Essentials</h2>
         <p className="mb-4 text-sm text-text-muted">Spreadsheets, community info, and FAQs.</p>
         <ResourceSection
           section="community-links"
@@ -21,13 +21,13 @@ export default async function ResourceHubPage() {
       </div>
 
       <div id="educational-resources">
-        <h2 className="headline mb-1.5 text-xl text-text">Educational Resources</h2>
+        <h2 className="headline mb-1.5 text-lg text-text">Educational Resources</h2>
         <p className="mb-4 text-sm text-text-muted">Workshops, tutorials, and explainer videos.</p>
         <ResourceSection section="educational-resources" initialResources={educationalResources} />
       </div>
 
       <div>
-        <h2 className="headline mb-1.5 text-xl text-text">Upcoming workshops and community calls</h2>
+        <h2 className="headline mb-1.5 text-lg text-text">Upcoming workshops and community calls</h2>
         <p className="mb-4 text-sm text-text-muted">Updated weekly.</p>
         <EventsSection initialEvents={events} />
       </div>

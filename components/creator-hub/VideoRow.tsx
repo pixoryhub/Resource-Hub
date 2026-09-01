@@ -70,7 +70,7 @@ export default function VideoRow({
           className="min-w-0 flex-1 text-left"
           aria-expanded={open}
         >
-          <p className={"headline italic leading-snug text-text " + (completed ? "text-text-muted" : "")}>
+          <p className={"headline leading-snug text-text " + (completed ? "text-text-muted" : "")}>
             &ldquo;{video.title}&rdquo;
           </p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-faint">
