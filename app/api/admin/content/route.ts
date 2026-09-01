@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/adminAuth";
 import * as content from "@/lib/data/content";
-import type { Resource, CalendarEvent, HubVideo } from "@/lib/data/types";
+import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity } from "@/lib/data/types";
 
 function badRequest(error: string) {
   return NextResponse.json({ ok: false, error }, { status: 400 });
@@ -38,6 +38,9 @@ export async function POST(req: NextRequest) {
       else if (action === "delete") await content.deleteHubVideo(body.id);
       else if (action === "reorder") await content.setHubVideoPositions(body.positions);
       else return badRequest("Unknown action for hubVideos.");
+    } else if (type === "weeklyOpportunity") {
+      if (action === "save") await content.saveWeeklyOpportunity(body.value as WeeklyOpportunity);
+      else return badRequest("Unknown action for weeklyOpportunity.");
     } else {
       return badRequest("Unknown content type.");
     }

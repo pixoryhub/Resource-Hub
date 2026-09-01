@@ -8,9 +8,10 @@
 
 import { getBlobStore } from "@/lib/serverStore";
 import * as fixtures from "./fixtures";
-import type { Resource, CalendarEvent, HubVideo } from "./types";
+import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity } from "./types";
 
 const CONTENT_STORE = "pixory-site-content";
+const WEEKLY_OPPORTUNITY_KEY = "weekly-opportunity";
 
 async function getList<T>(key: string, seed: () => Promise<T[]>): Promise<T[]> {
   const store = getBlobStore(CONTENT_STORE);
@@ -112,4 +113,21 @@ export async function setHubVideoPositions(updates: { id: string; position: numb
   const next = list.map((v) => (positionById.has(v.id) ? { ...v, position: positionById.get(v.id)! } : v));
   await setList("hub-videos", next);
   return next;
+}
+
+// Weekly high-impact opportunity spotlight — a singleton, not a list; no
+// fixture to seed from, so it's simply absent (null) until an admin first
+// saves one.
+
+export async function getWeeklyOpportunity(): Promise<WeeklyOpportunity | null> {
+  try {
+    const raw = await getBlobStore(CONTENT_STORE).get(WEEKLY_OPPORTUNITY_KEY, { type: "text" });
+    return raw ? (JSON.parse(raw) as WeeklyOpportunity) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveWeeklyOpportunity(value: WeeklyOpportunity): Promise<void> {
+  await getBlobStore(CONTENT_STORE).set(WEEKLY_OPPORTUNITY_KEY, JSON.stringify(value));
 }

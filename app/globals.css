@@ -173,10 +173,21 @@ body {
   animation: pixory-fade-in var(--duration-base) var(--ease-out);
 }
 
+/* Gentle, slow pulse for the weekly opportunity spotlight's urgency badge —
+   just enough to catch the eye on load, never distracting or looping fast. */
+@keyframes pixory-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.animate-pulse-slow {
+  animation: pixory-pulse 2.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card-hover,
   .animate-pop,
   .animate-fade-in,
+  .animate-pulse-slow,
   .accordion-rows {
     transition: none;
     animation: none;

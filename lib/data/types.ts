@@ -145,3 +145,16 @@ export interface CalendarEvent {
   startsAt: string;
   rsvpUrl: string;
 }
+
+// The weekly high-impact opportunity spotlight — a single admin-editable
+// callout at the top of the Resource Hub (not a tab, so it can't get
+// buried). `body` is pasted close to verbatim from how the team already
+// writes it for Discord; the component that renders it auto-detects bare
+// URLs and short ALL-CAPS/emoji lines and styles them, rather than asking
+// for separate structured fields per section.
+export interface WeeklyOpportunity {
+  title: string;
+  body: string;
+  active: boolean;
+  updatedAt: string;
+}
