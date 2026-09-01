@@ -14,6 +14,15 @@ interface Creator {
   lastName: string;
 }
 
+// Showcase-only escape hatch: set NEXT_PUBLIC_DEMO_MODE=true in a *local*
+// .env.local to skip the login screen entirely (auto "logs in" as a fake
+// creator) — for screen-sharing this app before real hosting/auth is set
+// up. Defaults to off, and NEXT_PUBLIC_* vars are baked in at build time,
+// so it can only ever be on if someone deliberately builds it that way —
+// it will never turn on by accident on a real deploy.
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+const DEMO_CREATOR: Creator = { id: "demo", firstName: "Demo", lastName: "Creator" };
+
 interface AuthState {
   creator: Creator | null;
   ready: boolean;
@@ -31,10 +40,11 @@ const AuthContext = createContext<AuthState>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [creator, setCreator] = useState<Creator | null>(null);
-  const [ready, setReady] = useState(false);
+  const [creator, setCreator] = useState<Creator | null>(DEMO_MODE ? DEMO_CREATOR : null);
+  const [ready, setReady] = useState(DEMO_MODE);
 
   useEffect(() => {
+    if (DEMO_MODE) return; // already "logged in" as the demo creator above
     let cancelled = false;
     fetch("/api/auth")
       .then((r) => r.json())
