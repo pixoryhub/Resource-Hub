@@ -76,6 +76,34 @@ async function tryOEmbed(target: URL, rawUrl: string, signal: AbortSignal): Prom
   }
 }
 
+// Google Drive doesn't set a usable og:image on its file-view pages (those
+// need a login to render), but publicly-shared files (video or image) do
+// have a real thumbnail — including an actual video frame — behind Drive's
+// dedicated thumbnail endpoint.
+function extractDriveFileId(u: URL): string | null {
+  const pathMatch = u.pathname.match(/\/file\/d\/([^/]+)/);
+  if (pathMatch) return pathMatch[1];
+  const idParam = u.searchParams.get("id");
+  if (idParam) return idParam;
+  return null;
+}
+
+async function tryGoogleDriveThumbnail(target: URL, signal: AbortSignal): Promise<string | null> {
+  if (!/(^|\.)drive\.google\.com$/.test(target.hostname)) return null;
+  const fileId = extractDriveFileId(target);
+  if (!fileId) return null;
+
+  const thumbnailUrl = `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1000`;
+  try {
+    const res = await fetch(thumbnailUrl, { signal, method: "HEAD", redirect: "follow" });
+    if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") ?? "";
+    return contentType.startsWith("image/") ? thumbnailUrl : null;
+  } catch {
+    return null;
+  }
+}
+
 // Some platforms always return the same "logged out" / app-shell image for
 // a page the fetcher can't actually see (private Notion pages are the case
 // that surfaced this) — better to say so than to silently show the wrong
@@ -135,6 +163,11 @@ export async function GET(req: NextRequest) {
   const timeout = setTimeout(() => controller.abort(), 6000);
 
   try {
+    const driveImage = await tryGoogleDriveThumbnail(target, controller.signal);
+    if (driveImage) {
+      return NextResponse.json({ image: driveImage });
+    }
+
     const oEmbedImage = await tryOEmbed(target, urlParam, controller.signal);
     if (oEmbedImage && !isGenericFallbackImage(oEmbedImage)) {
       return NextResponse.json({ image: oEmbedImage });
