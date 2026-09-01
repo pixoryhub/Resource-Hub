@@ -22,10 +22,17 @@ export default function CoachingFlagClient() {
 
   // Each creator's own flags — loaded fresh whenever the logged-in creator
   // changes. A brand new profile starts with no flags at all.
+  // loadedForCreator is only set to this creator's id *after* the load
+  // resolves — setting it earlier would let the save effect below fire
+  // with the still-empty initial `flags` state and overwrite whatever was
+  // already saved on the server with an empty list.
   useEffect(() => {
     if (!creator || loadedForCreator.current === creator.id) return;
-    loadedForCreator.current = creator.id;
-    loadCreatorData<CoachingFlag[]>("flags", creator.id, []).then(setFlags);
+    const id = creator.id;
+    loadCreatorData<CoachingFlag[]>("flags", id, []).then((f) => {
+      setFlags(f);
+      loadedForCreator.current = id;
+    });
   }, [creator]);
 
   useEffect(() => {

@@ -24,11 +24,18 @@ export default function CreatorHubClient({
   const [adding, setAdding] = useState(false);
   const loadedForCreator = useRef<string | null>(null);
 
-  // Each creator's own ticks — loaded fresh whenever the logged-in creator changes.
+  // Each creator's own ticks — loaded fresh whenever the logged-in creator
+  // changes. loadedForCreator is only set to this creator's id *after* the
+  // load resolves — setting it earlier would let the save effect below fire
+  // with the still-empty initial `completed` state and overwrite whatever
+  // was already saved on the server with an empty list.
   useEffect(() => {
     if (!creator || loadedForCreator.current === creator.id) return;
-    loadedForCreator.current = creator.id;
-    loadCreatorData<string[]>("completions", creator.id, []).then((c) => setCompleted(new Set(c)));
+    const id = creator.id;
+    loadCreatorData<string[]>("completions", id, []).then((c) => {
+      setCompleted(new Set(c));
+      loadedForCreator.current = id;
+    });
   }, [creator]);
 
   useEffect(() => {

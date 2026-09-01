@@ -48,13 +48,18 @@ export default function ShotListClient({
   // Each creator's own week and archive — loaded fresh whenever the
   // logged-in creator changes, starting blank for anyone with nothing saved
   // yet (never the shared golden-case template — that's only for "Example").
+  // loadedForCreator is only set to this creator's id *after* the load
+  // resolves — setting it earlier would let the save effects below fire
+  // before the real data has loaded, overwriting (or, when switching
+  // creators without a full page reload, cross-contaminating) what's
+  // already saved on the server.
   useEffect(() => {
     if (!creator || loadedForCreator.current === creator.id) return;
-    loadedForCreator.current = creator.id;
+    const id = creator.id;
     (async () => {
-      const savedWeek = await loadCreatorData<Week | null>("shotlist-week", creator.id, null);
-      const savedArchived = await loadCreatorData<Week[]>("shotlist-archived", creator.id, []);
-      setWeek(savedWeek ?? blankWeek(creator.id));
+      const savedWeek = await loadCreatorData<Week | null>("shotlist-week", id, null);
+      const savedArchived = await loadCreatorData<Week[]>("shotlist-archived", id, []);
+      setWeek(savedWeek ?? blankWeek(id));
       setArchived(savedArchived);
       const last = (savedWeek?.shots ?? [])
         .map((s) => s.filmedAt)
@@ -62,21 +67,24 @@ export default function ShotListClient({
         .sort()
         .at(-1);
       setSavedAt(new Date(last ?? savedWeek?.createdAt ?? Date.now()));
+      loadedForCreator.current = id;
     })();
   }, [creator]);
 
-  // Debounced autosave simulation — §7.4. Local-only for now (see
-  // lib/localAuth.tsx); this just shows the "Saved HH:MM" label reacting to
-  // edits and actually persists to this browser via lib/creatorStorage.
+  // Debounced autosave simulation — §7.4. Persists via lib/creatorStorage.
+  // Also gated on loadedForCreator (not just isFirstRender) — isFirstRender
+  // alone only protects the very first mount, not a later switch to a
+  // different creator without a full page reload.
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
+    if (!creator || loadedForCreator.current !== creator.id) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       setSavedAt(new Date());
-      if (creator) saveCreatorData("shotlist-week", creator.id, week);
+      saveCreatorData("shotlist-week", creator.id, week);
     }, 800);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
