@@ -158,3 +158,16 @@ export interface WeeklyOpportunity {
   active: boolean;
   updatedAt: string;
 }
+
+// "A message from our top creators" — short video testimonials shown under
+// Educational Resources. videoAssetId points at a blob in the
+// pixory-testimonial-videos store (see app/api/testimonial-video/[id]),
+// not an external URL — these are uploaded files, not links.
+export interface Testimonial {
+  id: string;
+  position: number;
+  creatorName: string;
+  profileUrl: string;
+  avgEarnings: string;
+  videoAssetId: string;
+}

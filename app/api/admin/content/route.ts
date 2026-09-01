@@ -6,7 +6,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/adminAuth";
 import * as content from "@/lib/data/content";
-import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity } from "@/lib/data/types";
+import { deleteVideo } from "@/lib/videoStore";
+import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial } from "@/lib/data/types";
 
 function badRequest(error: string) {
   return NextResponse.json({ ok: false, error }, { status: 400 });
@@ -41,6 +42,13 @@ export async function POST(req: NextRequest) {
     } else if (type === "weeklyOpportunity") {
       if (action === "save") await content.saveWeeklyOpportunity(body.value as WeeklyOpportunity);
       else return badRequest("Unknown action for weeklyOpportunity.");
+    } else if (type === "testimonials") {
+      if (action === "add") await content.addTestimonial(body.item as Testimonial);
+      else if (action === "update") await content.updateTestimonial(body.id, body.patch as Partial<Testimonial>);
+      else if (action === "delete") {
+        await content.deleteTestimonial(body.id);
+        if (typeof body.videoAssetId === "string") await deleteVideo(body.videoAssetId).catch(() => {});
+      } else return badRequest("Unknown action for testimonials.");
     } else {
       return badRequest("Unknown content type.");
     }

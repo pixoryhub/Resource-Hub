@@ -8,7 +8,9 @@
 
 import { getBlobStore } from "@/lib/serverStore";
 import * as fixtures from "./fixtures";
-import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity } from "./types";
+import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial } from "./types";
+
+const noSeed = async () => [];
 
 const CONTENT_STORE = "pixory-site-content";
 const WEEKLY_OPPORTUNITY_KEY = "weekly-opportunity";
@@ -130,4 +132,20 @@ export async function getWeeklyOpportunity(): Promise<WeeklyOpportunity | null> 
 
 export async function saveWeeklyOpportunity(value: WeeklyOpportunity): Promise<void> {
   await getBlobStore(CONTENT_STORE).set(WEEKLY_OPPORTUNITY_KEY, JSON.stringify(value));
+}
+
+// "A message from our top creators" testimonials — no fixture to seed
+// from, starts empty until an admin adds the first one.
+
+export function getTestimonials(): Promise<Testimonial[]> {
+  return getList<Testimonial>("testimonials", noSeed);
+}
+export function addTestimonial(item: Testimonial): Promise<void> {
+  return addItem("testimonials", noSeed, item);
+}
+export function updateTestimonial(id: string, patch: Partial<Testimonial>): Promise<Testimonial[]> {
+  return updateItem<Testimonial>("testimonials", noSeed, id, patch);
+}
+export function deleteTestimonial(id: string): Promise<Testimonial[]> {
+  return deleteItem<Testimonial>("testimonials", noSeed, id);
 }
