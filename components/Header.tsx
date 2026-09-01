@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAdminMode } from "@/lib/adminMode";
+import { useAuth } from "@/lib/localAuth";
 
 // §5 — nav order and verbatim labels are 🟢 confirmed.
 const NAV_ITEMS = [
@@ -153,6 +154,23 @@ function AdminToggle() {
   );
 }
 
+function CreatorMenu() {
+  const { creator, logOut } = useAuth();
+  if (!creator) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (confirm(`Log out of ${creator.firstName}'s profile on this device?`)) logOut();
+      }}
+      title="Log out"
+      className="shrink-0 rounded-full border border-border px-3 py-2 text-xs font-semibold text-text-muted transition-colors hover:bg-accent-tint hover:text-text"
+    >
+      Hi, {creator.firstName} · Log out
+    </button>
+  );
+}
+
 export default function Header() {
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
@@ -183,6 +201,7 @@ export default function Header() {
             pixory
           </Link>
           <div className="flex items-center gap-2 lg:hidden">
+            <CreatorMenu />
             <AdminToggle />
             <ThemeToggle />
           </div>
@@ -216,6 +235,7 @@ export default function Header() {
             style={{ fontSize: "16px" }}
           />
           <div className="hidden items-center gap-2 lg:flex">
+            <CreatorMenu />
             <AdminToggle />
             <ThemeToggle />
           </div>

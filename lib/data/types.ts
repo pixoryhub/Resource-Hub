@@ -60,6 +60,14 @@ export type DesiredCategory =
   | "TOF"
   | "Pillar 3";
 
+export const DESIRED_CATEGORIES: DesiredCategory[] = [
+  "Product Desire",
+  "Lifestyle Desire",
+  "Hybrid Desire",
+  "TOF",
+  "Pillar 3",
+];
+
 export interface AudioSuggestion {
   label: string;
   url: string;

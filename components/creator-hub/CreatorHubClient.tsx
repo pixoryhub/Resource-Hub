@@ -1,21 +1,40 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { HubVideo } from "@/lib/data/types";
+import { useAdminMode } from "@/lib/adminMode";
+import { useAuth } from "@/lib/localAuth";
+import { loadCreatorData, saveCreatorData } from "@/lib/creatorStorage";
 import VideoRow from "./VideoRow";
+import HubVideoForm, { type HubVideoFormData } from "./HubVideoForm";
 
 type Tab = "all" | "completed" | "unfinished";
 
 export default function CreatorHubClient({
-  videos,
-  initialCompletedIds,
+  videos: initialVideos,
 }: {
   videos: HubVideo[];
-  initialCompletedIds: string[];
 }) {
-  const [completed, setCompleted] = useState<Set<string>>(new Set(initialCompletedIds));
+  const { enabled: adminMode } = useAdminMode();
+  const { creator } = useAuth();
+  const [videos, setVideos] = useState(initialVideos);
+  const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
+  const [adding, setAdding] = useState(false);
+  const loadedForCreator = useRef<string | null>(null);
+
+  // Each creator's own ticks — loaded fresh whenever the logged-in creator changes.
+  useEffect(() => {
+    if (!creator || loadedForCreator.current === creator.id) return;
+    loadedForCreator.current = creator.id;
+    setCompleted(new Set(loadCreatorData<string[]>("completions", creator.id, [])));
+  }, [creator]);
+
+  useEffect(() => {
+    if (!creator || loadedForCreator.current !== creator.id) return;
+    saveCreatorData("completions", creator.id, Array.from(completed));
+  }, [completed, creator]);
 
   function toggleCompleted(videoId: string) {
     setCompleted((prev) => {
@@ -26,23 +45,66 @@ export default function CreatorHubClient({
     });
   }
 
+  function addVideo(data: HubVideoFormData) {
+    const nextPosition = videos.reduce((max, v) => Math.max(max, v.position), 0) + 1;
+    const video: HubVideo = {
+      id: `video-${Date.now()}`,
+      position: nextPosition,
+      updatedAt: new Date().toISOString(),
+      ...data,
+    };
+    setVideos((prev) => [...prev, video]);
+    setAdding(false);
+  }
+
+  function updateVideo(id: string, data: HubVideoFormData) {
+    setVideos((prev) =>
+      prev.map((v) => (v.id === id ? { ...v, ...data, updatedAt: new Date().toISOString() } : v))
+    );
+  }
+
+  function deleteVideo(id: string) {
+    setVideos((prev) => prev.filter((v) => v.id !== id));
+  }
+
+  function moveVideo(id: string, direction: -1 | 1) {
+    setVideos((prev) => {
+      const sorted = [...prev].sort((a, b) => a.position - b.position);
+      const i = sorted.findIndex((v) => v.id === id);
+      const j = i + direction;
+      if (i === -1 || j < 0 || j >= sorted.length) return prev;
+      const a = sorted[i];
+      const b = sorted[j];
+      return prev.map((v) => {
+        if (v.id === a.id) return { ...v, position: b.position };
+        if (v.id === b.id) return { ...v, position: a.position };
+        return v;
+      });
+    });
+  }
+
+  // Admins can see and manage retired videos too; creators only ever see active ones.
+  const pool = adminMode ? videos : videos.filter((v) => v.status === "active");
   const active = videos.filter((v) => v.status === "active");
   const completedCount = active.filter((v) => completed.has(v.id)).length;
   const unfinishedCount = active.length - completedCount;
+  const sortedByPosition = useMemo(() => [...videos].sort((a, b) => a.position - b.position), [videos]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return active.filter((v) => {
-      if (tab === "completed" && !completed.has(v.id)) return false;
-      if (tab === "unfinished" && completed.has(v.id)) return false;
-      if (!q) return true;
-      return (
-        v.title.toLowerCase().includes(q) ||
-        v.creatorName.toLowerCase().includes(q) ||
-        v.desiredCategory.toLowerCase().includes(q)
-      );
-    });
-  }, [active, tab, completed, query]);
+    return [...pool]
+      .sort((a, b) => a.position - b.position)
+      .filter((v) => {
+        if (tab === "completed" && !completed.has(v.id)) return false;
+        if (tab === "unfinished" && completed.has(v.id)) return false;
+        if (!q) return true;
+        return (
+          v.title.toLowerCase().includes(q) ||
+          v.creatorName.toLowerCase().includes(q) ||
+          v.desiredCategory.toLowerCase().includes(q)
+        );
+      });
+  }, [pool, tab, completed, query]);
 
   const TABS: { key: Tab; label: string; count: number }[] = [
     { key: "all", label: "All", count: active.length },
@@ -52,20 +114,13 @@ export default function CreatorHubClient({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6">
-      <div>
-        <p className="eyebrow mb-2">Creator Hub</p>
-        <p className="text-text-muted">
-          Proven content for you to recreate, updated biweekly by the content team.
-        </p>
-      </div>
-
       <div className="card p-5">
         <h2 className="font-bold text-text">Welcome to the Breakthrough Program</h2>
         <p className="mt-1.5 text-sm text-text-muted">
-          You&apos;re in the recreation phase. Study these {active.length} winning formats,
-          choose your hook variation, and execute with precision. Each video includes execution
-          notes and audio suggestions to help you nail the format. Tick off each video once
-          you&apos;ve recreated it!
+          You&apos;re in the recreation phase. Study these winning formats, choose your hook
+          variation, and execute with precision. Each video includes execution notes and audio
+          suggestions to help you nail the format. Tick off each video once you&apos;ve recreated
+          it!
         </p>
         <p className="mt-3 border-t border-border pt-3 text-xs text-text-faint">
           Please note: this hub is designed for creators who have completed their first 30 days.
@@ -109,15 +164,39 @@ export default function CreatorHubClient({
         {filtered.length === 0 && (
           <p className="card p-6 text-center text-text-muted">No videos match.</p>
         )}
-        {filtered.map((video) => (
-          <VideoRow
-            key={video.id}
-            video={video}
-            completed={completed.has(video.id)}
-            onToggleCompleted={toggleCompleted}
-          />
-        ))}
+        {filtered.map((video) => {
+          const posIndex = sortedByPosition.findIndex((v) => v.id === video.id);
+          return (
+            <VideoRow
+              key={video.id}
+              video={video}
+              completed={completed.has(video.id)}
+              onToggleCompleted={toggleCompleted}
+              onUpdate={(data) => updateVideo(video.id, data)}
+              onDelete={() => deleteVideo(video.id)}
+              onMove={(direction) => moveVideo(video.id, direction)}
+              isFirst={posIndex === 0}
+              isLast={posIndex === sortedByPosition.length - 1}
+            />
+          );
+        })}
       </div>
+
+      {adminMode && (
+        <div>
+          {adding ? (
+            <HubVideoForm onSave={addVideo} onCancel={() => setAdding(false)} />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setAdding(true)}
+              className="w-full rounded-2xl border border-dashed border-border py-3 text-sm font-semibold text-text-muted transition-colors hover:border-accent hover:text-accent"
+            >
+              + Add a video
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

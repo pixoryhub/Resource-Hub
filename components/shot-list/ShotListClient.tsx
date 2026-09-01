@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Week } from "@/lib/data/types";
+import { useAuth } from "@/lib/localAuth";
+import { loadCreatorData, saveCreatorData } from "@/lib/creatorStorage";
 import ProgressCard from "./ProgressCard";
 import Step1 from "./Step1";
 import ResultSummary from "./ResultSummary";
@@ -14,10 +16,10 @@ function formatTime(date: Date) {
   return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
-function emptyWeek(previous: Week): Week {
+function blankWeek(creatorId: string): Week {
   return {
-    ...previous,
     id: `week-${Date.now()}`,
+    creatorId,
     label: "This week",
     sourceText: null,
     createdAt: new Date().toISOString(),
@@ -30,41 +32,59 @@ function emptyWeek(previous: Week): Week {
 
 export default function ShotListClient({
   initialWeek,
-  initialArchived,
 }: {
-  initialWeek: Week;
-  initialArchived: Week[];
+  initialWeek: Week; // the §12 golden case — shared template for "Example", not any real creator's data
 }) {
-  const [week, setWeek] = useState(initialWeek);
-  const [archived, setArchived] = useState(initialArchived);
+  const { creator } = useAuth();
+  const [week, setWeek] = useState<Week>(() => blankWeek("pending"));
+  const [archived, setArchived] = useState<Week[]>([]);
   const [collapsed, setCollapsed] = useState(false);
-  const [savedAt, setSavedAt] = useState<Date | null>(
-    (() => {
-      const last = week.shots
-        .map((s) => s.filmedAt)
-        .filter((v): v is string => Boolean(v))
-        .sort()
-        .at(-1);
-      return new Date(last ?? week.createdAt);
-    })()
-  );
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
 
+  const loadedForCreator = useRef<string | null>(null);
   const isFirstRender = useRef(true);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Debounced autosave simulation — §7.4. Real persistence arrives in CP9;
-  // for now this just shows the "Saved HH:MM" label reacting to edits.
+  // Each creator's own week and archive — loaded fresh whenever the
+  // logged-in creator changes, starting blank for anyone with nothing saved
+  // yet (never the shared golden-case template — that's only for "Example").
+  useEffect(() => {
+    if (!creator || loadedForCreator.current === creator.id) return;
+    loadedForCreator.current = creator.id;
+    const savedWeek = loadCreatorData<Week | null>("shotlist-week", creator.id, null);
+    const savedArchived = loadCreatorData<Week[]>("shotlist-archived", creator.id, []);
+    setWeek(savedWeek ?? blankWeek(creator.id));
+    setArchived(savedArchived);
+    const last = (savedWeek?.shots ?? [])
+      .map((s) => s.filmedAt)
+      .filter((v): v is string => Boolean(v))
+      .sort()
+      .at(-1);
+    setSavedAt(new Date(last ?? savedWeek?.createdAt ?? Date.now()));
+  }, [creator]);
+
+  // Debounced autosave simulation — §7.4. Local-only for now (see
+  // lib/localAuth.tsx); this just shows the "Saved HH:MM" label reacting to
+  // edits and actually persists to this browser via lib/creatorStorage.
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => setSavedAt(new Date()), 800);
+    saveTimer.current = setTimeout(() => {
+      setSavedAt(new Date());
+      if (creator) saveCreatorData("shotlist-week", creator.id, week);
+    }, 800);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [week]);
+  }, [week, creator]);
+
+  useEffect(() => {
+    if (!creator || loadedForCreator.current !== creator.id) return;
+    saveCreatorData("shotlist-archived", creator.id, archived);
+  }, [archived, creator]);
 
   function updateShot(shotId: string, patch: Partial<Week["shots"][number]>) {
     setWeek((w) => ({
@@ -119,12 +139,12 @@ export default function ShotListClient({
       const archivedCopy: Week = { ...week, archivedAt: new Date().toISOString() };
       setArchived((prev) => [archivedCopy, ...prev]);
     }
-    setWeek(emptyWeek(week));
+    setWeek(blankWeek(creator?.id ?? week.creatorId));
     setCollapsed(false);
   }
 
   function loadExample() {
-    setWeek(initialWeek);
+    setWeek({ ...initialWeek, creatorId: creator?.id ?? initialWeek.creatorId });
     setCollapsed(false);
   }
 
