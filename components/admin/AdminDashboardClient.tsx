@@ -11,6 +11,7 @@ import type { CoachingFlag, Week } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
 import { COACHING_FLAG_OPTIONS } from "@/lib/data/types";
 import GroupCard from "@/components/shot-list/GroupCard";
+import AdminOverview from "./AdminOverview";
 
 interface CreatorSummary {
   id: string;
@@ -19,6 +20,15 @@ interface CreatorSummary {
   videosCompleted: number;
   videosTotal: number;
   openFlagCount: number;
+  lastActiveAt: string | null;
+}
+
+function timeAgo(iso: string | null) {
+  if (!iso) return "No activity yet";
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days <= 0) return "Active today";
+  if (days === 1) return "Active yesterday";
+  return `Active ${days}d ago`;
 }
 
 interface CreatorDetail {
@@ -242,14 +252,17 @@ function CreatorDetailView({ id, onBack }: { id: string; onBack: () => void }) {
   );
 }
 
+type MainTab = "overview" | "creators";
+
 export default function AdminDashboardClient() {
   const { enabled: adminMode, ready } = useAdminMode();
+  const [mainTab, setMainTab] = useState<MainTab>("overview");
   const [creators, setCreators] = useState<CreatorSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!ready || !adminMode) return;
+    if (!ready || !adminMode || mainTab !== "creators") return;
     fetch("/api/admin/creators")
       .then((r) => r.json())
       .then((data) => {
@@ -257,7 +270,7 @@ export default function AdminDashboardClient() {
         else setCreators(data.creators);
       })
       .catch(() => setError("Couldn't reach the server."));
-  }, [ready, adminMode]);
+  }, [ready, adminMode, mainTab]);
 
   if (!ready) return null;
 
@@ -270,45 +283,72 @@ export default function AdminDashboardClient() {
     );
   }
 
+  function selectCreator(id: string) {
+    setSelectedId(id);
+    setMainTab("creators");
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6">
       {selectedId ? (
         <CreatorDetailView id={selectedId} onBack={() => setSelectedId(null)} />
       ) : (
         <>
-          <div>
-            <p className="eyebrow mb-2">Creators</p>
-            <p className="text-text-muted">What everyone&apos;s completed, and any open coaching flags.</p>
-          </div>
-
-          {error && <p className="text-accent">{error}</p>}
-          {!error && creators === null && <p className="text-text-muted">Loading…</p>}
-          {creators && creators.length === 0 && <p className="text-text-muted">No creators signed up yet.</p>}
-
-          <div className="space-y-2">
-            {creators?.map((c) => (
+          <div className="flex gap-1 rounded-full border border-border bg-surface p-1">
+            {(["overview", "creators"] as const).map((t) => (
               <button
-                key={c.id}
+                key={t}
                 type="button"
-                onClick={() => setSelectedId(c.id)}
-                className="card card-hover flex w-full items-center justify-between gap-3 p-4 text-left"
+                onClick={() => setMainTab(t)}
+                className={
+                  "flex-1 rounded-full px-3 py-2 text-sm font-semibold capitalize transition-colors " +
+                  (mainTab === t ? "bg-text text-bg" : "text-text-muted hover:bg-accent-tint")
+                }
               >
-                <div>
-                  <p className="font-semibold text-text">
-                    {c.firstName} {c.lastName}
-                  </p>
-                  <p className="text-sm text-text-muted">
-                    {c.videosCompleted} / {c.videosTotal} videos
-                  </p>
-                </div>
-                {c.openFlagCount > 0 && (
-                  <span className="shrink-0 rounded-full bg-accent-tint px-2.5 py-1 text-xs font-semibold text-accent">
-                    {c.openFlagCount} open flag{c.openFlagCount > 1 ? "s" : ""}
-                  </span>
-                )}
+                {t}
               </button>
             ))}
           </div>
+
+          {mainTab === "overview" ? (
+            <AdminOverview onSelectCreator={selectCreator} />
+          ) : (
+            <>
+              <div>
+                <p className="eyebrow mb-2">Creators</p>
+                <p className="text-text-muted">What everyone&apos;s completed, and any open coaching flags.</p>
+              </div>
+
+              {error && <p className="text-accent">{error}</p>}
+              {!error && creators === null && <p className="text-text-muted">Loading…</p>}
+              {creators && creators.length === 0 && <p className="text-text-muted">No creators signed up yet.</p>}
+
+              <div className="space-y-2">
+                {creators?.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedId(c.id)}
+                    className="card card-hover flex w-full items-center justify-between gap-3 p-4 text-left"
+                  >
+                    <div>
+                      <p className="font-semibold text-text">
+                        {c.firstName} {c.lastName}
+                      </p>
+                      <p className="text-sm text-text-muted">
+                        {c.videosCompleted} / {c.videosTotal} videos · {timeAgo(c.lastActiveAt)}
+                      </p>
+                    </div>
+                    {c.openFlagCount > 0 && (
+                      <span className="shrink-0 rounded-full bg-accent-tint px-2.5 py-1 text-xs font-semibold text-accent">
+                        {c.openFlagCount} open flag{c.openFlagCount > 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

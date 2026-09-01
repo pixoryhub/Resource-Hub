@@ -14,16 +14,21 @@ export interface Profile {
   lastName: string;
   nameKey: string;
   pinHash: string;
+  // Optional because profiles created before this field existed won't have
+  // it — treat as "unknown" (never assume a fallback date), not as "just
+  // signed up".
+  createdAt?: string;
 }
 
 export interface PublicCreator {
   id: string;
   firstName: string;
   lastName: string;
+  createdAt: string | null;
 }
 
 export function toPublicCreator(p: Profile): PublicCreator {
-  return { id: p.id, firstName: p.firstName, lastName: p.lastName };
+  return { id: p.id, firstName: p.firstName, lastName: p.lastName, createdAt: p.createdAt ?? null };
 }
 
 export async function loadProfileByNameKey(nameKey: string): Promise<Profile | null> {

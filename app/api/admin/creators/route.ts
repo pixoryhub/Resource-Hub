@@ -5,9 +5,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/adminAuth";
 import { listAllCreators } from "@/lib/creatorRegistry";
-import { loadCreatorDataServer } from "@/lib/creatorData";
+import { loadCreatorActivity } from "@/lib/adminAnalytics";
 import { getHubVideos } from "@/lib/data";
-import type { CoachingFlag } from "@/lib/data/types";
 
 export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) {
@@ -20,15 +19,13 @@ export async function GET(req: NextRequest) {
 
     const summaries = await Promise.all(
       creators.map(async (creator) => {
-        const [completions, flags] = await Promise.all([
-          loadCreatorDataServer<string[]>("completions", creator.id, []),
-          loadCreatorDataServer<CoachingFlag[]>("flags", creator.id, []),
-        ]);
+        const activity = await loadCreatorActivity(creator.id);
         return {
           ...creator,
-          videosCompleted: completions.length,
+          videosCompleted: activity.completions.length,
           videosTotal: activeVideoCount,
-          openFlagCount: flags.filter((f) => f.status === "open").length,
+          openFlagCount: activity.flags.filter((f) => f.status === "open").length,
+          lastActiveAt: activity.lastActiveAt,
         };
       })
     );

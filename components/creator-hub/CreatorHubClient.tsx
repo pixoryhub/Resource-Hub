@@ -18,7 +18,13 @@ export default function CreatorHubClient({
   const { enabled: adminMode } = useAdminMode();
   const { creator } = useAuth();
   const [videos, setVideos] = useState(initialVideos);
-  const [completed, setCompleted] = useState<Set<string>>(new Set());
+  // Maps videoId -> when it was ticked (or null for older data saved before
+  // completions carried a timestamp — see the admin dashboard's weekly
+  // activity chart, which needs completedAt to place a tick in a given
+  // week). `completed` (the Set most of this component reads) is just the
+  // keys of this map.
+  const [completedAt, setCompletedAt] = useState<Record<string, string | null>>({});
+  const completed = useMemo(() => new Set(Object.keys(completedAt)), [completedAt]);
   const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);
@@ -27,28 +33,39 @@ export default function CreatorHubClient({
   // Each creator's own ticks — loaded fresh whenever the logged-in creator
   // changes. loadedForCreator is only set to this creator's id *after* the
   // load resolves — setting it earlier would let the save effect below fire
-  // with the still-empty initial `completed` state and overwrite whatever
-  // was already saved on the server with an empty list.
+  // with the still-empty initial `completedAt` state and overwrite whatever
+  // was already saved on the server with an empty list. Handles both the
+  // old plain-string-array shape and the new {videoId, completedAt} shape.
   useEffect(() => {
     if (!creator || loadedForCreator.current === creator.id) return;
     const id = creator.id;
-    loadCreatorData<string[]>("completions", id, []).then((c) => {
-      setCompleted(new Set(c));
-      loadedForCreator.current = id;
-    });
+    loadCreatorData<Array<string | { videoId: string; completedAt: string | null }>>("completions", id, []).then(
+      (raw) => {
+        const map: Record<string, string | null> = {};
+        for (const item of raw) {
+          if (typeof item === "string") map[item] = null;
+          else map[item.videoId] = item.completedAt;
+        }
+        setCompletedAt(map);
+        loadedForCreator.current = id;
+      }
+    );
   }, [creator]);
 
   useEffect(() => {
     if (!creator || loadedForCreator.current !== creator.id) return;
-    saveCreatorData("completions", creator.id, Array.from(completed));
-  }, [completed, creator]);
+    const entries = Object.entries(completedAt).map(([videoId, at]) => ({ videoId, completedAt: at }));
+    saveCreatorData("completions", creator.id, entries);
+  }, [completedAt, creator]);
 
   function toggleCompleted(videoId: string) {
-    setCompleted((prev) => {
-      const next = new Set(prev);
-      if (next.has(videoId)) next.delete(videoId);
-      else next.add(videoId);
-      return next;
+    setCompletedAt((prev) => {
+      if (videoId in prev) {
+        const next = { ...prev };
+        delete next[videoId];
+        return next;
+      }
+      return { ...prev, [videoId]: new Date().toISOString() };
     });
   }
 

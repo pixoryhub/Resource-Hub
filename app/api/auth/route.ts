@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
         );
       }
       const id = randomUUID();
-      profile = { id, firstName, lastName, nameKey, pinHash: hashPin(nameKey, pin) };
+      profile = { id, firstName, lastName, nameKey, pinHash: hashPin(nameKey, pin), createdAt: new Date().toISOString() };
       const store = getBlobStore(PROFILES_STORE);
       await store.set(nameKey, JSON.stringify(profile));
       await store.set(`by-id:${id}`, nameKey);
