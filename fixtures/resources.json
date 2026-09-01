@@ -1,12 +1,36 @@
 [
   {
-    "id": "res-guide-faq",
+    "id": "res-guide-commission-spreadsheet",
     "section": "community-links",
     "position": 1,
+    "title": "Commission Spreadsheet",
+    "description": "",
+    "thumbnailUrl": "https://lh7-us.googleusercontent.com/docs/AHkbwyIJ0Kedc9o6y7-TgGjMIfB0Xm7h0pV0bDeUvouPmdPWTFHWGK23U4zheG4-uTbrpQkJ_jEhTSAqciktXBAy6_Qx7YwpW8d7Y3Uaaz04suI_UNbuxoE=w1200-h630-p",
+    "links": [
+      { "label": "Open spreadsheet", "url": "https://docs.google.com/spreadsheets/d/15lqH3XEctXe1TXZfWENmJJnPSq2YecdA-3YWr1tUgmQ/edit?gid=156960376#gid=156960376" }
+    ]
+  },
+  {
+    "id": "res-guide-discord",
+    "section": "community-links",
+    "position": 2,
+    "title": "Pixory Discord Server",
+    "description": "",
+    "thumbnailUrl": "",
+    "links": [
+      { "label": "Join the server", "url": "https://discord.gg/dYB7pcxV6" }
+    ]
+  },
+  {
+    "id": "res-guide-faq",
+    "section": "community-links",
+    "position": 3,
     "title": "FAQ",
     "description": "",
     "thumbnailUrl": "",
-    "links": []
+    "links": [
+      { "label": "Open FAQ", "url": "https://platinum-moustache-d56.notion.site/Pixory-Creator-FAQ-3c9adfbf7da281be8ee1d927a4a613e5?source=copy_link" }
+    ]
   },
   {
     "id": "res-guide-batch-create",
@@ -18,18 +42,43 @@
     "links": []
   },
   {
-    "id": "res-guide-recreate",
+    "id": "res-masterclass-1",
     "section": "educational-resources",
     "position": 2,
-    "title": "How to recreate",
+    "title": "#1 - Recreating Viral Videos With Intention",
     "description": "",
-    "thumbnailUrl": "",
-    "links": []
+    "thumbnailUrl": "https://www.canva.com/design/DAG_FTBSKMc/SdOeH9X-fBI3TTyrU7s5dQ/screen?type=thumbnail",
+    "links": [
+      { "label": "Canva slide deck", "url": "https://www.canva.com/design/DAG_FTBSKMc/SdOeH9X-fBI3TTyrU7s5dQ/view?utm_content=DAG_FTBSKMc&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hc4db9bf3de" }
+    ]
+  },
+  {
+    "id": "res-masterclass-2",
+    "section": "educational-resources",
+    "position": 3,
+    "title": "#2 - Recreating with intention Part 2",
+    "description": "",
+    "thumbnailUrl": "https://www.canva.com/design/DAHAf55Wc8I/UVLpGn1_vCkP3Iy5RZGzEQ/screen?type=thumbnail",
+    "links": [
+      { "label": "Canva slide deck", "url": "https://www.canva.com/design/DAHAf55Wc8I/UVLpGn1_vCkP3Iy5RZGzEQ/view?utm_content=DAHAf55Wc8I&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h3e16a4ec49" }
+    ]
+  },
+  {
+    "id": "res-masterclass-3",
+    "section": "educational-resources",
+    "position": 4,
+    "title": "#3 - Mastering the Humanizing Visual Element",
+    "description": "",
+    "thumbnailUrl": "https://www.canva.com/design/DAHBh1a0kq4/9wxRCD0CH8SkKI2AYpriqA/screen?type=thumbnail",
+    "links": [
+      { "label": "Masterclass recording", "url": "https://drive.google.com/file/d/1U8uHg0iFI7JTOuhxL-JF2TZ5sffzk0V6/view" },
+      { "label": "Canva slide deck", "url": "https://www.canva.com/design/DAHBh1a0kq4/9wxRCD0CH8SkKI2AYpriqA/view?utm_content=DAHBh1a0kq4&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h0b5b700a3d" }
+    ]
   },
   {
     "id": "res-guide-visual-tutorials",
     "section": "educational-resources",
-    "position": 3,
+    "position": 5,
     "title": "Visual Tutorials",
     "description": "",
     "thumbnailUrl": "",
@@ -38,7 +87,7 @@
   {
     "id": "res-workshop-categories",
     "section": "educational-resources",
-    "position": 4,
+    "position": 6,
     "title": "Desired categories, explained",
     "description": "How each desired category is used.",
     "thumbnailUrl": "",
