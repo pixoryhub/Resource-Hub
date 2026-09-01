@@ -37,13 +37,39 @@ async function getList<T>(key: string, seed: () => Promise<T[]>): Promise<T[]> {
   return seeded;
 }
 
-async function setList<T>(key: string, value: T[]): Promise<void> {
-  await getBlobStore(CONTENT_STORE).set(key, JSON.stringify(value));
+// Read-modify-write on a list isn't safe when two admin actions land close
+// together (two uploads, or an edit landing mid-add) — the second write's
+// "read" can be stale, silently discarding the first write (a lost
+// update). This showed up for real: a testimonial added via script and one
+// edited via the UI seconds apart made one of them vanish.
+//
+// Netlify Blobs supports compare-and-swap via ETags (`onlyIfMatch` on an
+// existing key, `onlyIfNew` when creating one) — `set()` reports back
+// `modified: false` instead of throwing when the condition fails, so this
+// retries with a fresh read until its write actually lands.
+async function mutateList<T>(
+  key: string,
+  seed: () => Promise<T[]>,
+  mutate: (list: T[]) => T[]
+): Promise<T[]> {
+  const store = getBlobStore(CONTENT_STORE);
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const current = (await store.getWithMetadata(key, { type: "json" })) as { data: T[]; etag: string } | null;
+    const list = current ? current.data : await seed();
+    const next = mutate(list);
+    const result = await store.set(
+      key,
+      JSON.stringify(next),
+      current ? { onlyIfMatch: current.etag } : { onlyIfNew: true }
+    );
+    if (result.modified) return next;
+    // Someone else wrote in between — retry against the now-current value.
+  }
+  throw new Error(`Too many conflicting writes to "${key}".`);
 }
 
 async function addItem<T extends { id: string }>(key: string, seed: () => Promise<T[]>, item: T): Promise<void> {
-  const list = await getList(key, seed);
-  await setList(key, [...list, item]);
+  await mutateList(key, seed, (list) => [...list, item]);
 }
 
 async function updateItem<T extends { id: string }>(
@@ -52,17 +78,11 @@ async function updateItem<T extends { id: string }>(
   id: string,
   patch: Partial<T>
 ): Promise<T[]> {
-  const list = await getList(key, seed);
-  const next = list.map((x) => (x.id === id ? { ...x, ...patch } : x));
-  await setList(key, next);
-  return next;
+  return mutateList(key, seed, (list) => list.map((x) => (x.id === id ? { ...x, ...patch } : x)));
 }
 
 async function deleteItem<T extends { id: string }>(key: string, seed: () => Promise<T[]>, id: string): Promise<T[]> {
-  const list = await getList(key, seed);
-  const next = list.filter((x) => x.id !== id);
-  await setList(key, next);
-  return next;
+  return mutateList(key, seed, (list) => list.filter((x) => x.id !== id));
 }
 
 // Resources ------------------------------------------------------------
@@ -110,11 +130,10 @@ export function deleteHubVideo(id: string): Promise<HubVideo[]> {
   return deleteItem<HubVideo>("hub-videos", fixtures.getHubVideos, id);
 }
 export async function setHubVideoPositions(updates: { id: string; position: number }[]): Promise<HubVideo[]> {
-  const list = await getList<HubVideo>("hub-videos", fixtures.getHubVideos);
   const positionById = new Map(updates.map((u) => [u.id, u.position]));
-  const next = list.map((v) => (positionById.has(v.id) ? { ...v, position: positionById.get(v.id)! } : v));
-  await setList("hub-videos", next);
-  return next;
+  return mutateList<HubVideo>("hub-videos", fixtures.getHubVideos, (list) =>
+    list.map((v) => (positionById.has(v.id) ? { ...v, position: positionById.get(v.id)! } : v))
+  );
 }
 
 // Weekly high-impact opportunity spotlight — a singleton, not a list; no
