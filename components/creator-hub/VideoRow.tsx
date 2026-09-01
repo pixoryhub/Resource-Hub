@@ -45,7 +45,7 @@ export default function VideoRow({
   }
 
   return (
-    <div className="card overflow-hidden">
+    <div className="card card-hover overflow-hidden">
       <div className="flex items-center gap-4 p-4 sm:p-5">
         <button
           type="button"
@@ -54,7 +54,7 @@ export default function VideoRow({
           aria-pressed={completed}
           className={
             "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors hover:border-accent " +
-            (completed ? "accent-gradient border-transparent" : "border-border")
+            (completed ? "accent-gradient border-transparent animate-pop" : "border-border")
           }
         >
           {completed && (
@@ -70,7 +70,7 @@ export default function VideoRow({
           className="min-w-0 flex-1 text-left"
           aria-expanded={open}
         >
-          <p className={"font-semibold leading-snug text-text " + (completed ? "text-text-muted" : "")}>
+          <p className={"headline italic leading-snug text-text " + (completed ? "text-text-muted" : "")}>
             &ldquo;{video.title}&rdquo;
           </p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-faint">
@@ -137,18 +137,24 @@ export default function VideoRow({
         </div>
       )}
 
-      {open && (
-        <div className="border-t border-border bg-bg p-4 sm:p-6">
-          {/* Media preview */}
-          <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-surface">
+      <div className={"accordion-rows " + (open ? "is-open" : "")}>
+        <div>
+        <div className="border-t border-border bg-bg p-4 sm:p-6" inert={!open}>
+          {/* Media preview — opens the original until a real embed is wired up */}
+          <a
+            href={video.originalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative block aspect-video w-full overflow-hidden rounded-2xl bg-surface"
+          >
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="accent-gradient flex h-14 w-14 items-center justify-center rounded-full text-white shadow-sm">
+              <span className="accent-gradient flex h-14 w-14 items-center justify-center rounded-full text-white shadow-sm transition-transform duration-300 ease-out group-hover:scale-105">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </span>
             </div>
-          </div>
+          </a>
           <div className="mt-2.5 flex items-center justify-between gap-3">
             <p className="text-xs text-text-faint">Embedded here — no need to leave the hub.</p>
             <a
@@ -238,7 +244,8 @@ export default function VideoRow({
             </div>
           </div>
         </div>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

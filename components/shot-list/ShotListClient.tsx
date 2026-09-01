@@ -159,7 +159,7 @@ export default function ShotListClient({
       <div className="mx-auto max-w-3xl space-y-8 px-4 py-8 sm:px-6">
         <div>
           <p className="eyebrow mb-2">Shot List Generator</p>
-          <p className="text-text-muted">
+          <p className="headline text-xl text-text sm:text-2xl">
             Groups your shots by physical setup, so you film everything that needs the same
             setup back-to-back instead of one video at a time.
           </p>
@@ -174,7 +174,7 @@ export default function ShotListClient({
         {week.opportunities.length > 0 && <ResultSummary week={week} />}
 
         <div>
-          <h2 className="mb-1 text-lg font-bold text-text">Film one group at a time</h2>
+          <h2 className="headline mb-1 text-xl text-text">Film one group at a time</h2>
           <p className="mb-4 text-sm text-text-muted">
             Similar shots are grouped so you set up once. Fill in your variations, then work down.
           </p>

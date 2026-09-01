@@ -75,7 +75,7 @@ export default function CoachingFlagClient() {
 
       {justSubmitted ? (
         <div className="card p-6">
-          <h2 className="text-lg font-bold text-text">Sent to your coach</h2>
+          <h2 className="headline text-lg text-text">Sent to your coach</h2>
           <p className="mt-2 text-sm text-text-muted">
             Submitted {formatDate(new Date(justSubmitted.submittedAt))}. Your coach will reply
             within 48 hours.
@@ -88,7 +88,7 @@ export default function CoachingFlagClient() {
         </div>
       ) : blocked && mostRecent ? (
         <div className="card p-6">
-          <h2 className="text-lg font-bold text-text">You&apos;ve already flagged this window</h2>
+          <h2 className="headline text-lg text-text">You&apos;ve already flagged this window</h2>
           <p className="mt-2 text-sm text-text-muted">
             One flag every two weeks makes sure your coaches can get to everybody. Your next flag
             is available on <strong className="text-text">{formatDate(unlockDate!)}</strong>.
@@ -165,7 +165,7 @@ export default function CoachingFlagClient() {
       )}
 
       <div>
-        <h2 className="mb-3 text-lg font-bold text-text">Your flag history</h2>
+        <h2 className="mb-3 headline text-lg text-text">Your flag history</h2>
         <FlagHistory flags={flags} />
       </div>
     </div>

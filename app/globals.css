@@ -56,6 +56,15 @@
   --group-tint-4: rgba(217, 154, 63, 0.18);
 }
 
+/* Motion — one easing curve, three durations, used consistently instead of
+   ad hoc transition values scattered per component. */
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -67,6 +76,7 @@
   --color-accent-light: var(--accent-light);
   --color-accent-tint: var(--accent-tint);
   --font-sans: var(--font-poppins);
+  --font-display: var(--font-fraunces);
 }
 
 html {
@@ -102,6 +112,73 @@ body {
   border: 1px solid var(--border);
   border-radius: 20px;
   box-shadow: var(--shadow-card);
+}
+
+/* For cards whose whole header is a click target (VideoRow) — a small,
+   deliberate lift on hover, not applied to every .card so static content
+   blocks don't look falsely clickable. */
+.card-hover {
+  transition: box-shadow var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
+}
+.card-hover:hover {
+  box-shadow: 0 14px 28px rgba(42, 39, 36, 0.09);
+  transform: translateY(-1px);
+}
+[data-theme="dark"] .card-hover:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.32);
+}
+
+/* Headline voice — Fraunces, used only for genuine section/page headings.
+   Everything else (nav, body, buttons, labels) stays Poppins. */
+.headline {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+/* A satisfying tick — the brief itself calls this out as "the satisfying
+   part" of the shot list and hub checkboxes. One small pop, not a loop. */
+@keyframes pixory-pop {
+  0% { transform: scale(0.75); }
+  55% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+.animate-pop {
+  animation: pixory-pop var(--duration-base) var(--ease-out);
+}
+
+/* CSS-only smooth accordion (grid-rows trick) — no JS height measuring, no
+   animation library. Content must always be rendered (visibility, not
+   removal) for the row transition to animate. */
+.accordion-rows {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-slow) var(--ease-out);
+}
+.accordion-rows.is-open {
+  grid-template-rows: 1fr;
+}
+.accordion-rows > div {
+  overflow: hidden;
+}
+
+@keyframes pixory-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: pixory-fade-in var(--duration-base) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-hover,
+  .animate-pop,
+  .animate-fade-in,
+  .accordion-rows {
+    transition: none;
+    animation: none;
+  }
 }
 
 /* Theme toggle icon swap — driven by [data-theme] so there is no client

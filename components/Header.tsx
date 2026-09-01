@@ -197,7 +197,7 @@ export default function Header() {
     >
       <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:gap-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold tracking-tight text-text">
+          <Link href="/" className="headline text-2xl text-text">
             pixory
           </Link>
           <div className="flex items-center gap-2 lg:hidden">

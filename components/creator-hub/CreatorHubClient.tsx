@@ -114,9 +114,9 @@ export default function CreatorHubClient({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6">
-      <div className="card p-5">
-        <h2 className="font-bold text-text">Welcome to the Breakthrough Program</h2>
-        <p className="mt-1.5 text-sm text-text-muted">
+      <div className="card p-6">
+        <h2 className="headline text-xl text-text">Welcome to the Breakthrough Program</h2>
+        <p className="mt-2 text-sm leading-relaxed text-text-muted">
           You&apos;re in the recreation phase. Study these winning formats, choose your hook
           variation, and execute with precision. Each video includes execution notes and audio
           suggestions to help you nail the format. Tick off each video once you&apos;ve recreated

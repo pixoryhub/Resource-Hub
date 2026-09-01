@@ -16,7 +16,7 @@ export default function Step1({
         aria-expanded={!collapsed}
       >
         <div>
-          <h2 className="text-lg font-bold text-text">Get your shots in</h2>
+          <h2 className="headline text-lg text-text">Get your shots in</h2>
           <p className="text-sm text-text-muted">Use the Creator Hub, the Blueprint, or both.</p>
         </div>
         <svg
@@ -36,8 +36,9 @@ export default function Step1({
         </svg>
       </button>
 
-      {!collapsed && (
-        <div className="mt-5 space-y-5">
+      <div className={"accordion-rows " + (collapsed ? "" : "is-open")}>
+        <div>
+        <div className="mt-5 space-y-5" inert={collapsed}>
           <div>
             <p className="eyebrow mb-2">Pull videos from the Creator Hub</p>
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -98,7 +99,8 @@ export default function Step1({
             </p>
           </div>
         </div>
-      )}
+        </div>
+      </div>
     </section>
   );
 }

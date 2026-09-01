@@ -29,7 +29,7 @@ export default function ShotCard({
         aria-pressed={shot.filmed}
         className={
           "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors " +
-          (shot.filmed ? "accent-gradient border-transparent" : "border-border") +
+          (shot.filmed ? "accent-gradient border-transparent animate-pop" : "border-border") +
           (readOnly ? "" : " cursor-pointer hover:border-accent")
         }
       >

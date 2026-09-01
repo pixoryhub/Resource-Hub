@@ -45,7 +45,7 @@ export default function GroupCard({
             index
           )}
         </span>
-        <h3 className="flex-1 font-bold text-text">{group.name}</h3>
+        <h3 className="headline flex-1 text-base text-text">{group.name}</h3>
         <span className="shrink-0 text-sm text-text-muted">
           {shots.length} {shots.length === 1 ? "clip" : "clips"}
         </span>
