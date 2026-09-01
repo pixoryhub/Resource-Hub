@@ -1,26 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CoachingFlag, CoachingFlagOptionId } from "@/lib/data/types";
 import { COACHING_FLAG_OPTIONS } from "@/lib/data/types";
 import { nextAvailableAt, isBlocked, hoursRemainingOnPromise } from "@/lib/coachingFlagEligibility";
+import { useAuth } from "@/lib/localAuth";
+import { loadCreatorData, saveCreatorData } from "@/lib/creatorStorage";
 import FlagHistory from "./FlagHistory";
 
 function formatDate(date: Date) {
   return date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 }
 
-export default function CoachingFlagClient({
-  creatorId,
-  initialFlags,
-}: {
-  creatorId: string;
-  initialFlags: CoachingFlag[];
-}) {
-  const [flags, setFlags] = useState(initialFlags);
+export default function CoachingFlagClient() {
+  const { creator } = useAuth();
+  const [flags, setFlags] = useState<CoachingFlag[]>([]);
   const [selected, setSelected] = useState<Set<CoachingFlagOptionId>>(new Set());
   const [note, setNote] = useState("");
   const [justSubmitted, setJustSubmitted] = useState<CoachingFlag | null>(null);
+  const loadedForCreator = useRef<string | null>(null);
+
+  // Each creator's own flags — loaded fresh whenever the logged-in creator
+  // changes. A brand new profile starts with no flags at all.
+  useEffect(() => {
+    if (!creator || loadedForCreator.current === creator.id) return;
+    loadedForCreator.current = creator.id;
+    setFlags(loadCreatorData<CoachingFlag[]>("flags", creator.id, []));
+  }, [creator]);
+
+  useEffect(() => {
+    if (!creator || loadedForCreator.current !== creator.id) return;
+    saveCreatorData("flags", creator.id, flags);
+  }, [flags, creator]);
 
   const now = new Date();
   const mostRecent = flags[0];
@@ -37,10 +48,10 @@ export default function CoachingFlagClient({
   }
 
   function submit() {
-    if (selected.size === 0) return;
+    if (selected.size === 0 || !creator) return;
     const flag: CoachingFlag = {
       id: `flag-${Date.now()}`,
-      creatorId,
+      creatorId: creator.id,
       selectedOptions: Array.from(selected),
       note: note.trim(),
       submittedAt: new Date().toISOString(),

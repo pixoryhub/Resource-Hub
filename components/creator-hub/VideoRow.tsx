@@ -46,19 +46,19 @@ export default function VideoRow({
 
   return (
     <div className="card overflow-hidden">
-      <div className="flex items-start gap-3 p-4">
+      <div className="flex items-center gap-4 p-4 sm:p-5">
         <button
           type="button"
           onClick={() => onToggleCompleted(video.id)}
           aria-label={completed ? "Mark as unfinished" : "Mark as completed"}
           aria-pressed={completed}
           className={
-            "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors hover:border-accent " +
+            "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors hover:border-accent " +
             (completed ? "accent-gradient border-transparent" : "border-border")
           }
         >
           {completed && (
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 6L9 17l-5-5" />
             </svg>
           )}
@@ -70,9 +70,12 @@ export default function VideoRow({
           className="min-w-0 flex-1 text-left"
           aria-expanded={open}
         >
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="font-semibold text-text-faint">#{video.position}</span>
-            <span className="text-text-faint">by {video.creatorName}</span>
+          <p className={"font-semibold leading-snug text-text " + (completed ? "text-text-muted" : "")}>
+            &ldquo;{video.title}&rdquo;
+          </p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-faint">
+            <span className="font-semibold">#{video.position}</span>
+            <span>by {video.creatorName}</span>
             <CategoryChip category={video.desiredCategory} />
             {video.status === "retired" && (
               <span className="rounded-full bg-border px-2 py-0.5 font-semibold text-text-muted">
@@ -85,21 +88,18 @@ export default function VideoRow({
               </span>
             )}
           </div>
-          <p className={"mt-1 font-semibold text-text " + (completed ? "text-text-muted" : "")}>
-            &ldquo;{video.title}&rdquo;
-          </p>
         </button>
 
         <svg
-          width="18"
-          height="18"
+          width="16"
+          height="16"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={"mt-1 shrink-0 cursor-pointer text-text-faint transition-transform " + (open ? "" : "-rotate-90")}
+          className={"shrink-0 cursor-pointer text-text-faint transition-transform " + (open ? "" : "-rotate-90")}
           onClick={() => setOpen((v) => !v)}
         >
           <path d="M6 9l6 6 6-6" />
@@ -138,103 +138,104 @@ export default function VideoRow({
       )}
 
       {open && (
-        <div className="space-y-5 border-t border-border bg-bg p-4 sm:p-5">
-          <div className="flex flex-col items-start gap-3 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-accent-tint text-accent">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm text-text-muted">
-                Video embedded here — no need to leave the hub to watch it.
-              </p>
-              <a
-                href={video.originalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-semibold text-accent hover:underline"
-              >
-                Open the original ↗
-              </a>
+        <div className="border-t border-border bg-bg p-4 sm:p-6">
+          {/* Media preview */}
+          <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-surface">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="accent-gradient flex h-14 w-14 items-center justify-center rounded-full text-white shadow-sm">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </span>
             </div>
           </div>
+          <div className="mt-2.5 flex items-center justify-between gap-3">
+            <p className="text-xs text-text-faint">Embedded here — no need to leave the hub.</p>
+            <a
+              href={video.originalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-xs font-semibold text-accent hover:underline"
+            >
+              Open original ↗
+            </a>
+          </div>
 
-          <div className="rounded-xl bg-accent-tint p-3 text-sm text-text">
+          <p className="mt-5 rounded-xl bg-accent-tint px-4 py-3 text-sm text-text">
             Recreate this format identically to the original. The only things you may swap are
-            the hook (for one of the variations below) and the audio (for one of the suggestions
-            below).
+            the hook and the audio, for one of the options below.
+          </p>
+
+          <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
+            <div>
+              <p className="eyebrow mb-1.5">Category</p>
+              <CategoryChip category={video.desiredCategory} />
+              <Link href="/#educational-resources" className="mt-1 block text-xs font-semibold text-accent hover:underline">
+                What does this mean?
+              </Link>
+            </div>
+            <div className="col-span-2 sm:col-span-3">
+              <p className="eyebrow mb-1.5">Format &amp; emotion</p>
+              <p className="text-sm text-text">{video.formatLayers}</p>
+            </div>
           </div>
 
-          <div>
+          <div className="mt-6">
             <p className="eyebrow mb-2">Hook variations</p>
-            <ul className="space-y-1.5 text-sm text-text">
+            <ul className="space-y-2 text-sm text-text">
               {video.hookVariations.map((hook) => (
-                <li key={hook} className="rounded-lg border border-border bg-surface px-3 py-2">
+                <li key={hook} className="border-l-2 border-border pl-3 leading-snug">
                   {hook}
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <p className="eyebrow mb-2">Format &amp; emotional layers</p>
-              <p className="text-sm text-text-muted">{video.formatLayers}</p>
-            </div>
-            <div>
-              <p className="eyebrow mb-2">Desired category</p>
-              <div className="flex items-center gap-2">
-                <CategoryChip category={video.desiredCategory} />
-                <Link href="/#educational-resources" className="text-xs font-semibold text-accent hover:underline">
-                  What does this mean?
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div>
+          <div className="mt-6">
             <p className="eyebrow mb-2">Visual elements, in order</p>
-            <p className="flex flex-wrap items-center gap-1.5 text-sm text-text">
+            <p className="text-sm leading-relaxed text-text">
               {video.visualElements.map((el, i) => (
-                <span key={el} className="flex items-center gap-1.5">
-                  <span className="rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-text">
-                    {el}
-                  </span>
+                <span key={el}>
+                  {el}
                   {i < video.visualElements.length - 1 && (
-                    <span className="text-text-faint">→</span>
+                    <span className="mx-1.5 text-text-faint">→</span>
                   )}
                 </span>
               ))}
             </p>
           </div>
 
-          <div>
-            <p className="eyebrow mb-2">Execution notes</p>
-            <p className="whitespace-pre-line text-sm text-text-muted">{video.executionNotes}</p>
+          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div>
+              <p className="eyebrow mb-2">Execution notes</p>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-text-muted">
+                {video.executionNotes}
+              </p>
+            </div>
+            <div>
+              <p className="eyebrow mb-2">Collection-size guidance</p>
+              <p className="text-sm leading-relaxed text-text-muted">{video.collectionGuidance}</p>
+            </div>
           </div>
 
-          <div>
-            <p className="eyebrow mb-2">Collection-size guidance</p>
-            <p className="text-sm text-text-muted">{video.collectionGuidance}</p>
-          </div>
-
-          <div>
+          <div className="mt-6">
             <p className="eyebrow mb-2">Audio suggestions</p>
-            <ul className="space-y-1.5">
+            <div className="-mx-1">
               {video.audioSuggestions.map((a) => (
-                <li key={a.label}>
-                  <a
-                    href={a.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-semibold text-text hover:border-accent hover:text-accent"
-                  >
-                    🎵 {a.label}
-                  </a>
-                </li>
+                <a
+                  key={a.label}
+                  href={a.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between gap-2 rounded-lg px-1 py-1.5 text-sm font-medium text-text transition-colors hover:bg-surface hover:text-accent"
+                >
+                  <span className="truncate">🎵 {a.label}</span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                    <path d="M7 17 17 7M8 7h9v9" />
+                  </svg>
+                </a>
               ))}
-            </ul>
+            </div>
           </div>
         </div>
       )}
