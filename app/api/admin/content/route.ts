@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       if (action === "add") await content.addResource(body.item as Resource);
       else if (action === "update") await content.updateResource(body.id, body.patch as Partial<Resource>);
       else if (action === "delete") await content.deleteResource(body.id);
+      else if (action === "reorder") await content.setResourcePositions(body.positions);
       else return badRequest("Unknown action for resources.");
     } else if (type === "events") {
       if (action === "add") await content.addEvent(body.item as CalendarEvent);

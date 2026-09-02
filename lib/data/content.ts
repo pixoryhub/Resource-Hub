@@ -85,6 +85,17 @@ async function deleteItem<T extends { id: string }>(key: string, seed: () => Pro
   return mutateList(key, seed, (list) => list.filter((x) => x.id !== id));
 }
 
+async function setPositions<T extends { id: string; position: number }>(
+  key: string,
+  seed: () => Promise<T[]>,
+  updates: { id: string; position: number }[]
+): Promise<T[]> {
+  const positionById = new Map(updates.map((u) => [u.id, u.position]));
+  return mutateList<T>(key, seed, (list) =>
+    list.map((x) => (positionById.has(x.id) ? { ...x, position: positionById.get(x.id)! } : x))
+  );
+}
+
 // Resources ------------------------------------------------------------
 
 export function getResources(): Promise<Resource[]> {
@@ -98,6 +109,9 @@ export function updateResource(id: string, patch: Partial<Resource>): Promise<Re
 }
 export function deleteResource(id: string): Promise<Resource[]> {
   return deleteItem<Resource>("resources", fixtures.getResources, id);
+}
+export function setResourcePositions(updates: { id: string; position: number }[]): Promise<Resource[]> {
+  return setPositions<Resource>("resources", fixtures.getResources, updates);
 }
 
 // Calendar events --------------------------------------------------------
@@ -129,11 +143,8 @@ export function updateHubVideo(id: string, patch: Partial<HubVideo>): Promise<Hu
 export function deleteHubVideo(id: string): Promise<HubVideo[]> {
   return deleteItem<HubVideo>("hub-videos", fixtures.getHubVideos, id);
 }
-export async function setHubVideoPositions(updates: { id: string; position: number }[]): Promise<HubVideo[]> {
-  const positionById = new Map(updates.map((u) => [u.id, u.position]));
-  return mutateList<HubVideo>("hub-videos", fixtures.getHubVideos, (list) =>
-    list.map((v) => (positionById.has(v.id) ? { ...v, position: positionById.get(v.id)! } : v))
-  );
+export function setHubVideoPositions(updates: { id: string; position: number }[]): Promise<HubVideo[]> {
+  return setPositions<HubVideo>("hub-videos", fixtures.getHubVideos, updates);
 }
 
 // Weekly high-impact opportunity spotlight — a singleton, not a list; no
