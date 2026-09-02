@@ -144,11 +144,20 @@ function MedalCircle({
 }) {
   const medal = MEDALS[post.position];
   const circle = (
-    <span
-      className="flex h-14 w-14 items-center justify-center rounded-full text-2xl shadow-sm transition-transform group-hover:scale-105"
-      style={medal ? { background: `${medal.colour}1a` } : { background: "var(--border)" }}
-    >
-      {medal ? medal.emoji : `#${post.position}`}
+    <span className="relative flex h-14 w-14 items-center justify-center">
+      <span
+        className="flex h-14 w-14 items-center justify-center rounded-full text-2xl shadow-sm transition-transform group-hover:scale-105"
+        style={medal ? { background: `${medal.colour}1a` } : { background: "var(--border)" }}
+      >
+        {medal ? medal.emoji : `#${post.position}`}
+      </span>
+      {!adminMode && (
+        <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-white shadow-sm">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </span>
+      )}
     </span>
   );
 
@@ -178,6 +187,7 @@ function MedalCircle({
       </div>
       <p className="max-w-full truncate text-[11px] font-semibold text-text">{post.views}</p>
       <p className="max-w-full truncate text-[10px] text-text-faint">{post.creatorName}</p>
+      {!adminMode && <p className="text-[9px] font-bold uppercase tracking-wide text-accent">View ↗</p>}
       {adminMode && (
         <div className="flex gap-0.5">
           <button type="button" onClick={() => onMove(-1)} disabled={isFirst} aria-label="Move up" className="flex h-5 w-5 items-center justify-center rounded-full text-text-faint hover:text-accent disabled:opacity-20">
@@ -246,9 +256,13 @@ export default function TopPostsSection({ initial }: { initial: TopPost[] }) {
   const editingPost = sorted.find((p) => p.id === editingId);
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-3 overflow-x-auto pb-1">
-        <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-text-faint">🏆 Last week</span>
+    <div className="space-y-3">
+      <div>
+        <p className="eyebrow mb-1">🏆 Leaderboard</p>
+        <h2 className="headline text-text">Last week&apos;s leaderboard</h2>
+      </div>
+
+      <div className="flex items-start gap-3 overflow-x-auto pb-1">
         {sorted.map((post, i) => (
           <MedalCircle
             key={post.id}
