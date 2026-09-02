@@ -20,6 +20,8 @@ export default function ResourceForm({
   const [links, setLinks] = useState<ResourceLink[]>(initial?.links ?? []);
   const [fetchingIndex, setFetchingIndex] = useState<number | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   function updateLink(i: number, patch: Partial<ResourceLink>) {
     setLinks((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
@@ -50,6 +52,30 @@ export default function ResourceForm({
       setFetchError("Couldn't fetch that link.");
     } finally {
       setFetchingIndex(null);
+    }
+  }
+
+  // Lets an admin pick their own image — e.g. a screenshot of one specific
+  // slide from a Canva/Slides deck — rather than being stuck with whatever
+  // og:image the linked platform happens to expose (always the cover
+  // slide). Save the slide as an image first, then upload it here.
+  async function uploadThumbnail(file: File) {
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/images", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.ok) {
+        setThumbnailUrl(data.url);
+      } else {
+        setUploadError(data.error ?? "Couldn't upload that image.");
+      }
+    } catch {
+      setUploadError("Couldn't upload that image.");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -158,16 +184,38 @@ export default function ResourceForm({
               </button>
             </div>
           ) : (
-            <input
-              type="text"
-              value={thumbnailUrl}
-              onChange={(e) => setThumbnailUrl(e.target.value)}
-              placeholder="Or paste an image URL"
-              className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
-              style={{ fontSize: "16px" }}
-            />
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={thumbnailUrl}
+                onChange={(e) => setThumbnailUrl(e.target.value)}
+                placeholder="Or paste an image URL"
+                className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
+                style={{ fontSize: "16px" }}
+              />
+              <div className="flex items-center gap-2">
+                <label className="cursor-pointer text-xs font-semibold text-accent hover:underline">
+                  {uploading ? "Uploading…" : "Or upload your own image"}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    className="hidden"
+                    disabled={uploading}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadThumbnail(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                <span className="text-xs text-text-faint">
+                  e.g. a screenshot or export of the exact slide you want
+                </span>
+              </div>
+            </div>
           )}
           {fetchError && <p className="mt-1.5 text-xs text-accent">{fetchError}</p>}
+          {uploadError && <p className="mt-1.5 text-xs text-accent">{uploadError}</p>}
         </div>
       )}
 

@@ -18,8 +18,16 @@ export default async function ResourceHubPage() {
     getWeeklyOpportunity(),
     getTestimonials(),
   ]);
-  const communityLinks = resources.filter((r) => r.section === "community-links");
-  const educationalResources = resources.filter((r) => r.section === "educational-resources");
+  // Storage keeps resources in whatever order they were added — the
+  // `position` field carries the actual display order (updated by drag-
+  // reordering), so it has to be sorted by explicitly here or a reorder
+  // "saves" but never shows up after a reload.
+  const communityLinks = resources
+    .filter((r) => r.section === "community-links")
+    .sort((a, b) => a.position - b.position);
+  const educationalResources = resources
+    .filter((r) => r.section === "educational-resources")
+    .sort((a, b) => a.position - b.position);
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-6 sm:px-6">
