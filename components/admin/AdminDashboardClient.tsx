@@ -136,7 +136,71 @@ function FlagRow({ creatorId, flag, onReplied }: { creatorId: string; flag: Coac
   );
 }
 
-function CreatorDetailView({ id, onBack }: { id: string; onBack: () => void }) {
+function DeleteCreatorButton({ id, name, onDeleted }: { id: string; name: string; onDeleted: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleDelete() {
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/creators/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        onDeleted();
+      } else {
+        setError(data.error ?? "Couldn't delete — try again.");
+        setDeleting(false);
+      }
+    } catch {
+      setError("Couldn't reach the server — try again.");
+      setDeleting(false);
+    }
+  }
+
+  if (!confirming) {
+    return (
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        className="text-sm font-semibold text-accent hover:underline"
+      >
+        Delete creator
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-xl bg-accent-tint p-3">
+      <p className="text-sm text-text">
+        Permanently delete {name}&apos;s login and all their data — completions, shot lists, and
+        coaching flags? This can&apos;t be undone.
+      </p>
+      {error && <p className="mt-1.5 text-xs text-accent">{error}</p>}
+      <div className="mt-2 flex gap-2">
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting}
+          className="rounded-full bg-text px-4 py-1.5 text-xs font-semibold text-bg disabled:opacity-50"
+        >
+          {deleting ? "Deleting…" : "Delete permanently"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setConfirming(false)}
+          disabled={deleting}
+          className="rounded-full border border-border px-4 py-1.5 text-xs font-semibold text-text-muted"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CreatorDetailView({ id, onBack, onDeleted }: { id: string; onBack: () => void; onDeleted: () => void }) {
   const [detail, setDetail] = useState<CreatorDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -172,13 +236,20 @@ function CreatorDetailView({ id, onBack }: { id: string; onBack: () => void }) {
 
       {detail && (
         <div className="space-y-6">
-          <div>
-            <h2 className="headline text-text">
-              {detail.creator.firstName} {detail.creator.lastName}
-            </h2>
-            <p className="text-sm text-text-muted">
-              {detail.completedVideos.length} of {detail.videosTotal} videos completed
-            </p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="headline text-text">
+                {detail.creator.firstName} {detail.creator.lastName}
+              </h2>
+              <p className="text-sm text-text-muted">
+                {detail.completedVideos.length} of {detail.videosTotal} videos completed
+              </p>
+            </div>
+            <DeleteCreatorButton
+              id={id}
+              name={`${detail.creator.firstName} ${detail.creator.lastName}`}
+              onDeleted={onDeleted}
+            />
           </div>
 
           <div>
@@ -260,6 +331,7 @@ export default function AdminDashboardClient() {
   const [creators, setCreators] = useState<CreatorSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
     if (!ready || !adminMode || mainTab !== "creators") return;
@@ -270,7 +342,7 @@ export default function AdminDashboardClient() {
         else setCreators(data.creators);
       })
       .catch(() => setError("Couldn't reach the server."));
-  }, [ready, adminMode, mainTab]);
+  }, [ready, adminMode, mainTab, refreshTick]);
 
   if (!ready) return null;
 
@@ -291,7 +363,15 @@ export default function AdminDashboardClient() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6">
       {selectedId ? (
-        <CreatorDetailView id={selectedId} onBack={() => setSelectedId(null)} />
+        <CreatorDetailView
+          id={selectedId}
+          onBack={() => setSelectedId(null)}
+          onDeleted={() => {
+            setSelectedId(null);
+            setCreators(null);
+            setRefreshTick((t) => t + 1);
+          }}
+        />
       ) : (
         <>
           <div className="flex gap-1 rounded-full border border-border bg-surface p-1">

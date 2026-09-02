@@ -48,15 +48,47 @@ export async function listAllCreatorIds(): Promise<string[]> {
   return raw ? (JSON.parse(raw) as string[]) : [];
 }
 
-export async function addToCreatorIndex(id: string): Promise<void> {
+// Compare-and-swap retry on the id index — same fix as lib/data/content.ts's
+// mutateList, for the same reason: two signups (or a signup racing a
+// deletion) landing close together can otherwise silently lose one of them.
+async function mutateIds(mutate: (ids: string[]) => string[]): Promise<string[]> {
   const store = getBlobStore(PROFILES_STORE);
-  const ids = await listAllCreatorIds();
-  ids.push(id);
-  await store.set(ALL_IDS_KEY, JSON.stringify(ids));
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const current = (await store.getWithMetadata(ALL_IDS_KEY, { type: "json" })) as { data: string[]; etag: string } | null;
+    const ids = current ? current.data : [];
+    const next = mutate(ids);
+    const result = await store.set(
+      ALL_IDS_KEY,
+      JSON.stringify(next),
+      current ? { onlyIfMatch: current.etag } : { onlyIfNew: true }
+    );
+    if (result.modified) return next;
+  }
+  throw new Error(`Too many conflicting writes to "${ALL_IDS_KEY}".`);
+}
+
+export async function addToCreatorIndex(id: string): Promise<void> {
+  await mutateIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
+}
+
+async function removeFromCreatorIndex(id: string): Promise<void> {
+  await mutateIds((ids) => ids.filter((existing) => existing !== id));
 }
 
 export async function listAllCreators(): Promise<PublicCreator[]> {
   const ids = await listAllCreatorIds();
   const profiles = await Promise.all(ids.map((id) => loadProfileById(id)));
   return profiles.filter((p): p is Profile => p !== null).map(toPublicCreator);
+}
+
+// Deletes the profile itself (both the name-keyed and id-keyed blobs) and
+// drops it from the index. Does not touch that creator's app data — see
+// lib/creatorData.ts's deleteAllCreatorData, called alongside this from the
+// admin delete route so both go together.
+export async function deleteProfile(id: string): Promise<void> {
+  const store = getBlobStore(PROFILES_STORE);
+  const nameKey = await store.get(`by-id:${id}`, { type: "text" });
+  if (nameKey) await store.delete(nameKey);
+  await store.delete(`by-id:${id}`);
+  await removeFromCreatorIndex(id);
 }
