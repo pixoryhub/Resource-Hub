@@ -1,8 +1,9 @@
 "use client";
 
 // Program-wide activity view for coaches — KPI totals, an 8-week activity
-// chart, who needs attention (inactive or an overdue coaching flag), and
-// who's most active this week. Pulls from app/api/admin/dashboard.
+// chart, category balance, who needs attention (inactive or an overdue
+// coaching flag), who's most active this week, and which videos are
+// over/under-performing. Pulls from app/api/admin/dashboard.
 
 import { useEffect, useState } from "react";
 
@@ -34,6 +35,12 @@ interface VideoStat {
   completions: number;
 }
 
+interface CategoryStat {
+  category: string;
+  completions: number;
+  videoCount: number;
+}
+
 interface DashboardData {
   kpis: {
     totalCreators: number;
@@ -41,12 +48,15 @@ interface DashboardData {
     totalShotsFilmed: number;
     openFlagCount: number;
     videosTotal: number;
+    weeklyActiveCreators: number;
+    newSignupsThisWeek: number;
   };
   weekly: WeekBucket[];
   needsAttention: NeedsAttentionEntry[];
   mostActive: MostActiveEntry[];
   topVideos: VideoStat[];
   needsPush: VideoStat[];
+  categoryBreakdown: CategoryStat[];
 }
 
 function formatWeek(iso: string) {
@@ -58,6 +68,55 @@ function KpiCard({ label, value }: { label: string; value: number | string }) {
     <div className="card p-4">
       <p className="eyebrow mb-1">{label}</p>
       <p className="text-2xl font-bold text-text">{value}</p>
+    </div>
+  );
+}
+
+// Closed by default so Top videos / Needs a push don't add clutter to the
+// page by default — same accordion technique as VideoRow/Step1 elsewhere.
+function Dropdown({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="card overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 p-4 text-left"
+        aria-expanded={open}
+      >
+        <div>
+          <p className="font-semibold text-text">{title}</p>
+          {subtitle && <p className="mt-0.5 text-xs text-text-faint">{subtitle}</p>}
+        </div>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={"shrink-0 text-text-faint transition-transform " + (open ? "" : "-rotate-90")}
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      <div className={"accordion-rows " + (open ? "is-open" : "")}>
+        <div>
+          <div className="space-y-2 border-t border-border p-3" inert={!open}>
+            {children}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -107,6 +166,24 @@ function WeeklyChart({ weeks }: { weeks: WeekBucket[] }) {
   );
 }
 
+function CategoryBar({ stat, maxCompletions }: { stat: CategoryStat; maxCompletions: number }) {
+  const pct = maxCompletions === 0 ? 0 : Math.round((stat.completions / maxCompletions) * 100);
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-sm font-medium text-text">{stat.category}</span>
+        <span className="text-xs text-text-faint">
+          {stat.completions} cross-off{stat.completions === 1 ? "" : "s"} · {stat.videoCount} video
+          {stat.videoCount === 1 ? "" : "s"}
+        </span>
+      </div>
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-border">
+        <div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (id: string) => void }) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -129,10 +206,14 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
   if (error) return <p className="text-accent">{error}</p>;
   if (!data) return <p className="text-text-muted">Loading…</p>;
 
+  const maxCategoryCompletions = Math.max(1, ...data.categoryBreakdown.map((c) => c.completions));
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <KpiCard label="Creators" value={data.kpis.totalCreators} />
+        <KpiCard label="Active this week" value={data.kpis.weeklyActiveCreators} />
+        <KpiCard label="New signups this week" value={data.kpis.newSignupsThisWeek} />
         <KpiCard label="Video completions" value={data.kpis.totalCompletions} />
         <KpiCard label="Shots filmed" value={data.kpis.totalShotsFilmed} />
         <KpiCard label="Open coaching flags" value={data.kpis.openFlagCount} />
@@ -145,6 +226,19 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
           Completions ticked before this feature existed won&apos;t appear here — they had no
           timestamp recorded at the time.
         </p>
+      </div>
+
+      <div>
+        <p className="eyebrow mb-2">Completion rate by category</p>
+        {data.categoryBreakdown.length === 0 ? (
+          <p className="text-sm text-text-faint">No active videos yet.</p>
+        ) : (
+          <div className="card space-y-3 p-4">
+            {data.categoryBreakdown.map((stat) => (
+              <CategoryBar key={stat.category} stat={stat} maxCompletions={maxCategoryCompletions} />
+            ))}
+          </div>
+        )}
       </div>
 
       <div>
@@ -197,49 +291,42 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
         )}
       </div>
 
-      <div>
-        <p className="eyebrow mb-2">Top {data.topVideos.length} most crossed-off videos</p>
-        {data.topVideos.length === 0 || data.topVideos[0].completions === 0 ? (
+      <Dropdown title={`Top ${data.topVideos.length || ""} most crossed-off videos`.trim()}>
+        {data.topVideos.length === 0 ? (
           <p className="text-sm text-text-faint">Nothing&apos;s been crossed off yet.</p>
         ) : (
-          <div className="space-y-2">
-            {data.topVideos.map((v, i) => (
-              <div key={v.id} className="card flex items-center justify-between gap-3 p-3">
-                <p className="min-w-0 truncate font-semibold text-text">
-                  #{i + 1} &ldquo;{v.title}&rdquo;
-                </p>
-                <span className="shrink-0 rounded-full bg-accent-tint px-2.5 py-1 text-xs font-semibold text-accent">
-                  {v.completions} cross-off{v.completions === 1 ? "" : "s"}
-                </span>
-              </div>
-            ))}
-          </div>
+          data.topVideos.map((v, i) => (
+            <div key={v.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3">
+              <p className="min-w-0 truncate font-semibold text-text">
+                #{i + 1} &ldquo;{v.title}&rdquo;
+              </p>
+              <span className="shrink-0 rounded-full bg-accent-tint px-2.5 py-1 text-xs font-semibold text-accent">
+                {v.completions} cross-off{v.completions === 1 ? "" : "s"}
+              </span>
+            </div>
+          ))
         )}
-      </div>
+      </Dropdown>
 
-      <div>
-        <p className="eyebrow mb-2">Needs a push</p>
-        <p className="mb-2 text-xs text-text-faint">
-          The {data.needsPush.length} least crossed-off active videos — worth promoting or
-          revisiting with creators.
-        </p>
+      <Dropdown
+        title="Needs a push"
+        subtitle="The least crossed-off active videos — worth promoting or revisiting with creators."
+      >
         {data.needsPush.length === 0 ? (
           <p className="text-sm text-text-faint">No active videos yet.</p>
         ) : (
-          <div className="space-y-2">
-            {data.needsPush.map((v) => (
-              <div key={v.id} className="card flex items-center justify-between gap-3 p-3">
-                <p className="min-w-0 truncate font-semibold text-text">
-                  #{v.position} &ldquo;{v.title}&rdquo;
-                </p>
-                <span className="shrink-0 rounded-full bg-border px-2.5 py-1 text-xs font-semibold text-text-muted">
-                  {v.completions} cross-off{v.completions === 1 ? "" : "s"}
-                </span>
-              </div>
-            ))}
-          </div>
+          data.needsPush.map((v) => (
+            <div key={v.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3">
+              <p className="min-w-0 truncate font-semibold text-text">
+                #{v.position} &ldquo;{v.title}&rdquo;
+              </p>
+              <span className="shrink-0 rounded-full bg-border px-2.5 py-1 text-xs font-semibold text-text-muted">
+                {v.completions} cross-off{v.completions === 1 ? "" : "s"}
+              </span>
+            </div>
+          ))
         )}
-      </div>
+      </Dropdown>
     </div>
   );
 }

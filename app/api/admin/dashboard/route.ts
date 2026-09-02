@@ -12,7 +12,7 @@ import { getHubVideos } from "@/lib/data";
 const WEEKS_BACK = 8;
 const INACTIVE_DAYS_THRESHOLD = 7;
 const FLAG_OVERDUE_HOURS = 48;
-const TOP_VIDEOS_LIMIT = 10;
+const TOP_VIDEOS_LIMIT = 5;
 const NEEDS_PUSH_LIMIT = 5;
 
 export async function GET(req: NextRequest) {
@@ -94,8 +94,40 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => b.activityCount - a.activityCount)
       .slice(0, 5);
 
+    // Weekly active creators — anyone with at least one action this week.
+    const weeklyActiveCreators = activityCountThisWeek.size;
+
+    // New signups this week — creators predating the createdAt field just
+    // won't count, same "unknown, not zero" treatment as elsewhere.
+    const currentWeekStart = new Date(currentWeekKey);
+    const newSignupsThisWeek = creators.filter(
+      (c) => c.createdAt && new Date(c.createdAt) >= currentWeekStart
+    ).length;
+
     // Active videos only — a retired video showing up as "needs a push" would be noise, not signal.
     const activeVideos = videos.filter((v) => v.status === "active");
+
+    // Completion rate by desired category — the data behind the "keep a
+    // healthy mix of categories" advice creators already get, made visible
+    // for the program as a whole.
+    const completionsByCategory = new Map<string, number>();
+    const videosByCategory = new Map<string, number>();
+    for (const v of activeVideos) {
+      videosByCategory.set(v.desiredCategory, (videosByCategory.get(v.desiredCategory) ?? 0) + 1);
+    }
+    for (const [videoId, count] of completionsByVideoId) {
+      const video = activeVideos.find((v) => v.id === videoId);
+      if (!video) continue;
+      completionsByCategory.set(video.desiredCategory, (completionsByCategory.get(video.desiredCategory) ?? 0) + count);
+    }
+    const categoryBreakdown = [...videosByCategory.keys()]
+      .map((category) => ({
+        category,
+        completions: completionsByCategory.get(category) ?? 0,
+        videoCount: videosByCategory.get(category) ?? 0,
+      }))
+      .sort((a, b) => b.completions - a.completions);
+
     const videoStats = activeVideos.map((v) => ({
       id: v.id,
       position: v.position,
@@ -103,7 +135,10 @@ export async function GET(req: NextRequest) {
       completions: completionsByVideoId.get(v.id) ?? 0,
     }));
 
+    // Zero cross-offs isn't a "top" video, no matter how it sorts — that's
+    // a "needs a push" video wearing the wrong badge.
     const topVideos = [...videoStats]
+      .filter((v) => v.completions > 0)
       .sort((a, b) => b.completions - a.completions || a.position - b.position)
       .slice(0, TOP_VIDEOS_LIMIT);
 
@@ -119,12 +154,15 @@ export async function GET(req: NextRequest) {
         totalShotsFilmed,
         openFlagCount,
         videosTotal: activeVideoTotal,
+        weeklyActiveCreators,
+        newSignupsThisWeek,
       },
       weekly: weekKeys.map((w) => weekly.get(w)),
       needsAttention,
       mostActive,
       topVideos,
       needsPush,
+      categoryBreakdown,
     });
   } catch {
     return NextResponse.json({ error: "Couldn't reach storage — try again." }, { status: 500 });
