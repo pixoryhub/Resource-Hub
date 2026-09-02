@@ -27,4 +27,4 @@ export const {
 // Resources, events, and Creator Hub videos go through the Blobs-backed
 // content layer instead of `source` directly — that's what makes admin
 // edits to them actually survive a reload (see lib/data/content.ts).
-export const { getResources, getEvents, getHubVideos, getWeeklyOpportunity, getTestimonials } = content;
+export const { getResources, getEvents, getHubVideos, getWeeklyOpportunity, getTestimonials, getTopPosts } = content;

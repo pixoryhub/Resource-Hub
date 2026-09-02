@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/adminAuth";
 import * as content from "@/lib/data/content";
 import { deleteVideo } from "@/lib/videoStore";
-import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial } from "@/lib/data/types";
+import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial, TopPosts } from "@/lib/data/types";
 
 function badRequest(error: string) {
   return NextResponse.json({ ok: false, error }, { status: 400 });
@@ -43,6 +43,9 @@ export async function POST(req: NextRequest) {
     } else if (type === "weeklyOpportunity") {
       if (action === "save") await content.saveWeeklyOpportunity(body.value as WeeklyOpportunity);
       else return badRequest("Unknown action for weeklyOpportunity.");
+    } else if (type === "topPosts") {
+      if (action === "save") await content.saveTopPosts(body.value as TopPosts);
+      else return badRequest("Unknown action for topPosts.");
     } else if (type === "testimonials") {
       if (action === "add") await content.addTestimonial(body.item as Testimonial);
       else if (action === "update") await content.updateTestimonial(body.id, body.patch as Partial<Testimonial>);

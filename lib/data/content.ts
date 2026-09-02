@@ -8,12 +8,13 @@
 
 import { getBlobStore } from "@/lib/serverStore";
 import * as fixtures from "./fixtures";
-import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial } from "./types";
+import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial, TopPosts } from "./types";
 
 const noSeed = async () => [];
 
 const CONTENT_STORE = "pixory-site-content";
 const WEEKLY_OPPORTUNITY_KEY = "weekly-opportunity";
+const TOP_POSTS_KEY = "top-posts";
 
 async function getList<T>(key: string, seed: () => Promise<T[]>): Promise<T[]> {
   const store = getBlobStore(CONTENT_STORE);
@@ -162,6 +163,22 @@ export async function getWeeklyOpportunity(): Promise<WeeklyOpportunity | null> 
 
 export async function saveWeeklyOpportunity(value: WeeklyOpportunity): Promise<void> {
   await getBlobStore(CONTENT_STORE).set(WEEKLY_OPPORTUNITY_KEY, JSON.stringify(value));
+}
+
+// Top posts from last week — same singleton pattern as the weekly
+// opportunity spotlight above.
+
+export async function getTopPosts(): Promise<TopPosts | null> {
+  try {
+    const raw = await getBlobStore(CONTENT_STORE).get(TOP_POSTS_KEY, { type: "text" });
+    return raw ? (JSON.parse(raw) as TopPosts) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveTopPosts(value: TopPosts): Promise<void> {
+  await getBlobStore(CONTENT_STORE).set(TOP_POSTS_KEY, JSON.stringify(value));
 }
 
 // "A message from our top creators" testimonials — no fixture to seed

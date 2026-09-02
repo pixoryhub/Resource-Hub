@@ -53,20 +53,9 @@ export interface Week {
   opportunities: Opportunity[];
 }
 
-export type DesiredCategory =
-  | "Product Desire"
-  | "Lifestyle Desire"
-  | "Hybrid Desire"
-  | "TOF"
-  | "Pillar 3";
+export type DesiredCategory = "Product Desire" | "Lifestyle Desire" | "Hybrid Desire";
 
-export const DESIRED_CATEGORIES: DesiredCategory[] = [
-  "Product Desire",
-  "Lifestyle Desire",
-  "Hybrid Desire",
-  "TOF",
-  "Pillar 3",
-];
+export const DESIRED_CATEGORIES: DesiredCategory[] = ["Product Desire", "Lifestyle Desire", "Hybrid Desire"];
 
 export interface AudioSuggestion {
   label: string;
@@ -153,6 +142,18 @@ export interface CalendarEvent {
 // URLs and short ALL-CAPS/emoji lines and styles them, rather than asking
 // for separate structured fields per section.
 export interface WeeklyOpportunity {
+  title: string;
+  body: string;
+  active: boolean;
+  updatedAt: string;
+}
+
+// Top posts from last week — same singleton-plus-paste-box shape as
+// WeeklyOpportunity, and the same reason: `body` is pasted close to
+// verbatim from how the team already writes it (one line per post — rank
+// marker, view count, @handle, link), and the component parses that line
+// shape directly rather than asking for four separate fields per post.
+export interface TopPosts {
   title: string;
   body: string;
   active: boolean;
