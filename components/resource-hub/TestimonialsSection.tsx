@@ -3,7 +3,7 @@
 // "A message from our top creators" — short video testimonials under
 // Educational Resources. Each entry is a name, a profile link, an average
 // earnings figure, and an uploaded video (not a link — see
-// lib/videoStore.ts and app/api/admin/testimonial-videos). Admin add/edit
+// lib/videoStore.ts and app/api/admin/videos). Admin add/edit
 // follows the same inline-form pattern as Resources/Events.
 
 import { useRef, useState } from "react";
@@ -36,7 +36,7 @@ function TestimonialForm({
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/api/admin/testimonial-videos", { method: "POST", body: formData });
+      const res = await fetch("/api/admin/videos", { method: "POST", body: formData });
       const data = await res.json();
       if (res.ok && data.ok) {
         setVideoAssetId(data.id);
@@ -154,7 +154,7 @@ function TestimonialCard({
     <div className="card flex items-center gap-3 overflow-hidden p-3">
       <div className="relative aspect-[9/16] w-24 shrink-0 overflow-hidden rounded-xl bg-black sm:w-28">
         <video
-          src={`/api/testimonial-video/${testimonial.videoAssetId}`}
+          src={`/api/video/${testimonial.videoAssetId}`}
           controls
           playsInline
           preload="metadata"

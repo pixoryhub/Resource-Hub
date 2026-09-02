@@ -12,7 +12,7 @@
 // what the team already writes for Discord is enough. See
 // lib/data/types.ts's WeeklyOpportunity for the stored shape.
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { WeeklyOpportunity } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
 import { saveContentAction } from "@/lib/adminContentClient";
@@ -83,10 +83,42 @@ function OpportunityForm({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [body, setBody] = useState(initial?.body ?? "");
   const [active, setActive] = useState(initial?.active ?? true);
+  const [videoAssetId, setVideoAssetId] = useState(initial?.videoAssetId ?? "");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/videos", { method: "POST", body: formData });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setVideoAssetId(data.id);
+      } else {
+        setUploadError(data.error ?? "Upload failed — try again.");
+      }
+    } catch {
+      setUploadError("Couldn't reach the server — try again.");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   function handleSave() {
     if (!title.trim() || !body.trim()) return;
-    onSave({ title: title.trim(), body: body.trim(), active, updatedAt: new Date().toISOString() });
+    onSave({
+      title: title.trim(),
+      body: body.trim(),
+      active,
+      updatedAt: new Date().toISOString(),
+      videoAssetId: videoAssetId || undefined,
+    });
   }
 
   return (
@@ -111,6 +143,33 @@ function OpportunityForm({
         className="w-full resize-y rounded-xl border border-border bg-bg px-3 py-2.5 font-mono text-sm text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
         style={{ fontSize: "16px" }}
       />
+      <div>
+        <label className="eyebrow mb-1.5 block">Reference video (optional)</label>
+        <p className="mb-2 text-xs text-text-faint">
+          For when you don&apos;t have a link to point at — upload the clip itself instead.
+        </p>
+        <input ref={fileInputRef} type="file" accept="video/*" onChange={handleFileChange} className="hidden" />
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="rounded-xl border border-dashed border-border px-4 py-2.5 text-sm font-semibold text-text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+          >
+            {uploading ? "Uploading…" : videoAssetId ? "✓ Video uploaded — click to replace" : "Choose a video file"}
+          </button>
+          {videoAssetId && (
+            <button
+              type="button"
+              onClick={() => setVideoAssetId("")}
+              className="text-xs font-semibold text-text-faint hover:text-accent"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        {uploadError && <p className="mt-1.5 text-sm text-accent">{uploadError}</p>}
+      </div>
       <label className="flex items-center gap-2 text-sm font-medium text-text">
         <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} className="h-4 w-4" />
         Live on the Resource Hub
@@ -217,10 +276,19 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
         </span>
       </button>
 
-      {restLines.length > 0 && (
+      {(restLines.length > 0 || opportunity.videoAssetId) && (
         <div className={"accordion-rows " + (open ? "is-open" : "")}>
           <div>
             <div className="mt-4 border-t border-white/20 pt-4" inert={!open}>
+              {opportunity.videoAssetId && (
+                <video
+                  src={`/api/video/${opportunity.videoAssetId}`}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="mb-4 max-h-[420px] w-full rounded-2xl bg-black"
+                />
+              )}
               <OpportunityBody lines={restLines} />
             </div>
           </div>

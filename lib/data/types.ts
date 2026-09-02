@@ -146,6 +146,10 @@ export interface WeeklyOpportunity {
   body: string;
   active: boolean;
   updatedAt: string;
+  // Optional uploaded reference clip, for when there's no link to point at
+  // — same video store as Testimonial.videoAssetId (see
+  // app/api/video/[id]/route.ts).
+  videoAssetId?: string;
 }
 
 // Top posts from last week — shown at the top of the Creator Hub. A list,
@@ -164,7 +168,7 @@ export interface TopPost {
 
 // "A message from our top creators" — short video testimonials shown under
 // Educational Resources. videoAssetId points at a blob in the
-// pixory-testimonial-videos store (see app/api/testimonial-video/[id]),
+// pixory-testimonial-videos store (see app/api/video/[id]),
 // not an external URL — these are uploaded files, not links.
 export interface Testimonial {
   id: string;
@@ -173,4 +177,13 @@ export interface Testimonial {
   profileUrl: string;
   avgEarnings: string;
   videoAssetId: string;
+}
+
+// Which of the four main nav pages are hidden from creators right now —
+// the easiest version of "take a page down while I fix it": the page and
+// its nav link disappear for everyone except admins, who can still open it
+// directly to keep working. `key` matches NAV_ITEMS' href with the leading
+// slash stripped ("" for the Resource Hub root).
+export interface SiteSettings {
+  hiddenNavKeys: string[];
 }

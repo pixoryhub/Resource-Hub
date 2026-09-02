@@ -1,6 +1,7 @@
-// Public streaming endpoint for uploaded testimonial videos — see
-// lib/videoStore.ts and app/api/admin/testimonial-videos (the upload
-// route). Not admin-gated: creators need to actually watch these.
+// Public streaming endpoint for uploaded video assets — used by both
+// testimonials and the weekly opportunity's optional reference clip. See
+// lib/videoStore.ts and app/api/admin/videos (the upload route). Not
+// admin-gated: creators need to actually watch these.
 
 import { NextRequest, NextResponse } from "next/server";
 import { loadVideo } from "@/lib/videoStore";

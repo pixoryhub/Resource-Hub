@@ -5,13 +5,16 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAdminMode } from "@/lib/adminMode";
 import { useAuth } from "@/lib/localAuth";
+import { useSiteSettings } from "@/lib/useSiteSettings";
 
-// §5 — nav order and verbatim labels are 🟢 confirmed.
+// §5 — nav order and verbatim labels are 🟢 confirmed. `key` matches
+// SiteSettings.hiddenNavKeys (see lib/data/types.ts) — how a page's own
+// SectionGate and this nav agree on which page is being hidden.
 const NAV_ITEMS = [
-  { label: "Resource Hub", href: "/" },
-  { label: "Creator Hub", href: "/creator-hub" },
-  { label: "Coaching Flag", href: "/coaching-flag" },
-  { label: "Shot List", href: "/shot-list-generator" },
+  { label: "Resource Hub", href: "/", key: "" },
+  { label: "Creator Hub", href: "/creator-hub", key: "creator-hub" },
+  { label: "Coaching Flag", href: "/coaching-flag", key: "coaching-flag" },
+  { label: "Shot List", href: "/shot-list-generator", key: "shot-list-generator" },
 ];
 
 // Visibility of the two icons is driven purely by CSS off the
@@ -175,7 +178,11 @@ export default function Header() {
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
   const { enabled: adminMode } = useAdminMode();
-  const navItems = adminMode ? [...NAV_ITEMS, { label: "Admin Dashboard", href: "/admin" }] : NAV_ITEMS;
+  const { hiddenNavKeys } = useSiteSettings();
+  const visibleNavItems = adminMode ? NAV_ITEMS : NAV_ITEMS.filter((item) => !hiddenNavKeys.includes(item.key));
+  const navItems = adminMode
+    ? [...visibleNavItems, { label: "Admin Dashboard", href: "/admin", key: "admin" }]
+    : visibleNavItems;
 
   // Reports its own height as --header-h so other sticky elements (the
   // Shot List Generator's progress card) can pin themselves just below it,
@@ -212,18 +219,22 @@ export default function Header() {
         <nav className="flex flex-wrap gap-1 lg:order-2 lg:flex-nowrap lg:gap-1">
           {navItems.map((item) => {
             const active = pathname === item.href;
+            const hiddenFromCreators = adminMode && hiddenNavKeys.includes(item.key);
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                title={hiddenFromCreators ? "Hidden from creators right now" : undefined}
                 className={
                   "shrink-0 rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors lg:px-4 " +
                   (active
                     ? "bg-text text-bg"
-                    : "text-text-muted hover:bg-accent-tint hover:text-text")
+                    : "text-text-muted hover:bg-accent-tint hover:text-text") +
+                  (hiddenFromCreators ? " opacity-60" : "")
                 }
               >
                 {item.label}
+                {hiddenFromCreators && " (hidden)"}
               </Link>
             );
           })}

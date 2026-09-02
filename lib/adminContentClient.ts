@@ -7,7 +7,7 @@
 // a reload instead of silently reverting.
 
 export function saveContentAction(
-  type: "resources" | "events" | "hubVideos" | "weeklyOpportunity" | "topPosts" | "testimonials",
+  type: "resources" | "events" | "hubVideos" | "weeklyOpportunity" | "topPosts" | "testimonials" | "siteSettings",
   body: Record<string, unknown>
 ): void {
   fetch("/api/admin/content", {

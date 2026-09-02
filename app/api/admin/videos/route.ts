@@ -1,7 +1,7 @@
-// Admin-only video upload for the "message from our top creators" section
-// (see lib/videoStore.ts). Accepts multipart/form-data with a single
-// "file" field, stores it, and returns an id the testimonial's
-// videoAssetId can point at.
+// Admin-only video upload — used by testimonials and the weekly
+// opportunity's optional reference clip (see lib/videoStore.ts). Accepts
+// multipart/form-data with a single "file" field, stores it, and returns
+// an id a videoAssetId field can point at.
 
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";

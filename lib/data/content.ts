@@ -8,12 +8,13 @@
 
 import { getBlobStore } from "@/lib/serverStore";
 import * as fixtures from "./fixtures";
-import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial, TopPost } from "./types";
+import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial, TopPost, SiteSettings } from "./types";
 
 const noSeed = async () => [];
 
 const CONTENT_STORE = "pixory-site-content";
 const WEEKLY_OPPORTUNITY_KEY = "weekly-opportunity";
+const SITE_SETTINGS_KEY = "site-settings";
 
 async function getList<T>(key: string, seed: () => Promise<T[]>): Promise<T[]> {
   const store = getBlobStore(CONTENT_STORE);
@@ -204,4 +205,24 @@ export function updateTestimonial(id: string, patch: Partial<Testimonial>): Prom
 }
 export function deleteTestimonial(id: string): Promise<Testimonial[]> {
   return deleteItem<Testimonial>("testimonials", noSeed, id);
+}
+
+// Page visibility — which nav pages are hidden from creators right now.
+// A singleton, defaulting to "nothing hidden" when never saved.
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+  try {
+    const raw = await getBlobStore(CONTENT_STORE).get(SITE_SETTINGS_KEY, { type: "text" });
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed?.hiddenNavKeys)) return parsed as SiteSettings;
+    }
+  } catch {
+    // fall through to default
+  }
+  return { hiddenNavKeys: [] };
+}
+
+export async function saveSiteSettings(value: SiteSettings): Promise<void> {
+  await getBlobStore(CONTENT_STORE).set(SITE_SETTINGS_KEY, JSON.stringify(value));
 }

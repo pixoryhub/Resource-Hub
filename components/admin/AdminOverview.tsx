@@ -6,6 +6,60 @@
 // over/under-performing. Pulls from app/api/admin/dashboard.
 
 import { useEffect, useState } from "react";
+import { saveContentAction } from "@/lib/adminContentClient";
+import { useSiteSettings } from "@/lib/useSiteSettings";
+
+// Kept in sync with components/Header.tsx's NAV_ITEMS keys by hand — small,
+// fixed list, not worth sharing a module for.
+const HIDEABLE_PAGES = [
+  { key: "creator-hub", label: "Creator Hub" },
+  { key: "coaching-flag", label: "Coaching Flag" },
+  { key: "shot-list-generator", label: "Shot List Generator" },
+];
+
+function PageVisibilityPanel() {
+  const { hiddenNavKeys: initialHidden, ready } = useSiteSettings();
+  const [hidden, setHidden] = useState<string[]>([]);
+  const [synced, setSynced] = useState(false);
+
+  // useSiteSettings resolves async — copy its result in once, then this
+  // panel owns the value locally (so toggling doesn't fight the fetch).
+  if (ready && !synced) {
+    setHidden(initialHidden);
+    setSynced(true);
+  }
+
+  function toggle(key: string) {
+    const next = hidden.includes(key) ? hidden.filter((k) => k !== key) : [...hidden, key];
+    setHidden(next);
+    saveContentAction("siteSettings", { action: "save", value: { hiddenNavKeys: next } });
+  }
+
+  return (
+    <div className="card space-y-2.5 p-4">
+      <p className="eyebrow">Page visibility</p>
+      <p className="text-xs text-text-faint">
+        Hide a page from creators while you work on it — you&apos;ll still see and can open it
+        yourself; everyone else sees a &quot;check back soon&quot; message.
+      </p>
+      {HIDEABLE_PAGES.map((page) => (
+        <label key={page.key} className="flex items-center justify-between gap-3 py-1">
+          <span className="text-sm font-medium text-text">{page.label}</span>
+          <span className="flex items-center gap-2 text-xs text-text-muted">
+            {hidden.includes(page.key) ? "Hidden from creators" : "Visible to creators"}
+            <input
+              type="checkbox"
+              checked={!hidden.includes(page.key)}
+              onChange={() => toggle(page.key)}
+              className="h-4 w-4"
+              aria-label={`${page.label} visible to creators`}
+            />
+          </span>
+        </label>
+      ))}
+    </div>
+  );
+}
 
 interface WeekBucket {
   weekStart: string;
@@ -210,6 +264,8 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
 
   return (
     <div className="space-y-6">
+      <PageVisibilityPanel />
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <KpiCard label="Creators" value={data.kpis.totalCreators} />
         <KpiCard label="Active this week" value={data.kpis.weeklyActiveCreators} />

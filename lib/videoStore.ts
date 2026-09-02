@@ -6,6 +6,9 @@
 
 import { getBlobStore } from "@/lib/serverStore";
 
+// Name kept as-is (not renamed to match the wider "video assets" use it now
+// covers) — it's a literal Netlify Blobs bucket identifier, and renaming it
+// would orphan every video already uploaded under the old name.
 const VIDEO_STORE = "pixory-testimonial-videos";
 
 export async function saveVideo(id: string, data: ArrayBuffer, contentType: string): Promise<void> {

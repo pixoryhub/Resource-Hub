@@ -1,6 +1,7 @@
 import { getCurrentWeek } from "@/lib/data";
 import { DEV_CREATOR_ID } from "@/lib/session";
 import ShotListClient from "@/components/shot-list/ShotListClient";
+import SectionGate from "@/components/SectionGate";
 
 export default async function ShotListGeneratorPage() {
   // The §12 golden case, seeded under the fixed demo id — used only as the
@@ -17,5 +18,9 @@ export default async function ShotListGeneratorPage() {
     );
   }
 
-  return <ShotListClient initialWeek={exampleWeek} />;
+  return (
+    <SectionGate sectionKey="shot-list-generator">
+      <ShotListClient initialWeek={exampleWeek} />
+    </SectionGate>
+  );
 }
