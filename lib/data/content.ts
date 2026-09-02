@@ -26,7 +26,14 @@ async function getList<T>(key: string, seed: () => Promise<T[]>): Promise<T[]> {
     // without trying (and failing) to write the seed back.
     return seed();
   }
-  if (raw) return JSON.parse(raw) as T[];
+  if (raw) {
+    // A key can end up holding a shape from before it was a list — that
+    // literally happened when "top-posts" changed from a singleton object
+    // to a list under the same key. Treat anything non-array as "start
+    // fresh" instead of crashing every page that reads it.
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed as T[];
+  }
 
   const seeded = await seed();
   try {
