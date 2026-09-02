@@ -19,28 +19,49 @@ interface PostLine {
   url: string;
 }
 
-// "🥇 540K @elizabeth  https://www.instagram.com/reel/DcZgUCwSQCr/" — a rank
-// marker, a stat, a handle/name, then a link. The handle isn't assumed to
-// be one space-free token — "@Holly F" is a real example — so it's
-// whatever sits between the stat and the URL, however many words that is.
-// Kept generic on the marker itself so a 4th/5th place using "4." or
-// another emoji still parses the same way.
-const POST_LINE = /^(\S+)\s+(\S+)\s+(.+?)\s+(https?:\/\/\S+)\s*$/;
+// Handles two shapes, since both show up in practice:
+//   "🥇 540K @elizabeth  https://www.instagram.com/reel/DcZgUCwSQCr/"  (one line)
+//   "🥇 540K Elizabeth" then "https://www.instagram.com/reel/..." on the next line
+// The handle isn't assumed to be one space-free token or "@"-prefixed —
+// "@Holly F" and "Holly F" are both real examples — so it's whatever sits
+// between the stat and the URL, however many words that is. Kept generic
+// on the marker itself so a 4th/5th place using "4." or another emoji
+// still parses the same way.
+const ONE_LINE_POST = /^(\S+)\s+(\S+)\s+(.+?)\s+(https?:\/\/\S+)\s*$/;
+const INFO_LINE = /^(\S+)\s+(\S+)\s+(.+)$/;
+const URL_LINE = /^https?:\/\/\S+$/;
 
 function parsePosts(body: string): { posts: PostLine[]; extraLines: string[] } {
+  const lines = body
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+
   const posts: PostLine[] = [];
   const extraLines: string[] = [];
-  for (const raw of body.split("\n")) {
-    const line = raw.trim();
-    if (!line) continue;
-    const match = line.match(POST_LINE);
-    if (match) {
-      const [, marker, stat, handle, url] = match;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    const oneLine = line.match(ONE_LINE_POST);
+    if (oneLine) {
+      const [, marker, stat, handle, url] = oneLine;
       posts.push({ marker, stat, handle, url });
-    } else {
-      extraLines.push(line);
+      continue;
     }
+
+    const info = line.match(INFO_LINE);
+    const next = lines[i + 1];
+    if (info && !URL_LINE.test(info[3]) && next && URL_LINE.test(next)) {
+      const [, marker, stat, handle] = info;
+      posts.push({ marker, stat, handle, url: next });
+      i++; // this line's URL was on the next line — don't process it again
+      continue;
+    }
+
+    extraLines.push(line);
   }
+
   return { posts, extraLines };
 }
 
