@@ -153,6 +153,8 @@ export default function CreatorHubClient({
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 sm:px-6">
+      <TopPostsSection initial={topPosts} />
+
       <div className="card space-y-3 p-4">
         <div>
           <p className="eyebrow mb-1">Creator Hub</p>
@@ -217,8 +219,6 @@ export default function CreatorHubClient({
           />
         </div>
       </div>
-
-      <TopPostsSection initial={topPosts} />
 
       <div className="space-y-3">
         {filtered.length === 0 && (

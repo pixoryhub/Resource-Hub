@@ -262,7 +262,7 @@ export default function TopPostsSection({ initial }: { initial: TopPost[] }) {
         <h2 className="headline text-text">Last week&apos;s leaderboard</h2>
       </div>
 
-      <div className="flex items-start gap-3 overflow-x-auto pb-1">
+      <div className="flex items-start justify-center gap-3 overflow-x-auto pb-1">
         {sorted.map((post, i) => (
           <MedalCircle
             key={post.id}
