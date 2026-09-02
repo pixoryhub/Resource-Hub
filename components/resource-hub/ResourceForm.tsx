@@ -22,6 +22,9 @@ export default function ResourceForm({
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  // Slide exports uploaded together — kept around after picking one so the
+  // gallery below stays visible for overriding the auto-picked slide.
+  const [uploadedGallery, setUploadedGallery] = useState<string[]>([]);
 
   function updateLink(i: number, patch: Partial<ResourceLink>) {
     setLinks((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
@@ -55,25 +58,38 @@ export default function ResourceForm({
     }
   }
 
-  // Lets an admin pick their own image — e.g. a screenshot of one specific
-  // slide from a Canva/Slides deck — rather than being stuck with whatever
-  // og:image the linked platform happens to expose (always the cover
-  // slide). Save the slide as an image first, then upload it here.
-  async function uploadThumbnail(file: File) {
+  async function uploadOne(file: File): Promise<string | null> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/admin/images", { method: "POST", body: formData });
+    const data = await res.json();
+    return data.ok ? (data.url as string) : null;
+  }
+
+  // Lets an admin pick their own image — most decks always use the 2nd
+  // slide as the thumbnail, so exporting a deck from Canva/Slides (Download
+  // → selected/all pages) and dropping every exported file in here at once
+  // auto-picks slide 2 with zero extra clicks. The rest of what's uploaded
+  // stays visible below so a one-off can still be picked by hand.
+  async function uploadThumbnails(files: File[]) {
+    if (!files.length) return;
     setUploading(true);
     setUploadError(null);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/admin/images", { method: "POST", body: formData });
-      const data = await res.json();
-      if (data.ok) {
-        setThumbnailUrl(data.url);
-      } else {
-        setUploadError(data.error ?? "Couldn't upload that image.");
+      const urls = (await Promise.all(files.map(uploadOne))).filter((u): u is string => !!u);
+      if (!urls.length) {
+        setUploadError("Couldn't upload those images.");
+        return;
+      }
+      setUploadedGallery(urls);
+      // Auto-pick slide 2 when there's a batch; a single file just becomes
+      // the thumbnail directly (that's the "paste one screenshot" case).
+      setThumbnailUrl(urls.length > 1 ? urls[1] : urls[0]);
+      if (urls.length < files.length) {
+        setUploadError(`${files.length - urls.length} of ${files.length} images failed to upload.`);
       }
     } catch {
-      setUploadError("Couldn't upload that image.");
+      setUploadError("Couldn't upload those images.");
     } finally {
       setUploading(false);
     }
@@ -177,7 +193,10 @@ export default function ResourceForm({
               <img src={thumbnailUrl} alt="" className="h-16 w-16 rounded-lg object-cover" />
               <button
                 type="button"
-                onClick={() => setThumbnailUrl("")}
+                onClick={() => {
+                  setThumbnailUrl("");
+                  setUploadedGallery([]);
+                }}
                 className="text-xs font-semibold text-text-muted hover:text-accent"
               >
                 Remove
@@ -189,28 +208,73 @@ export default function ResourceForm({
                 type="text"
                 value={thumbnailUrl}
                 onChange={(e) => setThumbnailUrl(e.target.value)}
-                placeholder="Or paste an image URL"
+                onPaste={(e) => {
+                  // A screenshot copied to the clipboard (e.g. Cmd+Ctrl+Shift+4
+                  // on Mac) pastes as an image, not text — grab it and upload
+                  // directly instead of trying to type it into a URL field.
+                  const item = Array.from(e.clipboardData.items).find((i) => i.type.startsWith("image/"));
+                  const file = item?.getAsFile();
+                  if (file) {
+                    e.preventDefault();
+                    uploadThumbnails([file]);
+                  }
+                }}
+                placeholder="Paste an image URL, or paste/drop exported slides"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  const files = Array.from(e.dataTransfer.files ?? []).filter((f) => f.type.startsWith("image/"));
+                  if (files.length) {
+                    e.preventDefault();
+                    uploadThumbnails(files);
+                  }
+                }}
                 className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
                 style={{ fontSize: "16px" }}
               />
               <div className="flex items-center gap-2">
                 <label className="cursor-pointer text-xs font-semibold text-accent hover:underline">
-                  {uploading ? "Uploading…" : "Or upload your own image"}
+                  {uploading ? "Uploading…" : "Or click to upload exported slides"}
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/webp,image/gif"
+                    multiple
                     className="hidden"
                     disabled={uploading}
                     onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) uploadThumbnail(file);
+                      const files = Array.from(e.target.files ?? []);
+                      if (files.length) uploadThumbnails(files);
                       e.target.value = "";
                     }}
                   />
                 </label>
-                <span className="text-xs text-text-faint">
-                  e.g. a screenshot or export of the exact slide you want
-                </span>
+              </div>
+              <p className="text-xs text-text-faint">
+                From Canva/Slides: Download → export the deck as images, then drop all the exported files
+                in here at once — the 2nd slide gets picked automatically.
+              </p>
+            </div>
+          )}
+          {uploadedGallery.length > 1 && (
+            <div className="mt-2">
+              <p className="mb-1 text-xs font-semibold text-text-muted">
+                Uploaded slides — click to use a different one
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {uploadedGallery.map((url, i) => (
+                  <button
+                    key={url}
+                    type="button"
+                    onClick={() => setThumbnailUrl(url)}
+                    title={i === 1 ? "Slide 2 (auto-picked)" : `Slide ${i + 1}`}
+                    className={
+                      "h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 " +
+                      (thumbnailUrl === url ? "border-accent" : "border-transparent hover:border-border")
+                    }
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- thumbnail gallery of uploaded images */}
+                    <img src={url} alt={`Slide ${i + 1}`} className="h-full w-full object-cover" />
+                  </button>
+                ))}
               </div>
             </div>
           )}
