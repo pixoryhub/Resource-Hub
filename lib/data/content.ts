@@ -8,13 +8,12 @@
 
 import { getBlobStore } from "@/lib/serverStore";
 import * as fixtures from "./fixtures";
-import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial, TopPosts } from "./types";
+import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial, TopPost } from "./types";
 
 const noSeed = async () => [];
 
 const CONTENT_STORE = "pixory-site-content";
 const WEEKLY_OPPORTUNITY_KEY = "weekly-opportunity";
-const TOP_POSTS_KEY = "top-posts";
 
 async function getList<T>(key: string, seed: () => Promise<T[]>): Promise<T[]> {
   const store = getBlobStore(CONTENT_STORE);
@@ -165,20 +164,23 @@ export async function saveWeeklyOpportunity(value: WeeklyOpportunity): Promise<v
   await getBlobStore(CONTENT_STORE).set(WEEKLY_OPPORTUNITY_KEY, JSON.stringify(value));
 }
 
-// Top posts from last week — same singleton pattern as the weekly
-// opportunity spotlight above.
+// Top posts from last week — a list, not a singleton (see lib/data/types.ts
+// for why). No fixture to seed from, starts empty until an admin adds one.
 
-export async function getTopPosts(): Promise<TopPosts | null> {
-  try {
-    const raw = await getBlobStore(CONTENT_STORE).get(TOP_POSTS_KEY, { type: "text" });
-    return raw ? (JSON.parse(raw) as TopPosts) : null;
-  } catch {
-    return null;
-  }
+export function getTopPosts(): Promise<TopPost[]> {
+  return getList<TopPost>("top-posts", noSeed);
 }
-
-export async function saveTopPosts(value: TopPosts): Promise<void> {
-  await getBlobStore(CONTENT_STORE).set(TOP_POSTS_KEY, JSON.stringify(value));
+export function addTopPost(item: TopPost): Promise<void> {
+  return addItem("top-posts", noSeed, item);
+}
+export function updateTopPost(id: string, patch: Partial<TopPost>): Promise<TopPost[]> {
+  return updateItem<TopPost>("top-posts", noSeed, id, patch);
+}
+export function deleteTopPost(id: string): Promise<TopPost[]> {
+  return deleteItem<TopPost>("top-posts", noSeed, id);
+}
+export function setTopPostPositions(updates: { id: string; position: number }[]): Promise<TopPost[]> {
+  return setPositions<TopPost>("top-posts", noSeed, updates);
 }
 
 // "A message from our top creators" testimonials — no fixture to seed

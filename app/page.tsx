@@ -1,8 +1,7 @@
-import { getResources, getEvents, getWeeklyOpportunity, getTestimonials, getTopPosts } from "@/lib/data";
+import { getResources, getEvents, getWeeklyOpportunity, getTestimonials } from "@/lib/data";
 import ResourceSection from "@/components/resource-hub/ResourceSection";
 import EventsSection from "@/components/resource-hub/EventsSection";
 import WeeklyOpportunitySection from "@/components/resource-hub/WeeklyOpportunitySection";
-import TopPostsSection from "@/components/resource-hub/TopPostsSection";
 import TestimonialsSection from "@/components/resource-hub/TestimonialsSection";
 
 // Resources/events/the weekly opportunity are admin-editable and live in
@@ -13,12 +12,11 @@ import TestimonialsSection from "@/components/resource-hub/TestimonialsSection";
 export const dynamic = "force-dynamic";
 
 export default async function ResourceHubPage() {
-  const [resources, events, opportunity, testimonials, topPosts] = await Promise.all([
+  const [resources, events, opportunity, testimonials] = await Promise.all([
     getResources(),
     getEvents(),
     getWeeklyOpportunity(),
     getTestimonials(),
-    getTopPosts(),
   ]);
   const communityLinks = resources.filter((r) => r.section === "community-links");
   const educationalResources = resources.filter((r) => r.section === "educational-resources");
@@ -26,8 +24,6 @@ export default async function ResourceHubPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-6 sm:px-6">
       <WeeklyOpportunitySection initial={opportunity} />
-
-      <TopPostsSection initial={topPosts} />
 
       <div>
         <h2 className="headline mb-1.5 text-text">Community Essentials</h2>

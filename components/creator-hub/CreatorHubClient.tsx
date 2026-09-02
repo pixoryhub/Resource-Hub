@@ -1,20 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { HubVideo } from "@/lib/data/types";
+import type { HubVideo, TopPost } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
 import { useAuth } from "@/lib/localAuth";
 import { loadCreatorData, saveCreatorData } from "@/lib/creatorStorage";
 import { saveContentAction } from "@/lib/adminContentClient";
 import VideoRow from "./VideoRow";
 import HubVideoForm, { type HubVideoFormData } from "./HubVideoForm";
+import TopPostsSection from "./TopPostsSection";
 
 type Tab = "all" | "completed" | "unfinished";
 
 export default function CreatorHubClient({
   videos: initialVideos,
+  topPosts,
 }: {
   videos: HubVideo[];
+  topPosts: TopPost[];
 }) {
   const { enabled: adminMode } = useAdminMode();
   const { creator } = useAuth();
@@ -150,6 +153,8 @@ export default function CreatorHubClient({
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 sm:px-6">
+      <TopPostsSection initial={topPosts} />
+
       <div className="card space-y-3 p-4">
         <div>
           <p className="eyebrow mb-1">Creator Hub</p>

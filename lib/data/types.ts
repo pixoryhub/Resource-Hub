@@ -148,16 +148,18 @@ export interface WeeklyOpportunity {
   updatedAt: string;
 }
 
-// Top posts from last week — same singleton-plus-paste-box shape as
-// WeeklyOpportunity, and the same reason: `body` is pasted close to
-// verbatim from how the team already writes it (one line per post — rank
-// marker, view count, @handle, link), and the component parses that line
-// shape directly rather than asking for four separate fields per post.
-export interface TopPosts {
-  title: string;
-  body: string;
-  active: boolean;
-  updatedAt: string;
+// Top posts from last week — shown at the top of the Creator Hub. A list,
+// not a singleton: each post is its own entry with explicit fields
+// (creator name, platform link) rather than one pasted blob — a free-text
+// parser here kept breaking on real examples (multi-word names, different
+// line shapes), so this asks for exactly the two things that vary.
+// `position` (1st/2nd/3rd/...) decides the rank badge shown.
+export interface TopPost {
+  id: string;
+  position: number;
+  views: string; // e.g. "540K" — free text, not a number, since it's typed as seen on the platform
+  creatorName: string;
+  url: string;
 }
 
 // "A message from our top creators" — short video testimonials shown under
