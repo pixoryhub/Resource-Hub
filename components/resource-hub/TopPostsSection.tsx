@@ -19,11 +19,13 @@ interface PostLine {
   url: string;
 }
 
-// "🥇 540K @elizabeth  https://www.instagram.com/reel/DcZgUCwSQCr/" — four
-// space-separated tokens: a rank marker, a stat, an @handle, a link. Kept
-// generic on the marker itself so a 4th/5th place using "4." or another
-// emoji still parses the same way.
-const POST_LINE = /^(\S+)\s+(\S+)\s+(@\S+)\s+(https?:\/\/\S+)\s*$/;
+// "🥇 540K @elizabeth  https://www.instagram.com/reel/DcZgUCwSQCr/" — a rank
+// marker, a stat, a handle/name, then a link. The handle isn't assumed to
+// be one space-free token — "@Holly F" is a real example — so it's
+// whatever sits between the stat and the URL, however many words that is.
+// Kept generic on the marker itself so a 4th/5th place using "4." or
+// another emoji still parses the same way.
+const POST_LINE = /^(\S+)\s+(\S+)\s+(.+?)\s+(https?:\/\/\S+)\s*$/;
 
 function parsePosts(body: string): { posts: PostLine[]; extraLines: string[] } {
   const posts: PostLine[] = [];
