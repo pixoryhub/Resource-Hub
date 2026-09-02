@@ -29,6 +29,7 @@ export default function VideoRow({
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [audioOpen, setAudioOpen] = useState(false);
 
   if (editing) {
     return (
@@ -215,36 +216,56 @@ export default function VideoRow({
             </p>
           </div>
 
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-border bg-surface p-4">
-              <p className="eyebrow mb-2">Execution notes</p>
-              <p className="whitespace-pre-line text-sm leading-relaxed text-text-muted">
-                {video.executionNotes}
-              </p>
-            </div>
-            <div className="rounded-xl border border-border bg-surface p-4">
-              <p className="eyebrow mb-2">Collection-size guidance</p>
-              <p className="text-sm leading-relaxed text-text-muted">{video.collectionGuidance}</p>
-            </div>
+          <div className="mt-3 rounded-xl border border-border bg-surface p-4">
+            <p className="eyebrow mb-2">Execution notes</p>
+            <p className="whitespace-pre-line text-sm leading-relaxed text-text-muted">
+              {video.executionNotes}
+            </p>
           </div>
 
-          <div className="mt-3 rounded-xl border border-border bg-surface p-4">
-            <p className="eyebrow mb-2">Audio suggestions</p>
-            <div className="-mx-1">
-              {video.audioSuggestions.map((a) => (
-                <a
-                  key={a.label}
-                  href={a.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between gap-2 rounded-lg px-1 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg hover:text-accent"
-                >
-                  <span className="truncate">🎵 {a.label}</span>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                    <path d="M7 17 17 7M8 7h9v9" />
-                  </svg>
-                </a>
-              ))}
+          <div className="mt-3 overflow-hidden rounded-xl border border-border bg-surface">
+            <button
+              type="button"
+              onClick={() => setAudioOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-3 p-4 text-left"
+              aria-expanded={audioOpen}
+            >
+              <span className="eyebrow">
+                Audio suggestions ({video.audioSuggestions.length})
+              </span>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={"shrink-0 text-text-faint transition-transform " + (audioOpen ? "" : "-rotate-90")}
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            <div className={"accordion-rows " + (audioOpen ? "is-open" : "")}>
+              <div>
+                <div className="-mx-1 border-t border-border px-3 pb-3" inert={!audioOpen}>
+                  {video.audioSuggestions.map((a) => (
+                    <a
+                      key={a.label}
+                      href={a.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between gap-2 rounded-lg px-1 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg hover:text-accent"
+                    >
+                      <span className="truncate">🎵 {a.label}</span>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                        <path d="M7 17 17 7M8 7h9v9" />
+                      </svg>
+                    </a>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

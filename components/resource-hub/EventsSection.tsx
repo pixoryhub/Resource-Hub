@@ -5,14 +5,16 @@ import type { CalendarEvent } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
 import { saveContentAction } from "@/lib/adminContentClient";
 
+// The team works across Central Time and the UK — showing both avoids the
+// "which timezone did they mean" back-and-forth. IANA zone names handle
+// daylight saving automatically, so this stays correct year-round without
+// needing to track CST/CDT or GMT/BST by hand.
 function formatEventDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const date = new Date(iso);
+  const dateLabel = date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  const ct = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Chicago" });
+  const uk = date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" });
+  return `${dateLabel} · ${ct} CT / ${uk} UK`;
 }
 
 // datetime-local gives "2026-09-05T19:00" (no seconds/zone) — good enough here.

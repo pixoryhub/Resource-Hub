@@ -12,9 +12,11 @@
 // what the team already writes for Discord is enough. See
 // lib/data/types.ts's WeeklyOpportunity for the stored shape.
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { WeeklyOpportunity } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
+import { useAuth } from "@/lib/localAuth";
+import { loadCreatorData, saveCreatorData } from "@/lib/creatorStorage";
 import { saveContentAction } from "@/lib/adminContentClient";
 
 function isUrlLine(line: string): boolean {
@@ -197,9 +199,34 @@ function OpportunityForm({
 
 export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyOpportunity | null }) {
   const { enabled: adminMode } = useAdminMode();
+  const { creator } = useAuth();
   const [opportunity, setOpportunity] = useState(initial);
   const [editing, setEditing] = useState(false);
   const [open, setOpen] = useState(false);
+  // Which opportunity (by its updatedAt — a fresh post gets a fresh one)
+  // this creator has marked done. null while unknown/not-yet-loaded, so
+  // the checkmark doesn't flash "undone" before the real value arrives.
+  const [markedUpdatedAt, setMarkedUpdatedAt] = useState<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    if (!creator) return;
+    let cancelled = false;
+    loadCreatorData<{ updatedAt: string } | null>("opportunity-completion", creator.id, null).then((record) => {
+      if (!cancelled) setMarkedUpdatedAt(record?.updatedAt ?? null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [creator]);
+
+  const completed = !!opportunity && markedUpdatedAt === opportunity.updatedAt;
+
+  function toggleCompleted() {
+    if (!creator || !opportunity) return;
+    const next = completed ? null : { updatedAt: opportunity.updatedAt };
+    setMarkedUpdatedAt(next?.updatedAt ?? null);
+    saveCreatorData("opportunity-completion", creator.id, next);
+  }
 
   function handleSave(value: WeeklyOpportunity) {
     setOpportunity(value);
@@ -248,12 +275,40 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
         </button>
       )}
 
-      <button type="button" onClick={() => setOpen((v) => !v)} className="block w-full text-left" aria-expanded={open}>
+      <div className={"flex items-start justify-between gap-3 " + (adminMode ? "pr-10" : "")}>
         <span className="animate-pulse-slow inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-accent">
           🚨 This week&apos;s opportunity
         </span>
 
-        <h2 className="mt-3 pr-8 text-xl font-extrabold leading-tight text-white sm:text-2xl">{opportunity.title}</h2>
+        {creator && (
+          <button
+            type="button"
+            onClick={toggleCompleted}
+            aria-pressed={completed}
+            className={
+              "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-colors " +
+              (completed ? "bg-white text-accent" : "border border-white/50 text-white hover:bg-white/10")
+            }
+          >
+            <span
+              className={
+                "flex h-4 w-4 items-center justify-center rounded-full border-2 " +
+                (completed ? "border-accent" : "border-white")
+              }
+            >
+              {completed && (
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              )}
+            </span>
+            {completed ? "Done" : "Mark as done"}
+          </button>
+        )}
+      </div>
+
+      <button type="button" onClick={() => setOpen((v) => !v)} className="mt-3 block w-full text-left" aria-expanded={open}>
+        <h2 className="pr-8 text-xl font-extrabold leading-tight text-white sm:text-2xl">{opportunity.title}</h2>
         <p className="mt-1 text-xs font-semibold text-white/70">{daysAgo(opportunity.updatedAt)}</p>
 
         {teaserLine && <p className="mt-4 text-[15px] font-semibold leading-snug text-white">{teaserLine}</p>}

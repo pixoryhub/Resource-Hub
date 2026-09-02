@@ -7,7 +7,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/adminAuth";
 import { listAllCreators } from "@/lib/creatorRegistry";
 import { loadCreatorActivity, mondayOf, lastNWeekStarts } from "@/lib/adminAnalytics";
-import { getHubVideos } from "@/lib/data";
+import { loadCreatorDataServer } from "@/lib/creatorData";
+import { getHubVideos, getWeeklyOpportunity } from "@/lib/data";
 
 const WEEKS_BACK = 8;
 const INACTIVE_DAYS_THRESHOLD = 7;
@@ -21,7 +22,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const [creators, videos] = await Promise.all([listAllCreators(), getHubVideos()]);
+    const [creators, videos, weeklyOpportunity] = await Promise.all([
+      listAllCreators(),
+      getHubVideos(),
+      getWeeklyOpportunity(),
+    ]);
     const activeVideoTotal = videos.filter((v) => v.status === "active").length;
 
     const perCreator = await Promise.all(
@@ -147,6 +152,23 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => a.completions - b.completions || a.position - b.position)
       .slice(0, NEEDS_PUSH_LIMIT);
 
+    // Who's marked this week's opportunity done — "this week's" meaning
+    // whatever's live right now, identified by its updatedAt (a fresh post
+    // gets a fresh one, so marks from a previous opportunity don't carry
+    // over and look like they applied to a new one).
+    let opportunityMarkedDone: { id: string; firstName: string; lastName: string }[] = [];
+    if (weeklyOpportunity) {
+      const records = await Promise.all(
+        creators.map(async (creator) => ({
+          creator,
+          record: await loadCreatorDataServer<{ updatedAt: string } | null>("opportunity-completion", creator.id, null),
+        }))
+      );
+      opportunityMarkedDone = records
+        .filter(({ record }) => record?.updatedAt === weeklyOpportunity.updatedAt)
+        .map(({ creator }) => ({ id: creator.id, firstName: creator.firstName, lastName: creator.lastName }));
+    }
+
     return NextResponse.json({
       kpis: {
         totalCreators: creators.length,
@@ -156,6 +178,7 @@ export async function GET(req: NextRequest) {
         videosTotal: activeVideoTotal,
         weeklyActiveCreators,
         newSignupsThisWeek,
+        opportunityMarkedDoneCount: opportunityMarkedDone.length,
       },
       weekly: weekKeys.map((w) => weekly.get(w)),
       needsAttention,
@@ -163,6 +186,8 @@ export async function GET(req: NextRequest) {
       topVideos,
       needsPush,
       categoryBreakdown,
+      opportunityMarkedDone,
+      hasWeeklyOpportunity: !!weeklyOpportunity,
     });
   } catch {
     return NextResponse.json({ error: "Couldn't reach storage — try again." }, { status: 500 });

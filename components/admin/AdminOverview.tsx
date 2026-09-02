@@ -95,6 +95,12 @@ interface CategoryStat {
   videoCount: number;
 }
 
+interface OpportunityMarkedEntry {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
 interface DashboardData {
   kpis: {
     totalCreators: number;
@@ -104,6 +110,7 @@ interface DashboardData {
     videosTotal: number;
     weeklyActiveCreators: number;
     newSignupsThisWeek: number;
+    opportunityMarkedDoneCount: number;
   };
   weekly: WeekBucket[];
   needsAttention: NeedsAttentionEntry[];
@@ -111,6 +118,8 @@ interface DashboardData {
   topVideos: VideoStat[];
   needsPush: VideoStat[];
   categoryBreakdown: CategoryStat[];
+  opportunityMarkedDone: OpportunityMarkedEntry[];
+  hasWeeklyOpportunity: boolean;
 }
 
 function formatWeek(iso: string) {
@@ -273,7 +282,35 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
         <KpiCard label="Video completions" value={data.kpis.totalCompletions} />
         <KpiCard label="Shots filmed" value={data.kpis.totalShotsFilmed} />
         <KpiCard label="Open coaching flags" value={data.kpis.openFlagCount} />
+        {data.hasWeeklyOpportunity && (
+          <KpiCard
+            label="Marked this week's opportunity"
+            value={`${data.kpis.opportunityMarkedDoneCount} / ${data.kpis.totalCreators}`}
+          />
+        )}
       </div>
+
+      {data.hasWeeklyOpportunity && (
+        <Dropdown title={`Marked this week's opportunity (${data.opportunityMarkedDone.length})`}>
+          {data.opportunityMarkedDone.length === 0 ? (
+            <p className="text-sm text-text-faint">Nobody&apos;s marked it done yet.</p>
+          ) : (
+            data.opportunityMarkedDone.map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                onClick={() => onSelectCreator(entry.id)}
+                className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3 text-left transition-colors hover:border-accent"
+              >
+                <p className="font-semibold text-text">
+                  {entry.firstName} {entry.lastName}
+                </p>
+                <span className="shrink-0 text-xs font-semibold text-accent">✓ Done</span>
+              </button>
+            ))
+          )}
+        </Dropdown>
+      )}
 
       <div>
         <p className="eyebrow mb-2">Activity, last 8 weeks</p>

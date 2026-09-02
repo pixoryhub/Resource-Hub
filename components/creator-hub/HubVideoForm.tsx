@@ -108,7 +108,6 @@ export default function HubVideoForm({
   const [formatLayers, setFormatLayers] = useState(initial?.formatLayers ?? "");
   const [visualElements, setVisualElements] = useState<string[]>(initial?.visualElements ?? []);
   const [executionNotes, setExecutionNotes] = useState(initial?.executionNotes ?? "");
-  const [collectionGuidance, setCollectionGuidance] = useState(initial?.collectionGuidance ?? "");
   const [audioSuggestions, setAudioSuggestions] = useState<AudioSuggestion[]>(
     initial?.audioSuggestions ?? []
   );
@@ -133,7 +132,9 @@ export default function HubVideoForm({
       formatLayers: formatLayers.trim(),
       visualElements: visualElements.map((v) => v.trim()).filter(Boolean),
       executionNotes: executionNotes.trim(),
-      collectionGuidance: collectionGuidance.trim(),
+      // Retired field — no longer edited or shown, but existing videos still
+      // carry whatever they had, and HubVideo's type still expects it.
+      collectionGuidance: initial?.collectionGuidance ?? "",
       audioSuggestions: audioSuggestions.filter((a) => a.label.trim() || a.url.trim()),
       status,
     });
@@ -245,17 +246,6 @@ export default function HubVideoForm({
           value={executionNotes}
           onChange={(e) => setExecutionNotes(e.target.value)}
           placeholder={"One per line, e.g.\n• Start on a real camera roll scroll\n• Reveal at the beat drop"}
-          className="w-full resize-y rounded-xl border border-border bg-bg px-3 py-2.5 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
-          style={{ fontSize: "16px" }}
-        />
-      </div>
-
-      <div>
-        <label className="eyebrow mb-1.5 block">Collection-size guidance</label>
-        <textarea
-          rows={2}
-          value={collectionGuidance}
-          onChange={(e) => setCollectionGuidance(e.target.value)}
           className="w-full resize-y rounded-xl border border-border bg-bg px-3 py-2.5 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
           style={{ fontSize: "16px" }}
         />
