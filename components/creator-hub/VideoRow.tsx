@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import type { HubVideo } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
 import CategoryChip from "./CategoryChip";
@@ -176,9 +175,14 @@ export default function VideoRow({
             <div className="rounded-xl border border-border bg-surface p-4">
               <p className="eyebrow mb-2">Category</p>
               <CategoryChip category={video.desiredCategory} />
-              <Link href="/#educational-resources" className="mt-2 block text-xs font-semibold text-accent hover:underline">
+              <a
+                href="https://canva.link/3rkcbx9rw54g2m2"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 block text-xs font-semibold text-accent hover:underline"
+              >
                 What does this mean?
-              </Link>
+              </a>
             </div>
             <div className="rounded-xl border border-border bg-surface p-4">
               <p className="eyebrow mb-2">Format &amp; emotion</p>
