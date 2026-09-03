@@ -18,6 +18,7 @@ import { useAdminMode } from "@/lib/adminMode";
 import { useAuth } from "@/lib/localAuth";
 import { loadCreatorData, saveCreatorData } from "@/lib/creatorStorage";
 import { saveContentAction } from "@/lib/adminContentClient";
+import { uploadVideoChunked } from "@/lib/videoUploadClient";
 
 function isUrlLine(line: string): boolean {
   return /^https?:\/\/\S+$/.test(line);
@@ -95,21 +96,13 @@ function OpportunityForm({
     if (!file) return;
     setUploading(true);
     setUploadError(null);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/admin/videos", { method: "POST", body: formData });
-      const data = await res.json();
-      if (res.ok && data.ok) {
-        setVideoAssetId(data.id);
-      } else {
-        setUploadError(data.error ?? "Upload failed — try again.");
-      }
-    } catch {
-      setUploadError("Couldn't reach the server — try again.");
-    } finally {
-      setUploading(false);
+    const result = await uploadVideoChunked(file);
+    if (result.ok) {
+      setVideoAssetId(result.id);
+    } else {
+      setUploadError(result.error);
     }
+    setUploading(false);
   }
 
   function handleSave() {

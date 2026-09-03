@@ -10,6 +10,7 @@ import { useRef, useState } from "react";
 import type { Testimonial } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
 import { saveContentAction } from "@/lib/adminContentClient";
+import { uploadVideoChunked } from "@/lib/videoUploadClient";
 
 function TestimonialForm({
   initial,
@@ -33,21 +34,13 @@ function TestimonialForm({
     if (!file) return;
     setUploading(true);
     setError(null);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/admin/videos", { method: "POST", body: formData });
-      const data = await res.json();
-      if (res.ok && data.ok) {
-        setVideoAssetId(data.id);
-      } else {
-        setError(data.error ?? "Upload failed — try again.");
-      }
-    } catch {
-      setError("Couldn't reach the server — try again.");
-    } finally {
-      setUploading(false);
+    const result = await uploadVideoChunked(file);
+    if (result.ok) {
+      setVideoAssetId(result.id);
+    } else {
+      setError(result.error);
     }
+    setUploading(false);
   }
 
   function handleSave() {
