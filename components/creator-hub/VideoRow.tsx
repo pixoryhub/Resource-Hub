@@ -223,6 +223,21 @@ export default function VideoRow({
             </p>
           </div>
 
+          {/* Existing videos saved before this field existed have no shotList at all — treat that the same as empty. */}
+          {(video.shotList ?? []).length > 0 && (
+            <div className="mt-3 rounded-xl border border-border bg-surface p-4">
+              <p className="eyebrow mb-2">Shot list</p>
+              <ol className="space-y-2 text-sm text-text">
+                {video.shotList.map((shot, i) => (
+                  <li key={i} className="flex gap-2 leading-snug">
+                    <span className="shrink-0 font-semibold text-text-faint">{i + 1}.</span>
+                    <span>{shot}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
           <div className="mt-3 overflow-hidden rounded-xl border border-border bg-surface">
             <button
               type="button"

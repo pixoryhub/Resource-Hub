@@ -74,6 +74,7 @@ export interface HubVideo {
   formatLayers: string;
   visualElements: string[]; // ordered — the Shot List Generator pulls this
   executionNotes: string;
+  shotList: string[]; // ordered, line-by-line — the manual shot-by-shot breakdown for this video
   collectionGuidance: string;
   audioSuggestions: AudioSuggestion[];
   status: "active" | "retired";

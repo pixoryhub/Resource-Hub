@@ -14,6 +14,7 @@ export interface HubVideoFormData {
   formatLayers: string;
   visualElements: string[];
   executionNotes: string;
+  shotList: string[];
   collectionGuidance: string;
   audioSuggestions: AudioSuggestion[];
   status: "active" | "retired";
@@ -108,6 +109,7 @@ export default function HubVideoForm({
   const [formatLayers, setFormatLayers] = useState(initial?.formatLayers ?? "");
   const [visualElements, setVisualElements] = useState<string[]>(initial?.visualElements ?? []);
   const [executionNotes, setExecutionNotes] = useState(initial?.executionNotes ?? "");
+  const [shotList, setShotList] = useState<string[]>(initial?.shotList ?? []);
   const [audioSuggestions, setAudioSuggestions] = useState<AudioSuggestion[]>(
     initial?.audioSuggestions ?? []
   );
@@ -132,6 +134,7 @@ export default function HubVideoForm({
       formatLayers: formatLayers.trim(),
       visualElements: visualElements.map((v) => v.trim()).filter(Boolean),
       executionNotes: executionNotes.trim(),
+      shotList: shotList.map((s) => s.trim()).filter(Boolean),
       // Retired field — no longer edited or shown, but existing videos still
       // carry whatever they had, and HubVideo's type still expects it.
       collectionGuidance: initial?.collectionGuidance ?? "",
@@ -250,6 +253,16 @@ export default function HubVideoForm({
           style={{ fontSize: "16px" }}
         />
       </div>
+
+      <StringListEditor
+        label="Shot list"
+        hint="One shot per line, in the order they're filmed."
+        addLabel="+ Add a shot"
+        placeholder="e.g. Wide shot of the desk, camera pans left"
+        items={shotList}
+        onChange={setShotList}
+        reorderable
+      />
 
       <div>
         <label className="eyebrow mb-1.5 block">Audio suggestions</label>
