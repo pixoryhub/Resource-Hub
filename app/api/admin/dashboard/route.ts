@@ -10,6 +10,16 @@ import { loadCreatorActivity, mondayOf, lastNWeekStarts } from "@/lib/adminAnaly
 import { loadCreatorDataServer } from "@/lib/creatorData";
 import { getHubVideos, getWeeklyOpportunity } from "@/lib/data";
 
+// Recreation links briefly shipped as a single {url, submittedAt} value per
+// item before becoming a list (so a creator could add more than one) — a
+// handful of real records were written in that old shape before the
+// switchover. Treat anything not already an array as "one old-style entry,
+// or none at all" rather than crashing on it.
+function normalizeLinks<T>(raw: T[] | T | null | undefined): T[] {
+  if (Array.isArray(raw)) return raw;
+  return raw ? [raw] : [];
+}
+
 const WEEKS_BACK = 8;
 const INACTIVE_DAYS_THRESHOLD = 7;
 const FLAG_OVERDUE_HOURS = 48;
@@ -185,39 +195,41 @@ export async function GET(req: NextRequest) {
     const recreationLinks: RecreationLinkEntry[] = (
       await Promise.all(
         creators.map(async (creator) => {
-          const [hubLinks, opportunityLink] = await Promise.all([
-            loadCreatorDataServer<Record<string, { url: string; submittedAt: string }>>(
+          const [hubLinks, opportunityLinksRaw] = await Promise.all([
+            loadCreatorDataServer<Record<string, { url: string; submittedAt: string }[] | { url: string; submittedAt: string }>>(
               "recreation-links",
               creator.id,
               {}
             ),
-            loadCreatorDataServer<{ url: string; submittedAt: string } | null>(
+            loadCreatorDataServer<{ url: string; submittedAt: string }[] | { url: string; submittedAt: string } | null>(
               "recreation-link-weekly-opportunity",
               creator.id,
               null
             ),
           ]);
           const entries: RecreationLinkEntry[] = [];
-          if (opportunityLink) {
+          for (const link of normalizeLinks(opportunityLinksRaw)) {
             entries.push({
               creatorId: creator.id,
               firstName: creator.firstName,
               lastName: creator.lastName,
               label: "This week's opportunity",
-              url: opportunityLink.url,
-              submittedAt: opportunityLink.submittedAt,
-            });
-          }
-          for (const [videoId, link] of Object.entries(hubLinks)) {
-            const video = videos.find((v) => v.id === videoId);
-            entries.push({
-              creatorId: creator.id,
-              firstName: creator.firstName,
-              lastName: creator.lastName,
-              label: video ? `"${video.title}"` : "a Creator Hub video",
               url: link.url,
               submittedAt: link.submittedAt,
             });
+          }
+          for (const [videoId, links] of Object.entries(hubLinks)) {
+            const video = videos.find((v) => v.id === videoId);
+            for (const link of normalizeLinks(links)) {
+              entries.push({
+                creatorId: creator.id,
+                firstName: creator.firstName,
+                lastName: creator.lastName,
+                label: video ? `"${video.title}"` : "a Creator Hub video",
+                url: link.url,
+                submittedAt: link.submittedAt,
+              });
+            }
           }
           return entries;
         })

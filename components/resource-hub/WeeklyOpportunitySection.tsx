@@ -19,7 +19,7 @@ import { useAuth } from "@/lib/localAuth";
 import { loadCreatorData, saveCreatorData } from "@/lib/creatorStorage";
 import { saveContentAction } from "@/lib/adminContentClient";
 import { uploadVideoChunked } from "@/lib/videoUploadClient";
-import RecreationLinkBox, { type RecreationLink } from "@/components/RecreationLinkBox";
+import RecreationLinkBox, { type RecreationLink, normalizeRecreationLinks } from "@/components/RecreationLinkBox";
 
 function isUrlLine(line: string): boolean {
   return /^https?:\/\/\S+$/.test(line);
@@ -202,9 +202,10 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
   // the checkmark doesn't flash "undone" before the real value arrives.
   const [markedUpdatedAt, setMarkedUpdatedAt] = useState<string | null | undefined>(undefined);
   // Not tied to which opportunity is currently live (unlike the mark-done
-  // above) — the mechanic here isn't decided yet, so a submitted link just
-  // sticks around instead of resetting every time a new opportunity posts.
-  const [recreationLink, setRecreationLinkState] = useState<RecreationLink | null | undefined>(undefined);
+  // above) — the mechanic here isn't decided yet, so submitted links just
+  // stick around instead of resetting every time a new opportunity posts.
+  // A creator can add more than one, hence a list rather than one value.
+  const [recreationLinks, setRecreationLinks] = useState<RecreationLink[] | undefined>(undefined);
 
   useEffect(() => {
     if (!creator) return;
@@ -212,8 +213,12 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
     loadCreatorData<{ updatedAt: string } | null>("opportunity-completion", creator.id, null).then((record) => {
       if (!cancelled) setMarkedUpdatedAt(record?.updatedAt ?? null);
     });
-    loadCreatorData<RecreationLink | null>("recreation-link-weekly-opportunity", creator.id, null).then((record) => {
-      if (!cancelled) setRecreationLinkState(record);
+    loadCreatorData<RecreationLink[] | RecreationLink | null>(
+      "recreation-link-weekly-opportunity",
+      creator.id,
+      []
+    ).then((record) => {
+      if (!cancelled) setRecreationLinks(normalizeRecreationLinks(record));
     });
     return () => {
       cancelled = true;
@@ -222,8 +227,15 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
 
   function submitRecreationLink(url: string) {
     if (!creator) return;
-    const next: RecreationLink = { url, submittedAt: new Date().toISOString() };
-    setRecreationLinkState(next);
+    const next = [...(recreationLinks ?? []), { url, submittedAt: new Date().toISOString() }];
+    setRecreationLinks(next);
+    saveCreatorData("recreation-link-weekly-opportunity", creator.id, next);
+  }
+
+  function removeRecreationLink(index: number) {
+    if (!creator) return;
+    const next = (recreationLinks ?? []).filter((_, i) => i !== index);
+    setRecreationLinks(next);
     saveCreatorData("recreation-link-weekly-opportunity", creator.id, next);
   }
 
@@ -355,7 +367,11 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
               <OpportunityBody lines={restLines} />
               {creator && (
                 <div className="mt-4 rounded-2xl bg-bg p-1">
-                  <RecreationLinkBox value={recreationLink ?? null} onSubmit={submitRecreationLink} />
+                  <RecreationLinkBox
+                    value={recreationLinks ?? []}
+                    onSubmit={submitRecreationLink}
+                    onRemove={removeRecreationLink}
+                  />
                 </div>
               )}
             </div>

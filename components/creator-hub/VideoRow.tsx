@@ -17,8 +17,9 @@ export default function VideoRow({
   onMove,
   isFirst,
   isLast,
-  recreationLink,
+  recreationLinks,
   onSubmitRecreationLink,
+  onRemoveRecreationLink,
 }: {
   video: HubVideo;
   completed: boolean;
@@ -28,8 +29,9 @@ export default function VideoRow({
   onMove: (direction: -1 | 1) => void;
   isFirst: boolean;
   isLast: boolean;
-  recreationLink: RecreationLink | null;
+  recreationLinks: RecreationLink[];
   onSubmitRecreationLink: (url: string) => void;
+  onRemoveRecreationLink: (index: number) => void;
 }) {
   const { enabled: adminMode } = useAdminMode();
   const { creator } = useAuth();
@@ -293,7 +295,11 @@ export default function VideoRow({
 
           {creator && (
             <div className="mt-3">
-              <RecreationLinkBox value={recreationLink} onSubmit={onSubmitRecreationLink} />
+              <RecreationLinkBox
+                value={recreationLinks}
+                onSubmit={onSubmitRecreationLink}
+                onRemove={onRemoveRecreationLink}
+              />
             </div>
           )}
         </div>
