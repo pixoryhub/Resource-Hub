@@ -34,6 +34,7 @@ export default function CreatorHubClient({
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const loadedForCreator = useRef<string | null>(null);
   // Permanent record of every completion, separate from `completedAt`
   // above — "Reset all" clears the live checklist but must never touch
@@ -226,6 +227,20 @@ export default function CreatorHubClient({
 
   const progressPct = active.length === 0 ? 0 : Math.round((completedCount / active.length) * 100);
 
+  const videoTitleById = useMemo(() => new Map(videos.map((v) => [v.id, v.title])), [videos]);
+  // Completions from before completion-history existed have no history
+  // entry at all — same fallback as lib/adminAnalytics.ts, so a creator's
+  // past completions don't just look like they vanished from this view.
+  const sortedHistory = useMemo(() => {
+    const source =
+      completionHistory.length > 0
+        ? completionHistory
+        : Object.entries(completedAt)
+            .filter((entry): entry is [string, string] => entry[1] !== null)
+            .map(([videoId, at]) => ({ videoId, completedAt: at }));
+    return [...source].sort((a, b) => b.completedAt.localeCompare(a.completedAt));
+  }, [completionHistory, completedAt]);
+
   return (
     <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 sm:px-6">
       <TopPostsSection initial={topPosts} />
@@ -320,6 +335,61 @@ export default function CreatorHubClient({
             </div>
           )}
         </div>
+
+        {sortedHistory.length > 0 && (
+          <div className="overflow-hidden rounded-xl border border-border bg-bg">
+            <button
+              type="button"
+              onClick={() => setHistoryOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-3 p-3 text-left"
+              aria-expanded={historyOpen}
+            >
+              <span className="text-xs font-semibold text-text">
+                Your history <span className="font-normal text-text-faint">({sortedHistory.length})</span>
+              </span>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={"shrink-0 text-text-faint transition-transform " + (historyOpen ? "" : "-rotate-90")}
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            <div className={"accordion-rows " + (historyOpen ? "is-open" : "")}>
+              <div>
+                <div className="max-h-72 space-y-1.5 overflow-y-auto border-t border-border p-3 pt-2" inert={!historyOpen}>
+                  <p className="pb-1 text-[11px] text-text-faint">
+                    Every video you&apos;ve ever completed — resetting your checklist for a new
+                    week never removes anything from here.
+                  </p>
+                  {sortedHistory.map((entry, i) => (
+                    <div
+                      key={`${entry.videoId}-${entry.completedAt}-${i}`}
+                      className="flex items-center justify-between gap-3 rounded-lg bg-surface px-2.5 py-1.5"
+                    >
+                      <span className="min-w-0 truncate text-xs font-medium text-text">
+                        &ldquo;{videoTitleById.get(entry.videoId) ?? "A video no longer in the hub"}&rdquo;
+                      </span>
+                      <span className="shrink-0 text-[11px] text-text-faint">
+                        {new Date(entry.completedAt).toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex gap-1 rounded-full border border-border bg-surface p-1 sm:shrink-0">
