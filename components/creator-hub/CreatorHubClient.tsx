@@ -242,28 +242,30 @@ export default function CreatorHubClient({
           </div>
 
           {completedCount > 0 && (
-            <div className="mt-2 border-t border-border pt-2">
+            <div className="mt-3 border-t border-border pt-3">
               {confirmingReset ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[11px] text-text-muted">
-                    Uncheck all {completedCount} completed video{completedCount === 1 ? "" : "s"} so you can
-                    redo them this week?
-                  </span>
-                  <div className="flex gap-2">
+                <div className="rounded-xl bg-accent-tint p-3">
+                  <p className="text-xs leading-relaxed text-text">
+                    Uncheck all <span className="font-bold">{completedCount}</span> completed
+                    video{completedCount === 1 ? "" : "s"} so you can redo{" "}
+                    {completedCount === 1 ? "it" : "them"} this week? Your lifetime activity in the
+                    admin dashboard isn&apos;t affected.
+                  </p>
+                  <div className="mt-2.5 flex gap-2">
                     <button
                       type="button"
                       onClick={() => {
                         resetAllCompleted();
                         setConfirmingReset(false);
                       }}
-                      className="rounded-full bg-text px-3 py-1 text-xs font-semibold text-bg"
+                      className="accent-gradient rounded-full px-4 py-1.5 text-xs font-bold text-white shadow-sm transition-opacity hover:opacity-90"
                     >
-                      Reset all
+                      Yes, reset all
                     </button>
                     <button
                       type="button"
                       onClick={() => setConfirmingReset(false)}
-                      className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-text-muted"
+                      className="rounded-full border border-border bg-bg px-4 py-1.5 text-xs font-semibold text-text-muted transition-colors hover:bg-surface"
                     >
                       Cancel
                     </button>
@@ -273,9 +275,21 @@ export default function CreatorHubClient({
                 <button
                   type="button"
                   onClick={() => setConfirmingReset(true)}
-                  className="text-[11px] font-semibold text-text-muted hover:text-accent"
+                  className="group flex w-full items-center justify-between gap-2 rounded-xl px-1 py-1 text-left transition-colors hover:bg-accent-tint"
                 >
-                  Reset all — redo everything this week
+                  <span className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-tint text-accent transition-colors group-hover:bg-accent group-hover:text-white">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 12a9 9 0 1 1 2.6 6.3M3 12v6m0-6h6" />
+                      </svg>
+                    </span>
+                    <span className="text-xs font-semibold text-text-muted group-hover:text-accent">
+                      Reset all — redo everything this week
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-full bg-border px-2 py-0.5 text-[11px] font-bold text-text-muted">
+                    {completedCount}
+                  </span>
                 </button>
               )}
             </div>
