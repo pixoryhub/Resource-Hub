@@ -33,6 +33,7 @@ export default function CreatorHubClient({
   const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);
+  const [confirmingReset, setConfirmingReset] = useState(false);
   const loadedForCreator = useRef<string | null>(null);
   // Links each creator submits to their own recreation, keyed by videoId —
   // a creator can add more than one per video, so each entry is a list, not
@@ -112,6 +113,14 @@ export default function CreatorHubClient({
       }
       return { ...prev, [videoId]: new Date().toISOString() };
     });
+  }
+
+  // Unchecks every completed video so a creator can redo the whole set
+  // this week — same underlying toggle as one-at-a-time, just all at once.
+  // Nothing about a video's own history is deleted elsewhere (admin's
+  // activity chart only ever reflected the latest completedAt anyway).
+  function resetAllCompleted() {
+    setCompletedAt({});
   }
 
   function addVideo(data: HubVideoFormData) {
@@ -231,6 +240,46 @@ export default function CreatorHubClient({
               only hybrid.
             </span>
           </div>
+
+          {completedCount > 0 && (
+            <div className="mt-2 border-t border-border pt-2">
+              {confirmingReset ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] text-text-muted">
+                    Uncheck all {completedCount} completed video{completedCount === 1 ? "" : "s"} so you can
+                    redo them this week?
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetAllCompleted();
+                        setConfirmingReset(false);
+                      }}
+                      className="rounded-full bg-text px-3 py-1 text-xs font-semibold text-bg"
+                    >
+                      Reset all
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingReset(false)}
+                      className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-text-muted"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmingReset(true)}
+                  className="text-[11px] font-semibold text-text-muted hover:text-accent"
+                >
+                  Reset all — redo everything this week
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

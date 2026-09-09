@@ -59,7 +59,8 @@ export default function VideoRow({
         <button
           type="button"
           onClick={() => onToggleCompleted(video.id)}
-          aria-label={completed ? "Mark as unfinished" : "Mark as completed"}
+          aria-label={completed ? "Completed — tap to redo this week" : "Mark as completed"}
+          title={completed ? "Completed — tap to redo this week" : "Mark as completed"}
           aria-pressed={completed}
           className={
             "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors hover:border-accent " +
@@ -92,8 +93,11 @@ export default function VideoRow({
               </span>
             )}
             {completed && (
-              <span className="rounded-full bg-accent-tint px-2 py-0.5 font-semibold text-accent">
-                Completed
+              <span
+                className="rounded-full bg-accent-tint px-2 py-0.5 font-semibold text-accent"
+                title="Tap the checkmark to redo this week"
+              >
+                Completed · tap ✓ to redo
               </span>
             )}
           </div>
