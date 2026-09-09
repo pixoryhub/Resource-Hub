@@ -110,6 +110,7 @@ interface RecreationLinkEntry {
   url: string;
   submittedAt: string;
   views: number | null;
+  reviewed: boolean;
 }
 
 interface DashboardData {
@@ -194,38 +195,93 @@ function ViewCountInput({ entryKey, initial }: { entryKey: string; initial: numb
 // scan "who's linked something for X" at a glance instead of hunting
 // through one long feed — and a search box filters by either the video's
 // title or a creator's name, since both are things a coach might look up.
+function groupByLabel(links: RecreationLinkEntry[]) {
+  const map = new Map<string, RecreationLinkEntry[]>();
+  for (const entry of links) {
+    const list = map.get(entry.label) ?? [];
+    list.push(entry);
+    map.set(entry.label, list);
+  }
+  // Most recently active video/opportunity first.
+  return [...map.entries()].sort(
+    (a, b) => new Date(b[1][0].submittedAt).getTime() - new Date(a[1][0].submittedAt).getTime()
+  );
+}
+
+function filterGroups(groups: [string, RecreationLinkEntry[]][], q: string) {
+  if (!q) return groups;
+  return groups
+    .map(([label, entries]) => {
+      if (label.toLowerCase().includes(q)) return [label, entries] as const;
+      const matching = entries.filter((e) => `${e.firstName} ${e.lastName}`.toLowerCase().includes(q));
+      return matching.length > 0 ? ([label, matching] as const) : null;
+    })
+    .filter((g): g is readonly [string, RecreationLinkEntry[]] => g !== null);
+}
+
+function RecreationLinkRow({
+  entry,
+  onSelectCreator,
+  onToggleReviewed,
+}: {
+  entry: RecreationLinkEntry;
+  onSelectCreator: (id: string) => void;
+  onToggleReviewed: (entry: RecreationLinkEntry, reviewed: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg bg-surface p-2">
+      <input
+        type="checkbox"
+        checked={entry.reviewed}
+        onChange={(e) => onToggleReviewed(entry, e.target.checked)}
+        className="h-4 w-4 shrink-0"
+        aria-label={entry.reviewed ? "Mark as not reviewed" : "Mark as reviewed"}
+        title={entry.reviewed ? "Reviewed — click to undo" : "Mark reviewed"}
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline gap-2">
+          <button
+            type="button"
+            onClick={() => onSelectCreator(entry.creatorId)}
+            className="shrink-0 truncate text-xs font-semibold text-text hover:text-accent hover:underline"
+          >
+            {entry.firstName} {entry.lastName}
+          </button>
+          <span className="shrink-0 text-[11px] text-text-faint">{timeAgo(entry.submittedAt)}</span>
+        </div>
+        <a
+          href={entry.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block truncate text-xs font-medium text-accent hover:underline"
+        >
+          {entry.url}
+        </a>
+      </div>
+      <ViewCountInput entryKey={entry.key} initial={entry.views} />
+    </div>
+  );
+}
+
 function RecreationLinksPanel({
   links,
   onSelectCreator,
+  onToggleReviewed,
 }: {
   links: RecreationLinkEntry[];
   onSelectCreator: (id: string) => void;
+  onToggleReviewed: (entry: RecreationLinkEntry, reviewed: boolean) => void;
 }) {
   const [query, setQuery] = useState("");
 
-  const groups = useMemo(() => {
-    const map = new Map<string, RecreationLinkEntry[]>();
-    for (const entry of links) {
-      const list = map.get(entry.label) ?? [];
-      list.push(entry);
-      map.set(entry.label, list);
-    }
-    // Most recently active video/opportunity first.
-    return [...map.entries()].sort(
-      (a, b) => new Date(b[1][0].submittedAt).getTime() - new Date(a[1][0].submittedAt).getTime()
-    );
-  }, [links]);
+  const unreviewed = useMemo(() => links.filter((l) => !l.reviewed), [links]);
+  const reviewed = useMemo(() => links.filter((l) => l.reviewed), [links]);
+
+  const groups = useMemo(() => groupByLabel(unreviewed), [unreviewed]);
+  const reviewedGroups = useMemo(() => groupByLabel(reviewed), [reviewed]);
 
   const q = query.trim().toLowerCase();
-  const filteredGroups = q
-    ? groups
-        .map(([label, entries]) => {
-          if (label.toLowerCase().includes(q)) return [label, entries] as const;
-          const matching = entries.filter((e) => `${e.firstName} ${e.lastName}`.toLowerCase().includes(q));
-          return matching.length > 0 ? ([label, matching] as const) : null;
-        })
-        .filter((g): g is readonly [string, RecreationLinkEntry[]] => g !== null)
-    : groups;
+  const filteredGroups = filterGroups(groups, q);
 
   return (
     <div className="space-y-3">
@@ -239,43 +295,63 @@ function RecreationLinksPanel({
       />
       {filteredGroups.length === 0 ? (
         <p className="text-sm text-text-faint">
-          {links.length === 0 ? "Nobody's linked a recreation yet." : "No matches."}
+          {unreviewed.length === 0
+            ? links.length === 0
+              ? "Nobody's linked a recreation yet."
+              : "All caught up — every link's been reviewed."
+            : "No matches."}
         </p>
       ) : (
         filteredGroups.map(([label, entries]) => (
           <div key={label} className="rounded-xl border border-border bg-bg p-3">
-            <p className="mb-2 text-sm font-semibold text-text">
-              {label} <span className="font-normal text-text-faint">({entries.length})</span>
-            </p>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-text">
+                {label} <span className="font-normal text-text-faint">({entries.length})</span>
+              </p>
+              {entries.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => entries.forEach((entry) => onToggleReviewed(entry, true))}
+                  className="shrink-0 text-xs font-semibold text-text-muted hover:text-accent"
+                >
+                  Mark all reviewed
+                </button>
+              )}
+            </div>
             <div className="space-y-2">
               {entries.map((entry) => (
-                <div key={entry.key} className="flex items-center gap-2 rounded-lg bg-surface p-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline gap-2">
-                      <button
-                        type="button"
-                        onClick={() => onSelectCreator(entry.creatorId)}
-                        className="shrink-0 truncate text-xs font-semibold text-text hover:text-accent hover:underline"
-                      >
-                        {entry.firstName} {entry.lastName}
-                      </button>
-                      <span className="shrink-0 text-[11px] text-text-faint">{timeAgo(entry.submittedAt)}</span>
-                    </div>
-                    <a
-                      href={entry.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block truncate text-xs font-medium text-accent hover:underline"
-                    >
-                      {entry.url}
-                    </a>
-                  </div>
-                  <ViewCountInput entryKey={entry.key} initial={entry.views} />
-                </div>
+                <RecreationLinkRow
+                  key={entry.key}
+                  entry={entry}
+                  onSelectCreator={onSelectCreator}
+                  onToggleReviewed={onToggleReviewed}
+                />
               ))}
             </div>
           </div>
         ))
+      )}
+
+      {reviewed.length > 0 && (
+        <Dropdown title={`Reviewed (${reviewed.length})`} subtitle="Already looked at — nothing to action here.">
+          {reviewedGroups.map(([label, entries]) => (
+            <div key={label} className="rounded-xl border border-border bg-bg p-3">
+              <p className="mb-2 text-sm font-semibold text-text">
+                {label} <span className="font-normal text-text-faint">({entries.length})</span>
+              </p>
+              <div className="space-y-2">
+                {entries.map((entry) => (
+                  <RecreationLinkRow
+                    key={entry.key}
+                    entry={entry}
+                    onSelectCreator={onSelectCreator}
+                    onToggleReviewed={onToggleReviewed}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </Dropdown>
       )}
     </div>
   );
@@ -425,10 +501,29 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
     };
   }, []);
 
+  function toggleRecreationReviewed(entry: RecreationLinkEntry, reviewed: boolean) {
+    setData((prev) =>
+      prev
+        ? {
+            ...prev,
+            recreationLinks: prev.recreationLinks.map((l) => (l.key === entry.key ? { ...l, reviewed } : l)),
+          }
+        : prev
+    );
+    fetch("/api/admin/recreation-reviewed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ linkKey: entry.key, reviewed }),
+    }).catch(() => {
+      // fire-and-forget — worst case the checkbox reverts next reload and can be re-clicked
+    });
+  }
+
   if (error) return <p className="text-accent">{error}</p>;
   if (!data) return <p className="text-text-muted">Loading…</p>;
 
   const maxCategoryCompletions = Math.max(1, ...data.categoryBreakdown.map((c) => c.completions));
+  const unreviewedRecreationCount = data.recreationLinks.filter((l) => !l.reviewed).length;
 
   return (
     <div className="space-y-6">
@@ -447,7 +542,7 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
             value={`${data.kpis.opportunityMarkedDoneCount} / ${data.kpis.totalCreators}`}
           />
         )}
-        <KpiCard label="Recreation links submitted" value={data.kpis.recreationLinksCount} />
+        <KpiCard label="Recreation links to review" value={unreviewedRecreationCount} />
       </div>
 
       {data.hasWeeklyOpportunity && (
@@ -473,10 +568,14 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
       )}
 
       <Dropdown
-        title={`Recreation links (${data.recreationLinks.length})`}
+        title={`Recreation links (${unreviewedRecreationCount} to review)`}
         subtitle="What creators have linked as their recreation — no fixed mechanic yet, just visibility for now."
       >
-        <RecreationLinksPanel links={data.recreationLinks} onSelectCreator={onSelectCreator} />
+        <RecreationLinksPanel
+          links={data.recreationLinks}
+          onSelectCreator={onSelectCreator}
+          onToggleReviewed={toggleRecreationReviewed}
+        />
       </Dropdown>
 
       <div>

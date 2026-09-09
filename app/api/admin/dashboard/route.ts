@@ -10,6 +10,7 @@ import { loadCreatorActivity, mondayOf, lastNWeekStarts } from "@/lib/adminAnaly
 import { loadCreatorDataServer } from "@/lib/creatorData";
 import { getHubVideos, getWeeklyOpportunity } from "@/lib/data";
 import { getViewCounts, recreationLinkKey } from "@/lib/recreationViewCounts";
+import { getReviewedLinks } from "@/lib/recreationReviewed";
 
 // Recreation links briefly shipped as a single {url, submittedAt} value per
 // item before becoming a list (so a creator could add more than one) — a
@@ -194,8 +195,9 @@ export async function GET(req: NextRequest) {
       url: string;
       submittedAt: string;
       views: number | null;
+      reviewed: boolean;
     };
-    const viewCounts = await getViewCounts();
+    const [viewCounts, reviewedLinks] = await Promise.all([getViewCounts(), getReviewedLinks()]);
     const recreationLinks: RecreationLinkEntry[] = (
       await Promise.all(
         creators.map(async (creator) => {
@@ -224,6 +226,7 @@ export async function GET(req: NextRequest) {
               url: link.url,
               submittedAt: link.submittedAt,
               views: viewCounts[key] ?? null,
+              reviewed: !!reviewedLinks[key],
             });
           }
           for (const [videoId, links] of Object.entries(hubLinks)) {
@@ -240,6 +243,7 @@ export async function GET(req: NextRequest) {
                 url: link.url,
                 submittedAt: link.submittedAt,
                 views: viewCounts[key] ?? null,
+                reviewed: !!reviewedLinks[key],
               });
             }
           }
