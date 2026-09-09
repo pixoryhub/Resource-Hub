@@ -9,6 +9,7 @@ import { listAllCreators } from "@/lib/creatorRegistry";
 import { loadCreatorActivity, mondayOf, lastNWeekStarts } from "@/lib/adminAnalytics";
 import { loadCreatorDataServer } from "@/lib/creatorData";
 import { getHubVideos, getWeeklyOpportunity } from "@/lib/data";
+import { getViewCounts, recreationLinkKey } from "@/lib/recreationViewCounts";
 
 // Recreation links briefly shipped as a single {url, submittedAt} value per
 // item before becoming a list (so a creator could add more than one) — a
@@ -185,13 +186,16 @@ export async function GET(req: NextRequest) {
     // these qualify for; this just surfaces everything submitted, newest
     // first, so coaches can actually see them.
     type RecreationLinkEntry = {
+      key: string;
       creatorId: string;
       firstName: string;
       lastName: string;
       label: string;
       url: string;
       submittedAt: string;
+      views: number | null;
     };
+    const viewCounts = await getViewCounts();
     const recreationLinks: RecreationLinkEntry[] = (
       await Promise.all(
         creators.map(async (creator) => {
@@ -209,25 +213,33 @@ export async function GET(req: NextRequest) {
           ]);
           const entries: RecreationLinkEntry[] = [];
           for (const link of normalizeLinks(opportunityLinksRaw)) {
+            const label = "This week's opportunity";
+            const key = recreationLinkKey(creator.id, label, link.submittedAt);
             entries.push({
+              key,
               creatorId: creator.id,
               firstName: creator.firstName,
               lastName: creator.lastName,
-              label: "This week's opportunity",
+              label,
               url: link.url,
               submittedAt: link.submittedAt,
+              views: viewCounts[key] ?? null,
             });
           }
           for (const [videoId, links] of Object.entries(hubLinks)) {
             const video = videos.find((v) => v.id === videoId);
             for (const link of normalizeLinks(links)) {
+              const label = video ? `"${video.title}"` : "a Creator Hub video";
+              const key = recreationLinkKey(creator.id, label, link.submittedAt);
               entries.push({
+                key,
                 creatorId: creator.id,
                 firstName: creator.firstName,
                 lastName: creator.lastName,
-                label: video ? `"${video.title}"` : "a Creator Hub video",
+                label,
                 url: link.url,
                 submittedAt: link.submittedAt,
+                views: viewCounts[key] ?? null,
               });
             }
           }

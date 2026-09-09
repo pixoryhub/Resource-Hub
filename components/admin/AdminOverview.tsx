@@ -5,7 +5,7 @@
 // coaching flag), who's most active this week, and which videos are
 // over/under-performing. Pulls from app/api/admin/dashboard.
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { saveContentAction } from "@/lib/adminContentClient";
 import { useSiteSettings } from "@/lib/useSiteSettings";
 
@@ -102,12 +102,14 @@ interface OpportunityMarkedEntry {
 }
 
 interface RecreationLinkEntry {
+  key: string;
   creatorId: string;
   firstName: string;
   lastName: string;
   label: string;
   url: string;
   submittedAt: string;
+  views: number | null;
 }
 
 interface DashboardData {
@@ -141,6 +143,142 @@ function timeAgo(iso: string): string {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   return `${days}d ago`;
+}
+
+// Views can't be pulled automatically — TikTok/Instagram/Facebook/YouTube
+// don't expose that without platform API access this app doesn't have — so
+// a coach logs it once after checking, saved from then on for everyone.
+// Committed on blur/Enter rather than on every keystroke.
+function ViewCountInput({ entryKey, initial }: { entryKey: string; initial: number | null }) {
+  const [value, setValue] = useState(initial != null ? String(initial) : "");
+  const [saved, setSaved] = useState(initial);
+
+  function commit() {
+    const trimmed = value.trim();
+    const parsed = trimmed === "" ? null : Number(trimmed);
+    if (parsed !== null && (!Number.isFinite(parsed) || parsed < 0)) {
+      setValue(saved != null ? String(saved) : "");
+      return;
+    }
+    if (parsed === saved) return;
+    setSaved(parsed);
+    fetch("/api/admin/recreation-view-count", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ linkKey: entryKey, views: parsed }),
+    }).catch(() => {
+      // fire-and-forget — worst case it just doesn't stick and can be re-typed
+    });
+  }
+
+  return (
+    <input
+      type="number"
+      min={0}
+      inputMode="numeric"
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+      }}
+      placeholder="Views"
+      className="w-20 shrink-0 rounded-lg border border-border bg-surface px-2 py-1 text-right text-xs text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
+      style={{ fontSize: "16px" }}
+      aria-label="View count"
+    />
+  );
+}
+
+// Groups the flat, newest-first list by video/opportunity so a coach can
+// scan "who's linked something for X" at a glance instead of hunting
+// through one long feed — and a search box filters by either the video's
+// title or a creator's name, since both are things a coach might look up.
+function RecreationLinksPanel({
+  links,
+  onSelectCreator,
+}: {
+  links: RecreationLinkEntry[];
+  onSelectCreator: (id: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+
+  const groups = useMemo(() => {
+    const map = new Map<string, RecreationLinkEntry[]>();
+    for (const entry of links) {
+      const list = map.get(entry.label) ?? [];
+      list.push(entry);
+      map.set(entry.label, list);
+    }
+    // Most recently active video/opportunity first.
+    return [...map.entries()].sort(
+      (a, b) => new Date(b[1][0].submittedAt).getTime() - new Date(a[1][0].submittedAt).getTime()
+    );
+  }, [links]);
+
+  const q = query.trim().toLowerCase();
+  const filteredGroups = q
+    ? groups
+        .map(([label, entries]) => {
+          if (label.toLowerCase().includes(q)) return [label, entries] as const;
+          const matching = entries.filter((e) => `${e.firstName} ${e.lastName}`.toLowerCase().includes(q));
+          return matching.length > 0 ? ([label, matching] as const) : null;
+        })
+        .filter((g): g is readonly [string, RecreationLinkEntry[]] => g !== null)
+    : groups;
+
+  return (
+    <div className="space-y-3">
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search by video, opportunity, or creator name..."
+        className="w-full rounded-full border border-border bg-surface px-3.5 py-2 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
+        style={{ fontSize: "16px" }}
+      />
+      {filteredGroups.length === 0 ? (
+        <p className="text-sm text-text-faint">
+          {links.length === 0 ? "Nobody's linked a recreation yet." : "No matches."}
+        </p>
+      ) : (
+        filteredGroups.map(([label, entries]) => (
+          <div key={label} className="rounded-xl border border-border bg-bg p-3">
+            <p className="mb-2 text-sm font-semibold text-text">
+              {label} <span className="font-normal text-text-faint">({entries.length})</span>
+            </p>
+            <div className="space-y-2">
+              {entries.map((entry) => (
+                <div key={entry.key} className="flex items-center gap-2 rounded-lg bg-surface p-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onSelectCreator(entry.creatorId)}
+                        className="shrink-0 truncate text-xs font-semibold text-text hover:text-accent hover:underline"
+                      >
+                        {entry.firstName} {entry.lastName}
+                      </button>
+                      <span className="shrink-0 text-[11px] text-text-faint">{timeAgo(entry.submittedAt)}</span>
+                    </div>
+                    <a
+                      href={entry.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block truncate text-xs font-medium text-accent hover:underline"
+                    >
+                      {entry.url}
+                    </a>
+                  </div>
+                  <ViewCountInput entryKey={entry.key} initial={entry.views} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
 }
 
 function formatWeek(iso: string) {
@@ -338,36 +476,7 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
         title={`Recreation links (${data.recreationLinks.length})`}
         subtitle="What creators have linked as their recreation — no fixed mechanic yet, just visibility for now."
       >
-        {data.recreationLinks.length === 0 ? (
-          <p className="text-sm text-text-faint">Nobody&apos;s linked a recreation yet.</p>
-        ) : (
-          data.recreationLinks.map((entry, i) => (
-            <div
-              key={`${entry.creatorId}-${entry.label}-${i}`}
-              className="rounded-xl border border-border bg-bg p-3"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => onSelectCreator(entry.creatorId)}
-                  className="font-semibold text-text hover:text-accent hover:underline"
-                >
-                  {entry.firstName} {entry.lastName}
-                </button>
-                <span className="shrink-0 text-xs text-text-faint">{timeAgo(entry.submittedAt)}</span>
-              </div>
-              <p className="mt-0.5 text-xs text-text-faint">{entry.label}</p>
-              <a
-                href={entry.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1 block truncate text-sm font-medium text-accent hover:underline"
-              >
-                {entry.url}
-              </a>
-            </div>
-          ))
-        )}
+        <RecreationLinksPanel links={data.recreationLinks} onSelectCreator={onSelectCreator} />
       </Dropdown>
 
       <div>
@@ -392,55 +501,49 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
         )}
       </div>
 
-      <div>
-        <p className="eyebrow mb-2">Needs attention ({data.needsAttention.length})</p>
+      <Dropdown title={`Needs attention (${data.needsAttention.length})`}>
         {data.needsAttention.length === 0 ? (
           <p className="text-sm text-text-faint">Nobody&apos;s overdue for a check-in right now.</p>
         ) : (
-          <div className="space-y-2">
-            {data.needsAttention.map((entry, i) => (
-              <button
-                key={`${entry.id}-${i}`}
-                type="button"
-                onClick={() => onSelectCreator(entry.id)}
-                className="card card-hover flex w-full items-center justify-between gap-3 p-3 text-left"
-              >
-                <p className="font-semibold text-text">
-                  {entry.firstName} {entry.lastName}
-                </p>
-                <span className="shrink-0 rounded-full bg-accent-tint px-2.5 py-1 text-xs font-semibold text-accent">
-                  {entry.reason}
-                </span>
-              </button>
-            ))}
-          </div>
+          data.needsAttention.map((entry, i) => (
+            <button
+              key={`${entry.id}-${i}`}
+              type="button"
+              onClick={() => onSelectCreator(entry.id)}
+              className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3 text-left transition-colors hover:border-accent"
+            >
+              <p className="font-semibold text-text">
+                {entry.firstName} {entry.lastName}
+              </p>
+              <span className="shrink-0 rounded-full bg-accent-tint px-2.5 py-1 text-xs font-semibold text-accent">
+                {entry.reason}
+              </span>
+            </button>
+          ))
         )}
-      </div>
+      </Dropdown>
 
-      <div>
-        <p className="eyebrow mb-2">Most active this week</p>
+      <Dropdown title="Most active this week">
         {data.mostActive.length === 0 ? (
           <p className="text-sm text-text-faint">No activity logged yet this week.</p>
         ) : (
-          <div className="space-y-2">
-            {data.mostActive.map((entry, i) => (
-              <button
-                key={entry.id}
-                type="button"
-                onClick={() => onSelectCreator(entry.id)}
-                className="card card-hover flex w-full items-center justify-between gap-3 p-3 text-left"
-              >
-                <p className="font-semibold text-text">
-                  #{i + 1} {entry.firstName} {entry.lastName}
-                </p>
-                <span className="shrink-0 rounded-full bg-border px-2.5 py-1 text-xs font-semibold text-text-muted">
-                  {entry.activityCount} action{entry.activityCount === 1 ? "" : "s"}
-                </span>
-              </button>
-            ))}
-          </div>
+          data.mostActive.map((entry, i) => (
+            <button
+              key={entry.id}
+              type="button"
+              onClick={() => onSelectCreator(entry.id)}
+              className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3 text-left transition-colors hover:border-accent"
+            >
+              <p className="font-semibold text-text">
+                #{i + 1} {entry.firstName} {entry.lastName}
+              </p>
+              <span className="shrink-0 rounded-full bg-border px-2.5 py-1 text-xs font-semibold text-text-muted">
+                {entry.activityCount} action{entry.activityCount === 1 ? "" : "s"}
+              </span>
+            </button>
+          ))
         )}
-      </div>
+      </Dropdown>
 
       <Dropdown title={`Top ${data.topVideos.length || ""} most crossed-off videos`.trim()}>
         {data.topVideos.length === 0 ? (
