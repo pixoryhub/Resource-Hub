@@ -59,11 +59,14 @@ export async function GET(req: NextRequest) {
     const completionsByVideoId = new Map<string, number>();
 
     for (const { creator, activity } of perCreator) {
-      totalCompletions += activity.completions.length;
+      // Lifetime stats read from the permanent history, not the live
+      // checklist — a creator resetting their own progress for a fresh
+      // week shouldn't erase them from these totals.
+      totalCompletions += activity.completionHistory.length;
       totalShotsFilmed += activity.filmedShotCount;
       openFlagCount += activity.flags.filter((f) => f.status === "open").length;
 
-      for (const c of activity.completions) {
+      for (const c of activity.completionHistory) {
         completionsByVideoId.set(c.videoId, (completionsByVideoId.get(c.videoId) ?? 0) + 1);
       }
 

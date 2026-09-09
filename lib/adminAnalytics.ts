@@ -18,7 +18,15 @@ export interface ActivityEvent {
 }
 
 export interface CreatorActivity {
+  // Current, live checklist state — what's actually ticked on the
+  // creator's own screen right now. A "Reset all" clears this.
   completions: CompletionEntry[];
+  // Permanent, append-only record of every completion that's ever
+  // happened — never touched by a reset. This (not `completions`) is what
+  // the admin dashboard's lifetime totals, weekly chart, and per-video
+  // counts should read from, so a creator resetting their own checklist
+  // for a fresh week never erases anything from the coach's view.
+  completionHistory: CompletionEntry[];
   filmedShotCount: number;
   flags: CoachingFlag[];
   currentWeek: Week | null;
@@ -28,8 +36,9 @@ export interface CreatorActivity {
 }
 
 export async function loadCreatorActivity(creatorId: string): Promise<CreatorActivity> {
-  const [completionsRaw, currentWeek, archivedWeeks, flags] = await Promise.all([
+  const [completionsRaw, historyRaw, currentWeek, archivedWeeks, flags] = await Promise.all([
     loadCreatorDataServer<Array<string | CompletionEntry>>("completions", creatorId, []),
+    loadCreatorDataServer<CompletionEntry[]>("completion-history", creatorId, []),
     loadCreatorDataServer<Week | null>("shotlist-week", creatorId, null),
     loadCreatorDataServer<Week[]>("shotlist-archived", creatorId, []),
     loadCreatorDataServer<CoachingFlag[]>("flags", creatorId, []),
@@ -39,14 +48,21 @@ export async function loadCreatorActivity(creatorId: string): Promise<CreatorAct
     typeof item === "string" ? { videoId: item, completedAt: null } : item
   );
 
+  // Creators whose completions predate completion-history existing have no
+  // history recorded — falling back to their current live completions at
+  // least keeps their past activity visible instead of looking wiped.
+  const completionHistory = historyRaw.length > 0 ? historyRaw : completions;
+
   const allWeeks = currentWeek ? [currentWeek, ...archivedWeeks] : archivedWeeks;
   const filmedShots = allWeeks.flatMap((w) => w.shots.filter((s) => s.filmed && s.filmedAt));
 
   const events: ActivityEvent[] = [
-    ...completions.filter((c): c is CompletionEntry & { completedAt: string } => !!c.completedAt).map((c) => ({
-      type: "completion" as const,
-      at: c.completedAt,
-    })),
+    ...completionHistory
+      .filter((c): c is CompletionEntry & { completedAt: string } => !!c.completedAt)
+      .map((c) => ({
+        type: "completion" as const,
+        at: c.completedAt,
+      })),
     ...filmedShots.map((s) => ({ type: "shot" as const, at: s.filmedAt as string })),
     ...flags.map((f) => ({ type: "flag" as const, at: f.submittedAt })),
   ];
@@ -55,6 +71,7 @@ export async function loadCreatorActivity(creatorId: string): Promise<CreatorAct
 
   return {
     completions,
+    completionHistory,
     filmedShotCount: filmedShots.length,
     flags,
     currentWeek,

@@ -35,6 +35,13 @@ export default function CreatorHubClient({
   const [adding, setAdding] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const loadedForCreator = useRef<string | null>(null);
+  // Permanent record of every completion, separate from `completedAt`
+  // above — "Reset all" clears the live checklist but must never touch
+  // this, since it's what the admin dashboard's lifetime totals and
+  // weekly chart read from. Append-only: entries are added here, never
+  // removed.
+  const [completionHistory, setCompletionHistory] = useState<{ videoId: string; completedAt: string }[]>([]);
+  const historyLoadedForCreator = useRef<string | null>(null);
   // Links each creator submits to their own recreation, keyed by videoId —
   // a creator can add more than one per video, so each entry is a list, not
   // a single value. Loaded/saved as one map (same pattern as completions
@@ -71,6 +78,20 @@ export default function CreatorHubClient({
     const entries = Object.entries(completedAt).map(([videoId, at]) => ({ videoId, completedAt: at }));
     saveCreatorData("completions", creator.id, entries);
   }, [completedAt, creator]);
+
+  useEffect(() => {
+    if (!creator || historyLoadedForCreator.current === creator.id) return;
+    const id = creator.id;
+    loadCreatorData<{ videoId: string; completedAt: string }[]>("completion-history", id, []).then((history) => {
+      setCompletionHistory(history);
+      historyLoadedForCreator.current = id;
+    });
+  }, [creator]);
+
+  useEffect(() => {
+    if (!creator || historyLoadedForCreator.current !== creator.id) return;
+    saveCreatorData("completion-history", creator.id, completionHistory);
+  }, [completionHistory, creator]);
 
   useEffect(() => {
     if (!creator || recreationLoadedForCreator.current === creator.id) return;
@@ -111,14 +132,18 @@ export default function CreatorHubClient({
         delete next[videoId];
         return next;
       }
-      return { ...prev, [videoId]: new Date().toISOString() };
+      // A fresh completion — recorded permanently below too, separate from
+      // the live checklist state a reset can clear.
+      const completedAt = new Date().toISOString();
+      setCompletionHistory((history) => [...history, { videoId, completedAt }]);
+      return { ...prev, [videoId]: completedAt };
     });
   }
 
   // Unchecks every completed video so a creator can redo the whole set
-  // this week — same underlying toggle as one-at-a-time, just all at once.
-  // Nothing about a video's own history is deleted elsewhere (admin's
-  // activity chart only ever reflected the latest completedAt anyway).
+  // this week — clears only the live checklist. completionHistory is
+  // untouched, so the admin dashboard's lifetime totals and weekly chart
+  // still show everything that was ever actually done.
   function resetAllCompleted() {
     setCompletedAt({});
   }

@@ -24,6 +24,7 @@ export async function saveCreatorDataServer<T>(namespace: string, creatorId: str
 // deletes all of it, not just whichever namespace someone remembered.
 const ALL_NAMESPACES = [
   "completions",
+  "completion-history",
   "shotlist-week",
   "shotlist-archived",
   "flags",
