@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { HubVideo } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
+import { useAuth } from "@/lib/localAuth";
+import RecreationLinkBox, { type RecreationLink } from "@/components/RecreationLinkBox";
 import CategoryChip from "./CategoryChip";
 import HubVideoForm, { type HubVideoFormData } from "./HubVideoForm";
 
@@ -15,6 +17,8 @@ export default function VideoRow({
   onMove,
   isFirst,
   isLast,
+  recreationLink,
+  onSubmitRecreationLink,
 }: {
   video: HubVideo;
   completed: boolean;
@@ -24,8 +28,11 @@ export default function VideoRow({
   onMove: (direction: -1 | 1) => void;
   isFirst: boolean;
   isLast: boolean;
+  recreationLink: RecreationLink | null;
+  onSubmitRecreationLink: (url: string) => void;
 }) {
   const { enabled: adminMode } = useAdminMode();
+  const { creator } = useAuth();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -283,6 +290,12 @@ export default function VideoRow({
               </div>
             </div>
           </div>
+
+          {creator && (
+            <div className="mt-3">
+              <RecreationLinkBox value={recreationLink} onSubmit={onSubmitRecreationLink} />
+            </div>
+          )}
         </div>
         </div>
       </div>

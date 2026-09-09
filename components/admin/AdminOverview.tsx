@@ -101,6 +101,15 @@ interface OpportunityMarkedEntry {
   lastName: string;
 }
 
+interface RecreationLinkEntry {
+  creatorId: string;
+  firstName: string;
+  lastName: string;
+  label: string;
+  url: string;
+  submittedAt: string;
+}
+
 interface DashboardData {
   kpis: {
     totalCreators: number;
@@ -111,6 +120,7 @@ interface DashboardData {
     weeklyActiveCreators: number;
     newSignupsThisWeek: number;
     opportunityMarkedDoneCount: number;
+    recreationLinksCount: number;
   };
   weekly: WeekBucket[];
   needsAttention: NeedsAttentionEntry[];
@@ -120,6 +130,17 @@ interface DashboardData {
   categoryBreakdown: CategoryStat[];
   opportunityMarkedDone: OpportunityMarkedEntry[];
   hasWeeklyOpportunity: boolean;
+  recreationLinks: RecreationLinkEntry[];
+}
+
+function timeAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(ms / 60_000);
+  if (mins < 60) return mins <= 1 ? "just now" : `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
 function formatWeek(iso: string) {
@@ -288,6 +309,7 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
             value={`${data.kpis.opportunityMarkedDoneCount} / ${data.kpis.totalCreators}`}
           />
         )}
+        <KpiCard label="Recreation links submitted" value={data.kpis.recreationLinksCount} />
       </div>
 
       {data.hasWeeklyOpportunity && (
@@ -311,6 +333,42 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
           )}
         </Dropdown>
       )}
+
+      <Dropdown
+        title={`Recreation links (${data.recreationLinks.length})`}
+        subtitle="What creators have linked as their recreation — no fixed mechanic yet, just visibility for now."
+      >
+        {data.recreationLinks.length === 0 ? (
+          <p className="text-sm text-text-faint">Nobody&apos;s linked a recreation yet.</p>
+        ) : (
+          data.recreationLinks.map((entry, i) => (
+            <div
+              key={`${entry.creatorId}-${entry.label}-${i}`}
+              className="rounded-xl border border-border bg-bg p-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => onSelectCreator(entry.creatorId)}
+                  className="font-semibold text-text hover:text-accent hover:underline"
+                >
+                  {entry.firstName} {entry.lastName}
+                </button>
+                <span className="shrink-0 text-xs text-text-faint">{timeAgo(entry.submittedAt)}</span>
+              </div>
+              <p className="mt-0.5 text-xs text-text-faint">{entry.label}</p>
+              <a
+                href={entry.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 block truncate text-sm font-medium text-accent hover:underline"
+              >
+                {entry.url}
+              </a>
+            </div>
+          ))
+        )}
+      </Dropdown>
 
       <div>
         <p className="eyebrow mb-2">Activity, last 8 weeks</p>

@@ -6,6 +6,7 @@ import { useAdminMode } from "@/lib/adminMode";
 import { useAuth } from "@/lib/localAuth";
 import { loadCreatorData, saveCreatorData } from "@/lib/creatorStorage";
 import { saveContentAction } from "@/lib/adminContentClient";
+import type { RecreationLink } from "@/components/RecreationLinkBox";
 import VideoRow from "./VideoRow";
 import HubVideoForm, { type HubVideoFormData } from "./HubVideoForm";
 import TopPostsSection from "./TopPostsSection";
@@ -33,6 +34,12 @@ export default function CreatorHubClient({
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);
   const loadedForCreator = useRef<string | null>(null);
+  // Links each creator submits to their own recreation, keyed by videoId —
+  // loaded/saved as one map (same pattern as completions above) so every
+  // VideoRow's submit box shares one source of truth instead of racing each
+  // other's reads/writes of the same server-side record.
+  const [recreationLinks, setRecreationLinks] = useState<Record<string, RecreationLink>>({});
+  const recreationLoadedForCreator = useRef<string | null>(null);
 
   // Each creator's own ticks — loaded fresh whenever the logged-in creator
   // changes. loadedForCreator is only set to this creator's id *after* the
@@ -61,6 +68,24 @@ export default function CreatorHubClient({
     const entries = Object.entries(completedAt).map(([videoId, at]) => ({ videoId, completedAt: at }));
     saveCreatorData("completions", creator.id, entries);
   }, [completedAt, creator]);
+
+  useEffect(() => {
+    if (!creator || recreationLoadedForCreator.current === creator.id) return;
+    const id = creator.id;
+    loadCreatorData<Record<string, RecreationLink>>("recreation-links", id, {}).then((map) => {
+      setRecreationLinks(map);
+      recreationLoadedForCreator.current = id;
+    });
+  }, [creator]);
+
+  useEffect(() => {
+    if (!creator || recreationLoadedForCreator.current !== creator.id) return;
+    saveCreatorData("recreation-links", creator.id, recreationLinks);
+  }, [recreationLinks, creator]);
+
+  function submitRecreationLink(videoId: string, url: string) {
+    setRecreationLinks((prev) => ({ ...prev, [videoId]: { url, submittedAt: new Date().toISOString() } }));
+  }
 
   function toggleCompleted(videoId: string) {
     setCompletedAt((prev) => {
@@ -237,6 +262,8 @@ export default function CreatorHubClient({
               onMove={(direction) => moveVideo(video.id, direction)}
               isFirst={posIndex === 0}
               isLast={posIndex === sortedByPosition.length - 1}
+              recreationLink={recreationLinks[video.id] ?? null}
+              onSubmitRecreationLink={(url) => submitRecreationLink(video.id, url)}
             />
           );
         })}

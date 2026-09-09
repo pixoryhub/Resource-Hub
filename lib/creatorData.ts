@@ -22,7 +22,15 @@ export async function saveCreatorDataServer<T>(namespace: string, creatorId: str
 // lib/creatorStorage.ts (client) and app/api/creator-data (the route that
 // namespace comes from). Kept as one list so deleting a creator actually
 // deletes all of it, not just whichever namespace someone remembered.
-const ALL_NAMESPACES = ["completions", "shotlist-week", "shotlist-archived", "flags", "opportunity-completion"];
+const ALL_NAMESPACES = [
+  "completions",
+  "shotlist-week",
+  "shotlist-archived",
+  "flags",
+  "opportunity-completion",
+  "recreation-links",
+  "recreation-link-weekly-opportunity",
+];
 
 export async function deleteAllCreatorData(creatorId: string): Promise<void> {
   const store = getBlobStore(DATA_STORE);

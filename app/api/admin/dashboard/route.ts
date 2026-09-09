@@ -169,6 +169,63 @@ export async function GET(req: NextRequest) {
         .map(({ creator }) => ({ id: creator.id, firstName: creator.firstName, lastName: creator.lastName }));
     }
 
+    // Recreation links — creators can drop a link to their posted
+    // recreation from the weekly opportunity or any Creator Hub video (see
+    // components/RecreationLinkBox.tsx). No mechanic decided yet for what
+    // these qualify for; this just surfaces everything submitted, newest
+    // first, so coaches can actually see them.
+    type RecreationLinkEntry = {
+      creatorId: string;
+      firstName: string;
+      lastName: string;
+      label: string;
+      url: string;
+      submittedAt: string;
+    };
+    const recreationLinks: RecreationLinkEntry[] = (
+      await Promise.all(
+        creators.map(async (creator) => {
+          const [hubLinks, opportunityLink] = await Promise.all([
+            loadCreatorDataServer<Record<string, { url: string; submittedAt: string }>>(
+              "recreation-links",
+              creator.id,
+              {}
+            ),
+            loadCreatorDataServer<{ url: string; submittedAt: string } | null>(
+              "recreation-link-weekly-opportunity",
+              creator.id,
+              null
+            ),
+          ]);
+          const entries: RecreationLinkEntry[] = [];
+          if (opportunityLink) {
+            entries.push({
+              creatorId: creator.id,
+              firstName: creator.firstName,
+              lastName: creator.lastName,
+              label: "This week's opportunity",
+              url: opportunityLink.url,
+              submittedAt: opportunityLink.submittedAt,
+            });
+          }
+          for (const [videoId, link] of Object.entries(hubLinks)) {
+            const video = videos.find((v) => v.id === videoId);
+            entries.push({
+              creatorId: creator.id,
+              firstName: creator.firstName,
+              lastName: creator.lastName,
+              label: video ? `"${video.title}"` : "a Creator Hub video",
+              url: link.url,
+              submittedAt: link.submittedAt,
+            });
+          }
+          return entries;
+        })
+      )
+    )
+      .flat()
+      .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+
     return NextResponse.json({
       kpis: {
         totalCreators: creators.length,
@@ -179,6 +236,7 @@ export async function GET(req: NextRequest) {
         weeklyActiveCreators,
         newSignupsThisWeek,
         opportunityMarkedDoneCount: opportunityMarkedDone.length,
+        recreationLinksCount: recreationLinks.length,
       },
       weekly: weekKeys.map((w) => weekly.get(w)),
       needsAttention,
@@ -188,6 +246,7 @@ export async function GET(req: NextRequest) {
       categoryBreakdown,
       opportunityMarkedDone,
       hasWeeklyOpportunity: !!weeklyOpportunity,
+      recreationLinks,
     });
   } catch {
     return NextResponse.json({ error: "Couldn't reach storage — try again." }, { status: 500 });

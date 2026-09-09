@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/localAuth";
 import { loadCreatorData, saveCreatorData } from "@/lib/creatorStorage";
 import { saveContentAction } from "@/lib/adminContentClient";
 import { uploadVideoChunked } from "@/lib/videoUploadClient";
+import RecreationLinkBox, { type RecreationLink } from "@/components/RecreationLinkBox";
 
 function isUrlLine(line: string): boolean {
   return /^https?:\/\/\S+$/.test(line);
@@ -200,6 +201,10 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
   // this creator has marked done. null while unknown/not-yet-loaded, so
   // the checkmark doesn't flash "undone" before the real value arrives.
   const [markedUpdatedAt, setMarkedUpdatedAt] = useState<string | null | undefined>(undefined);
+  // Not tied to which opportunity is currently live (unlike the mark-done
+  // above) — the mechanic here isn't decided yet, so a submitted link just
+  // sticks around instead of resetting every time a new opportunity posts.
+  const [recreationLink, setRecreationLinkState] = useState<RecreationLink | null | undefined>(undefined);
 
   useEffect(() => {
     if (!creator) return;
@@ -207,10 +212,20 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
     loadCreatorData<{ updatedAt: string } | null>("opportunity-completion", creator.id, null).then((record) => {
       if (!cancelled) setMarkedUpdatedAt(record?.updatedAt ?? null);
     });
+    loadCreatorData<RecreationLink | null>("recreation-link-weekly-opportunity", creator.id, null).then((record) => {
+      if (!cancelled) setRecreationLinkState(record);
+    });
     return () => {
       cancelled = true;
     };
   }, [creator]);
+
+  function submitRecreationLink(url: string) {
+    if (!creator) return;
+    const next: RecreationLink = { url, submittedAt: new Date().toISOString() };
+    setRecreationLinkState(next);
+    saveCreatorData("recreation-link-weekly-opportunity", creator.id, next);
+  }
 
   const completed = !!opportunity && markedUpdatedAt === opportunity.updatedAt;
 
@@ -324,7 +339,7 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
         </span>
       </button>
 
-      {(restLines.length > 0 || opportunity.videoAssetId) && (
+      {(restLines.length > 0 || opportunity.videoAssetId || creator) && (
         <div className={"accordion-rows " + (open ? "is-open" : "")}>
           <div>
             <div className="mt-4 border-t border-white/20 pt-4" inert={!open}>
@@ -338,6 +353,11 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
                 />
               )}
               <OpportunityBody lines={restLines} />
+              {creator && (
+                <div className="mt-4 rounded-2xl bg-bg p-1">
+                  <RecreationLinkBox value={recreationLink ?? null} onSubmit={submitRecreationLink} />
+                </div>
+              )}
             </div>
           </div>
         </div>
