@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/adminAuth";
 import * as content from "@/lib/data/content";
 import { deleteVideo } from "@/lib/videoStore";
-import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial, TopPost, SiteSettings } from "@/lib/data/types";
+import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial, TopPost, SiteSettings, Challenge } from "@/lib/data/types";
 
 function badRequest(error: string) {
   return NextResponse.json({ ok: false, error }, { status: 400 });
@@ -59,6 +59,12 @@ export async function POST(req: NextRequest) {
     } else if (type === "siteSettings") {
       if (action === "save") await content.saveSiteSettings(body.value as SiteSettings);
       else return badRequest("Unknown action for siteSettings.");
+    } else if (type === "challenges") {
+      if (action === "add") await content.addChallenge(body.item as Challenge);
+      else if (action === "update") await content.updateChallenge(body.id, body.patch as Partial<Challenge>);
+      else if (action === "delete") await content.deleteChallenge(body.id);
+      else if (action === "reorder") await content.setChallengePositions(body.positions);
+      else return badRequest("Unknown action for challenges.");
     } else {
       return badRequest("Unknown content type.");
     }

@@ -183,11 +183,40 @@ body {
   animation: pixory-pulse 2.4s ease-in-out infinite;
 }
 
+/* Locked-challenge card (Challenges page) — a slow light sweep across the
+   card, like it's catching a glint, to make "there's something to unlock
+   here" read at a glance instead of just being a muted disabled state. */
+@keyframes pixory-shimmer {
+  0% { background-position: 160% 0; }
+  100% { background-position: -60% 0; }
+}
+.animate-shimmer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.09) 45%, transparent 60%);
+  background-size: 220% 100%;
+  animation: pixory-shimmer 3.2s ease-in-out infinite;
+}
+
+/* Soft breathing glow on the "unlock" button — draws the eye without a
+   full loop-y animation fighting for attention. */
+@keyframes pixory-unlock-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 85, 155, 0.45); }
+  50% { box-shadow: 0 0 0 9px rgba(232, 85, 155, 0); }
+}
+.animate-unlock-glow {
+  animation: pixory-unlock-glow 2.2s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card-hover,
   .animate-pop,
   .animate-fade-in,
   .animate-pulse-slow,
+  .animate-shimmer::before,
+  .animate-unlock-glow,
   .accordion-rows {
     transition: none;
     animation: none;

@@ -8,7 +8,7 @@ import { isAdminRequest } from "@/lib/adminAuth";
 import { listAllCreators } from "@/lib/creatorRegistry";
 import { loadCreatorActivity, mondayOf, lastNWeekStarts } from "@/lib/adminAnalytics";
 import { loadCreatorDataServer } from "@/lib/creatorData";
-import { getHubVideos, getWeeklyOpportunity } from "@/lib/data";
+import { getHubVideos, getWeeklyOpportunity, getChallenges } from "@/lib/data";
 import { getViewCounts, recreationLinkKey } from "@/lib/recreationViewCounts";
 import { getReviewedLinks } from "@/lib/recreationReviewed";
 
@@ -34,10 +34,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const [creators, videos, weeklyOpportunity] = await Promise.all([
+    const [creators, videos, weeklyOpportunity, challenges] = await Promise.all([
       listAllCreators(),
       getHubVideos(),
       getWeeklyOpportunity(),
+      getChallenges(),
     ]);
     const activeVideoTotal = videos.filter((v) => v.status === "active").length;
 
@@ -233,9 +234,21 @@ export async function GET(req: NextRequest) {
             });
           }
           for (const [videoId, links] of Object.entries(hubLinks)) {
-            const video = videos.find((v) => v.id === videoId);
+            // Challenge-linked entries share this same map, keyed
+            // "challenge:{id}" instead of a hub video id (see
+            // components/challenges/ChallengesClient.tsx) — resolve the
+            // label from whichever list it actually came from.
+            const isChallenge = videoId.startsWith("challenge:");
+            const video = isChallenge ? undefined : videos.find((v) => v.id === videoId);
+            const challenge = isChallenge ? challenges.find((c) => c.id === videoId.slice("challenge:".length)) : undefined;
             for (const link of normalizeLinks(links)) {
-              const label = video ? `"${video.title}"` : "a Creator Hub video";
+              const label = video
+                ? `"${video.title}"`
+                : challenge
+                  ? `"${challenge.title}"`
+                  : isChallenge
+                    ? "a challenge"
+                    : "a Creator Hub video";
               const key = recreationLinkKey(creator.id, label, link.submittedAt);
               entries.push({
                 key,

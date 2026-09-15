@@ -188,3 +188,35 @@ export interface Testimonial {
 export interface SiteSettings {
   hiddenNavKeys: string[];
 }
+
+// Challenges — the gamified layer on top of recreation links and the
+// weekly opportunity (see components/RecreationLinkBox.tsx). Three kinds,
+// each with different behaviour on the creator-facing page:
+//   "raffle"    — ties to the weekly opportunity's mark-done + a link;
+//                 always running, resets each cycle.
+//   "spotlight" — info + prize only, no tracker (there's no reliable way
+//                 to track "community vibe" automatically) — coaches pick
+//                 the winner directly.
+//   "featured"  — the rotating "big one." Locked until a creator taps to
+//                 join; only one should be status "active" at a time, the
+//                 rest sit "retired" as history.
+// `criteria` is the short, trackable qualifying checklist shown up front;
+// `rules` is a separate, unbounded freeform field for whatever extra
+// detail a coach wants to add underneath, however long.
+export type ChallengeKind = "raffle" | "spotlight" | "featured";
+
+export interface Challenge {
+  id: string;
+  kind: ChallengeKind;
+  position: number;
+  title: string;
+  description: string;
+  prizeText: string;
+  prizeImageUrl: string; // "" = no photo, just show the kind's default icon
+  criteria: string[]; // short qualifying checklist — can be empty
+  rules: string; // long-form rules, freeform multi-line text — can be empty
+  cycleStart: string; // ISO date, "" if not set
+  cycleEnd: string; // ISO date, "" if not set
+  status: "active" | "retired";
+  updatedAt: string;
+}

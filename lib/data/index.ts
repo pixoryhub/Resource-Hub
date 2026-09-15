@@ -35,4 +35,5 @@ export const {
   getTestimonials,
   getTopPosts,
   getSiteSettings,
+  getChallenges,
 } = content;

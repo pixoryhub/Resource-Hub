@@ -20,7 +20,7 @@ export interface HubVideoFormData {
   status: "active" | "retired";
 }
 
-function StringListEditor({
+export function StringListEditor({
   label,
   hint,
   addLabel,

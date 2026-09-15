@@ -8,9 +8,73 @@
 
 import { getBlobStore } from "@/lib/serverStore";
 import * as fixtures from "./fixtures";
-import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial, TopPost, SiteSettings } from "./types";
+import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial, TopPost, SiteSettings, Challenge } from "./types";
 
 const noSeed = async () => [];
+
+// Seeded once, directly here rather than from a fixtures/*.json file —
+// this is the real starting content from the brief, not sample data, so
+// there's nothing to keep in sync with a separate fixture asset.
+async function seedChallenges(): Promise<Challenge[]> {
+  const now = new Date().toISOString();
+  return [
+    {
+      id: "challenge-raffle",
+      kind: "raffle",
+      position: 1,
+      title: "Ongoing Execution Raffle",
+      description:
+        "Recreate the high-impact opportunity, mark it done, and link your post — 1 entry, every week it's live.",
+      prizeText: "Cash bonus or physical item",
+      prizeImageUrl: "",
+      criteria: [],
+      rules:
+        "Earn 1 entry per week — mark it done AND link your post, or it won't count.\nVideo must be an exact recreation — same text hook, visual, and format.\nRaffle resets every 2 weeks.\nPrizes vary each cycle — cash bonuses or physical items.",
+      cycleStart: "2026-09-15",
+      cycleEnd: "2026-09-28",
+      status: "active",
+      updatedAt: now,
+    },
+    {
+      id: "challenge-spotlight",
+      kind: "spotlight",
+      position: 2,
+      title: "Creator of the Week",
+      description:
+        "One creator, picked by the coaches for real effort — hub activity, posting consistency, and being active in the community and Discord.",
+      prizeText: "$150 cash",
+      prizeImageUrl: "",
+      criteria: [],
+      rules:
+        "Weighted across hub activity, posting consistency, and community engagement.\nBeing active in Discord counts, not just what you post.\nCoaches choose the winner directly — there's no public leaderboard for this one.\nAnnounced alongside the raffle winner every 2 weeks.",
+      cycleStart: "2026-09-15",
+      cycleEnd: "2026-09-28",
+      status: "active",
+      updatedAt: now,
+    },
+    {
+      id: "challenge-featured-1",
+      kind: "featured",
+      position: 3,
+      title: "Bestie-Goals Challenge",
+      description:
+        'Post your own spin on the "bestie goals" format. Only videos that meet every criterion below count.',
+      prizeText: "Ring light + $75",
+      prizeImageUrl: "",
+      criteria: [
+        'Uses the "bestie goals" hook or a close variation',
+        "Posted between Sep 15 – Sep 28",
+        "Tags @pixory or uses #pixorybesties",
+      ],
+      rules:
+        "Entries are checked manually — coaches review each linked video against the criteria above.\nYou can link more than one attempt; only one needs to qualify.\nDuets and stitches of someone else's bestie-goals video don't count — it has to be your own recreation.\nWinner is announced in Discord within 48 hours of the cycle ending.",
+      cycleStart: "2026-09-15",
+      cycleEnd: "2026-09-28",
+      status: "active",
+      updatedAt: now,
+    },
+  ];
+}
 
 const CONTENT_STORE = "pixory-site-content";
 const WEEKLY_OPPORTUNITY_KEY = "weekly-opportunity";
@@ -205,6 +269,26 @@ export function updateTestimonial(id: string, patch: Partial<Testimonial>): Prom
 }
 export function deleteTestimonial(id: string): Promise<Testimonial[]> {
   return deleteItem<Testimonial>("testimonials", noSeed, id);
+}
+
+// Challenges — see lib/data/types.ts's Challenge for the three kinds.
+// Seeded once from seedChallenges() above the first time this is asked
+// for, same pattern as everything else in this file.
+
+export function getChallenges(): Promise<Challenge[]> {
+  return getList<Challenge>("challenges", seedChallenges);
+}
+export function addChallenge(item: Challenge): Promise<void> {
+  return addItem("challenges", seedChallenges, item);
+}
+export function updateChallenge(id: string, patch: Partial<Challenge>): Promise<Challenge[]> {
+  return updateItem<Challenge>("challenges", seedChallenges, id, patch);
+}
+export function deleteChallenge(id: string): Promise<Challenge[]> {
+  return deleteItem<Challenge>("challenges", seedChallenges, id);
+}
+export function setChallengePositions(updates: { id: string; position: number }[]): Promise<Challenge[]> {
+  return setPositions<Challenge>("challenges", seedChallenges, updates);
 }
 
 // Page visibility — which nav pages are hidden from creators right now.

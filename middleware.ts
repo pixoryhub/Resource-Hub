@@ -15,5 +15,5 @@ export function middleware() {
 }
 
 export const config = {
-  matcher: ["/", "/creator-hub"],
+  matcher: ["/", "/creator-hub", "/challenges"],
 };
