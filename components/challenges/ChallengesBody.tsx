@@ -430,9 +430,9 @@ export default function ChallengesBody({
                 </div>
               )}
 
-              {raffleEntrants > 0 && (
+              {raffleEntrants >= 10 && (
                 <p className="mt-2.5 text-[11px] text-text-faint">
-                  <span className="font-bold text-text-muted">{raffleEntrants}</span> creator{raffleEntrants === 1 ? "" : "s"} qualified this cycle
+                  <span className="font-bold text-text-muted">{raffleEntrants}</span> creators qualified this cycle
                 </p>
               )}
 
