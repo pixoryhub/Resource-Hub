@@ -13,7 +13,6 @@ import { useSiteSettings } from "@/lib/useSiteSettings";
 const NAV_ITEMS = [
   { label: "Resource Hub", href: "/", key: "" },
   { label: "Creator Hub", href: "/creator-hub", key: "creator-hub" },
-  { label: "Challenges", href: "/challenges", key: "challenges" },
   { label: "Coaching Flag", href: "/coaching-flag", key: "coaching-flag" },
   { label: "Shot List", href: "/shot-list-generator", key: "shot-list-generator" },
 ];

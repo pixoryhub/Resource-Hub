@@ -13,7 +13,6 @@ import { useSiteSettings } from "@/lib/useSiteSettings";
 // fixed list, not worth sharing a module for.
 const HIDEABLE_PAGES = [
   { key: "creator-hub", label: "Creator Hub" },
-  { key: "challenges", label: "Challenges" },
   { key: "coaching-flag", label: "Coaching Flag" },
   { key: "shot-list-generator", label: "Shot List Generator" },
 ];

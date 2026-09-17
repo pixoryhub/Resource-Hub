@@ -236,7 +236,7 @@ export async function GET(req: NextRequest) {
           for (const [videoId, links] of Object.entries(hubLinks)) {
             // Challenge-linked entries share this same map, keyed
             // "challenge:{id}" instead of a hub video id (see
-            // components/challenges/ChallengesClient.tsx) — resolve the
+            // components/challenges/ChallengesBody.tsx) — resolve the
             // label from whichever list it actually came from.
             const isChallenge = videoId.startsWith("challenge:");
             const video = isChallenge ? undefined : videos.find((v) => v.id === videoId);

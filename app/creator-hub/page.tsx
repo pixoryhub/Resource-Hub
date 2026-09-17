@@ -1,4 +1,4 @@
-import { getHubVideos, getTopPosts } from "@/lib/data";
+import { getHubVideos, getTopPosts, getChallenges, getWeeklyOpportunity } from "@/lib/data";
 import CreatorHubClient from "@/components/creator-hub/CreatorHubClient";
 
 // Hub videos/top posts are admin-editable and live in Netlify Blobs (see
@@ -8,6 +8,11 @@ import CreatorHubClient from "@/components/creator-hub/CreatorHubClient";
 export const dynamic = "force-dynamic";
 
 export default async function CreatorHubPage() {
-  const [videos, topPosts] = await Promise.all([getHubVideos(), getTopPosts()]);
-  return <CreatorHubClient videos={videos} topPosts={topPosts} />;
+  const [videos, topPosts, challenges, weeklyOpportunity] = await Promise.all([
+    getHubVideos(),
+    getTopPosts(),
+    getChallenges(),
+    getWeeklyOpportunity(),
+  ]);
+  return <CreatorHubClient videos={videos} topPosts={topPosts} challenges={challenges} weeklyOpportunity={weeklyOpportunity} />;
 }

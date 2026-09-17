@@ -37,10 +37,20 @@ export default function RecreationLinkBox({
   onRemove: (index: number) => void;
 }) {
   const [draft, setDraft] = useState("");
+  const [duplicateError, setDuplicateError] = useState(false);
 
+  // A creator can reach the same underlying link list from more than one
+  // place (e.g. the weekly opportunity's own page and this same challenge
+  // on the Challenges dashboard) — catch a re-paste of a link already on
+  // the list here instead of silently double-counting it.
   function handleSubmit() {
     const url = draft.trim();
     if (!url) return;
+    if (value.some((l) => l.url.trim() === url)) {
+      setDuplicateError(true);
+      return;
+    }
+    setDuplicateError(false);
     onSubmit(url);
     setDraft("");
   }
@@ -83,7 +93,10 @@ export default function RecreationLinkBox({
         <input
           type="text"
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => {
+            setDraft(e.target.value);
+            if (duplicateError) setDuplicateError(false);
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -103,6 +116,11 @@ export default function RecreationLinkBox({
           {value.length > 0 ? "Add another" : "Submit"}
         </button>
       </div>
+      {duplicateError && (
+        <p className="mt-1.5 text-xs font-semibold text-accent">
+          You&apos;ve already linked that one — no need to add it twice.
+        </p>
+      )}
     </div>
   );
 }

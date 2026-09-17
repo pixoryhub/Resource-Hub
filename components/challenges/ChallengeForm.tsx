@@ -19,8 +19,15 @@ export interface ChallengeFormData {
   rules: string;
   cycleStart: string;
   cycleEnd: string;
-  status: "active" | "retired";
+  status: "active" | "coming-soon" | "retired";
+  comingSoonMessage: string;
 }
+
+const STATUS_LABELS: Record<ChallengeFormData["status"], string> = {
+  active: "Active",
+  "coming-soon": "Coming soon",
+  retired: "Retired",
+};
 
 const KIND_LABELS: Record<ChallengeKind, string> = {
   raffle: "Raffle (ties to the weekly opportunity)",
@@ -46,7 +53,8 @@ export default function ChallengeForm({
   const [rules, setRules] = useState(initial?.rules ?? "");
   const [cycleStart, setCycleStart] = useState(initial?.cycleStart ?? "");
   const [cycleEnd, setCycleEnd] = useState(initial?.cycleEnd ?? "");
-  const [status, setStatus] = useState<"active" | "retired">(initial?.status ?? "active");
+  const [status, setStatus] = useState<ChallengeFormData["status"]>(initial?.status ?? "active");
+  const [comingSoonMessage, setComingSoonMessage] = useState(initial?.comingSoonMessage ?? "");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -67,8 +75,12 @@ export default function ChallengeForm({
     }
   }
 
+  // A featured challenge that's just a "coming soon" teaser doesn't have a
+  // real prize/description yet — don't force placeholder text just to save it.
+  const canSkipRequiredFields = kind === "featured" && status === "coming-soon";
+
   function handleSave() {
-    if (!title.trim() || !description.trim()) return;
+    if (!canSkipRequiredFields && (!title.trim() || !description.trim())) return;
     onSave({
       kind,
       title: title.trim(),
@@ -80,6 +92,7 @@ export default function ChallengeForm({
       cycleStart,
       cycleEnd,
       status,
+      comingSoonMessage: comingSoonMessage.trim(),
     });
   }
 
@@ -218,28 +231,48 @@ export default function ChallengeForm({
 
       <div>
         <label className="eyebrow mb-1.5 block">Status</label>
+        {kind === "featured" && (
+          <p className="mb-1.5 text-xs text-text-faint">
+            &ldquo;Coming soon&rdquo; shows just a teaser (using the cycle-starts date below) — no prize,
+            criteria, or join button yet.
+          </p>
+        )}
         <div className="flex gap-1 rounded-full border border-border bg-bg p-1 sm:w-fit">
-          {(["active", "retired"] as const).map((s) => (
+          {(["active", "coming-soon", "retired"] as const).map((s) => (
             <button
               key={s}
               type="button"
               onClick={() => setStatus(s)}
               className={
-                "flex-1 rounded-full px-4 py-1.5 text-sm font-semibold capitalize transition-colors sm:flex-none " +
+                "flex-1 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-semibold transition-colors sm:flex-none " +
                 (status === s ? "bg-text text-bg" : "text-text-muted hover:bg-accent-tint")
               }
             >
-              {s}
+              {STATUS_LABELS[s]}
             </button>
           ))}
         </div>
       </div>
 
+      {kind === "featured" && status === "coming-soon" && (
+        <div>
+          <label className="eyebrow mb-1.5 block">Coming-soon message (optional)</label>
+          <input
+            type="text"
+            value={comingSoonMessage}
+            onChange={(e) => setComingSoonMessage(e.target.value)}
+            placeholder="e.g. New challenge drops Friday! — leave blank to auto-show days left"
+            className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
+            style={{ fontSize: "16px" }}
+          />
+        </div>
+      )}
+
       <div className="flex gap-2 border-t border-border pt-4">
         <button
           type="button"
           onClick={handleSave}
-          disabled={!title.trim() || !description.trim()}
+          disabled={!canSkipRequiredFields && (!title.trim() || !description.trim())}
           className="rounded-full bg-text px-5 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Save

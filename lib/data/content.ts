@@ -33,6 +33,7 @@ async function seedChallenges(): Promise<Challenge[]> {
       cycleStart: "2026-09-15",
       cycleEnd: "2026-09-28",
       status: "active",
+      comingSoonMessage: "",
       updatedAt: now,
     },
     {
@@ -50,6 +51,7 @@ async function seedChallenges(): Promise<Challenge[]> {
       cycleStart: "2026-09-15",
       cycleEnd: "2026-09-28",
       status: "active",
+      comingSoonMessage: "",
       updatedAt: now,
     },
     {
@@ -71,6 +73,7 @@ async function seedChallenges(): Promise<Challenge[]> {
       cycleStart: "2026-09-15",
       cycleEnd: "2026-09-28",
       status: "active",
+      comingSoonMessage: "",
       updatedAt: now,
     },
   ];

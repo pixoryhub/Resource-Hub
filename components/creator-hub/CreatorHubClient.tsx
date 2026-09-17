@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { HubVideo, TopPost } from "@/lib/data/types";
+import type { HubVideo, TopPost, Challenge, WeeklyOpportunity } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
 import { useAuth } from "@/lib/localAuth";
 import { loadCreatorData, saveCreatorData } from "@/lib/creatorStorage";
@@ -10,15 +10,20 @@ import { type RecreationLink, normalizeRecreationLinks } from "@/components/Recr
 import VideoRow from "./VideoRow";
 import HubVideoForm, { type HubVideoFormData } from "./HubVideoForm";
 import TopPostsSection from "./TopPostsSection";
+import CreatorHubChallenges from "@/components/challenges/CreatorHubChallenges";
 
 type Tab = "all" | "completed" | "unfinished";
 
 export default function CreatorHubClient({
   videos: initialVideos,
   topPosts,
+  challenges,
+  weeklyOpportunity,
 }: {
   videos: HubVideo[];
   topPosts: TopPost[];
+  challenges: Challenge[];
+  weeklyOpportunity: WeeklyOpportunity | null;
 }) {
   const { enabled: adminMode } = useAdminMode();
   const { creator } = useAuth();
@@ -418,6 +423,8 @@ export default function CreatorHubClient({
           />
         </div>
       </div>
+
+      <CreatorHubChallenges initial={challenges} weeklyOpportunity={weeklyOpportunity} />
 
       <div className="space-y-3">
         {filtered.length === 0 && (

@@ -217,6 +217,13 @@ export interface Challenge {
   rules: string; // long-form rules, freeform multi-line text — can be empty
   cycleStart: string; // ISO date, "" if not set
   cycleEnd: string; // ISO date, "" if not set
-  status: "active" | "retired";
+  // "coming-soon" only makes real sense for kind "featured" — a teaser
+  // slot between cycles ("new challenge in 3 days") without the full
+  // card, prize, or join button showing yet. The other kinds just treat
+  // it the same as "retired" (hidden from creators) if it's ever set.
+  status: "active" | "coming-soon" | "retired";
+  // Shown instead of the auto "New challenge in Xd" line while
+  // "coming-soon" — "" falls back to that computed default.
+  comingSoonMessage: string;
   updatedAt: string;
 }
