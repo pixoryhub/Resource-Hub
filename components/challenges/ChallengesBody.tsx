@@ -502,28 +502,6 @@ export default function ChallengesBody({
         </div>
       </div>
 
-      {/* ---------------- Live activity ---------------- */}
-      {activity && activity.feed.length > 0 && (
-        <div>
-          <p className="eyebrow mb-2">Live activity</p>
-          <div className="card divide-y divide-border p-1">
-            {activity.feed.map((entry, i) => (
-              <div key={i} className="flex items-center gap-2.5 px-3 py-2.5">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-tint text-[11px] font-bold" style={{ color: "var(--accent)" }}>
-                  {entry.firstName.charAt(0).toUpperCase()}
-                </span>
-                <p className="min-w-0 flex-1 truncate text-xs text-text">
-                  <span className="font-bold">{entry.firstName}</span> {entry.label}
-                </p>
-                <span className="shrink-0 text-[10.5px] text-text-faint">
-                  {new Date(entry.at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {adminMode && (
         <button
           type="button"

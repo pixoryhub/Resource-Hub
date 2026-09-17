@@ -15,9 +15,15 @@ import ChallengesBody from "./ChallengesBody";
 export default function CreatorHubChallenges({
   initial,
   weeklyOpportunity,
+  onMove,
+  isFirst,
+  isLast,
 }: {
   initial: Challenge[];
   weeklyOpportunity: WeeklyOpportunity | null;
+  onMove?: (direction: -1 | 1) => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }) {
   const { enabled: adminMode } = useAdminMode();
   const [open, setOpen] = useState(false);
@@ -30,8 +36,8 @@ export default function CreatorHubChallenges({
       className="overflow-hidden rounded-xl border shadow-sm"
       style={{ borderColor: "var(--accent)", background: "linear-gradient(135deg, var(--accent-tint), var(--surface) 60%)" }}
     >
-      <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between gap-3 p-3.5 text-left" aria-expanded={open}>
-        <span className="flex min-w-0 items-center gap-2.5">
+      <div className="flex w-full items-center gap-1 p-3.5">
+        <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left" aria-expanded={open}>
           <span
             className="animate-pulse-glow flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base text-white shadow-sm"
             style={{ background: "linear-gradient(135deg, var(--accent-light), var(--accent))" }}
@@ -41,11 +47,39 @@ export default function CreatorHubChallenges({
           <span className="flex items-center gap-1.5 text-sm font-bold text-text">
             Challenges <span className="font-normal text-text-faint">({visible.length})</span>
           </span>
-        </span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={"shrink-0 transition-transform " + (open ? "" : "-rotate-90")}>
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
+        </button>
+
+        {adminMode && onMove && (
+          <span className="flex shrink-0 items-center gap-0.5">
+            <button
+              type="button"
+              onClick={() => onMove(-1)}
+              disabled={isFirst}
+              aria-label="Move Challenges up"
+              title="Move up"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-accent opacity-70 hover:opacity-100 disabled:opacity-20"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 15l6-6 6 6" /></svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => onMove(1)}
+              disabled={isLast}
+              aria-label="Move Challenges down"
+              title="Move down"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-accent opacity-70 hover:opacity-100 disabled:opacity-20"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6" /></svg>
+            </button>
+          </span>
+        )}
+
+        <button type="button" onClick={() => setOpen((v) => !v)} aria-label={open ? "Collapse challenges" : "Expand challenges"} className="flex h-7 w-7 shrink-0 items-center justify-center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={"shrink-0 transition-transform " + (open ? "" : "-rotate-90")}>
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+      </div>
 
       <div className={"accordion-rows " + (open ? "is-open" : "")}>
         <div>

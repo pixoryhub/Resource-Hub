@@ -297,17 +297,26 @@ export function setChallengePositions(updates: { id: string; position: number }[
 // Page visibility — which nav pages are hidden from creators right now.
 // A singleton, defaulting to "nothing hidden" when never saved.
 
+const CHALLENGES_SLOTS = new Set(["top", "middle", "bottom"]);
+
 export async function getSiteSettings(): Promise<SiteSettings> {
   try {
     const raw = await getBlobStore(CONTENT_STORE).get(SITE_SETTINGS_KEY, { type: "text" });
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed?.hiddenNavKeys)) return parsed as SiteSettings;
+      if (Array.isArray(parsed?.hiddenNavKeys)) {
+        return {
+          hiddenNavKeys: parsed.hiddenNavKeys,
+          creatorHubChallengesSlot: CHALLENGES_SLOTS.has(parsed?.creatorHubChallengesSlot)
+            ? parsed.creatorHubChallengesSlot
+            : "middle",
+        };
+      }
     }
   } catch {
     // fall through to default
   }
-  return { hiddenNavKeys: [] };
+  return { hiddenNavKeys: [], creatorHubChallengesSlot: "middle" };
 }
 
 export async function saveSiteSettings(value: SiteSettings): Promise<void> {

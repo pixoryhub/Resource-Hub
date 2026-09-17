@@ -9,8 +9,11 @@
 
 import { useEffect, useState } from "react";
 
+export type CreatorHubChallengesSlot = "top" | "middle" | "bottom";
+
 export function useSiteSettings() {
   const [hiddenNavKeys, setHiddenNavKeys] = useState<string[]>([]);
+  const [creatorHubChallengesSlot, setCreatorHubChallengesSlot] = useState<CreatorHubChallengesSlot>("middle");
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -18,7 +21,11 @@ export function useSiteSettings() {
     fetch("/api/site-settings")
       .then((r) => r.json())
       .then((data) => {
-        if (!cancelled && Array.isArray(data.hiddenNavKeys)) setHiddenNavKeys(data.hiddenNavKeys);
+        if (cancelled) return;
+        if (Array.isArray(data.hiddenNavKeys)) setHiddenNavKeys(data.hiddenNavKeys);
+        if (["top", "middle", "bottom"].includes(data.creatorHubChallengesSlot)) {
+          setCreatorHubChallengesSlot(data.creatorHubChallengesSlot);
+        }
       })
       .catch(() => {
         // network error — default to nothing hidden
@@ -31,5 +38,5 @@ export function useSiteSettings() {
     };
   }, []);
 
-  return { hiddenNavKeys, ready };
+  return { hiddenNavKeys, creatorHubChallengesSlot, ready };
 }

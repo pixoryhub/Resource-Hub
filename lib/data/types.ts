@@ -187,6 +187,11 @@ export interface Testimonial {
 // slash stripped ("" for the Resource Hub root).
 export interface SiteSettings {
   hiddenNavKeys: string[];
+  // Where the collapsible Challenges row sits within Creator Hub, relative
+  // to the fixed content around it — "top" is right under the leaderboard,
+  // "middle" (default) is right after the welcome/progress card, "bottom"
+  // is after the video checklist. Admin-only, moved with up/down arrows.
+  creatorHubChallengesSlot?: "top" | "middle" | "bottom";
 }
 
 // Challenges — the gamified layer on top of recreation links and the

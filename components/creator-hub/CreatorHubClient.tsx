@@ -6,6 +6,7 @@ import { useAdminMode } from "@/lib/adminMode";
 import { useAuth } from "@/lib/localAuth";
 import { loadCreatorData, saveCreatorData } from "@/lib/creatorStorage";
 import { saveContentAction } from "@/lib/adminContentClient";
+import { useSiteSettings, type CreatorHubChallengesSlot } from "@/lib/useSiteSettings";
 import { type RecreationLink, normalizeRecreationLinks } from "@/components/RecreationLinkBox";
 import VideoRow from "./VideoRow";
 import HubVideoForm, { type HubVideoFormData } from "./HubVideoForm";
@@ -27,6 +28,9 @@ export default function CreatorHubClient({
 }) {
   const { enabled: adminMode } = useAdminMode();
   const { creator } = useAuth();
+  const { hiddenNavKeys, creatorHubChallengesSlot, ready: settingsReady } = useSiteSettings();
+  const [challengesSlot, setChallengesSlot] = useState<CreatorHubChallengesSlot>("middle");
+  const challengesSlotSynced = useRef(false);
   const [videos, setVideos] = useState(initialVideos);
   // Maps videoId -> when it was ticked (or null for older data saved before
   // completions carried a timestamp — see the admin dashboard's weekly
@@ -116,6 +120,26 @@ export default function CreatorHubClient({
     if (!creator || recreationLoadedForCreator.current !== creator.id) return;
     saveCreatorData("recreation-links", creator.id, recreationLinks);
   }, [recreationLinks, creator]);
+
+  // useSiteSettings resolves async — copy its result in once, the same
+  // pattern AdminOverview's page-visibility panel uses, so moving the
+  // section doesn't fight the initial fetch.
+  useEffect(() => {
+    if (settingsReady && !challengesSlotSynced.current) {
+      setChallengesSlot(creatorHubChallengesSlot);
+      challengesSlotSynced.current = true;
+    }
+  }, [settingsReady, creatorHubChallengesSlot]);
+
+  const CHALLENGES_SLOT_ORDER: CreatorHubChallengesSlot[] = ["top", "middle", "bottom"];
+  function moveChallengesSlot(direction: -1 | 1) {
+    const i = CHALLENGES_SLOT_ORDER.indexOf(challengesSlot);
+    const j = i + direction;
+    if (j < 0 || j >= CHALLENGES_SLOT_ORDER.length) return;
+    const next = CHALLENGES_SLOT_ORDER[j];
+    setChallengesSlot(next);
+    saveContentAction("siteSettings", { action: "save", value: { hiddenNavKeys, creatorHubChallengesSlot: next } });
+  }
 
   function submitRecreationLink(videoId: string, url: string) {
     setRecreationLinks((prev) => ({
@@ -246,9 +270,21 @@ export default function CreatorHubClient({
     return [...source].sort((a, b) => b.completedAt.localeCompare(a.completedAt));
   }, [completionHistory, completedAt]);
 
+  const challengesBlock = (
+    <CreatorHubChallenges
+      initial={challenges}
+      weeklyOpportunity={weeklyOpportunity}
+      onMove={moveChallengesSlot}
+      isFirst={challengesSlot === "top"}
+      isLast={challengesSlot === "bottom"}
+    />
+  );
+
   return (
     <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 sm:px-6">
       <TopPostsSection initial={topPosts} />
+
+      {challengesSlot === "top" && challengesBlock}
 
       <div className="card space-y-3 p-4">
         <div>
@@ -424,7 +460,7 @@ export default function CreatorHubClient({
         </div>
       </div>
 
-      <CreatorHubChallenges initial={challenges} weeklyOpportunity={weeklyOpportunity} />
+      {challengesSlot === "middle" && challengesBlock}
 
       <div className="space-y-3">
         {filtered.length === 0 && (
@@ -450,6 +486,8 @@ export default function CreatorHubClient({
           );
         })}
       </div>
+
+      {challengesSlot === "bottom" && challengesBlock}
 
       {adminMode && (
         <div>
