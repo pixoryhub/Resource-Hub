@@ -357,6 +357,7 @@ function RecreationLinksPanel({
   );
 }
 
+
 function formatWeek(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }

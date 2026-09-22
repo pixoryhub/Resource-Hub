@@ -11,6 +11,7 @@ import { loadCreatorDataServer } from "@/lib/creatorData";
 import { getHubVideos, getWeeklyOpportunity, getChallenges } from "@/lib/data";
 import { getViewCounts, recreationLinkKey } from "@/lib/recreationViewCounts";
 import { getReviewedLinks } from "@/lib/recreationReviewed";
+import { COACHING_FLAG_OPTIONS } from "@/lib/data/types";
 
 // Recreation links briefly shipped as a single {url, submittedAt} value per
 // item before becoming a list (so a creator could add more than one) — a
@@ -270,6 +271,84 @@ export async function GET(req: NextRequest) {
       .flat()
       .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
 
+    // One combined, chronological log across every kind of activity that
+    // carries a timestamp — joins, completions, recreation links, and
+    // coaching flags — so "review past activity" is one filterable place
+    // instead of a separate history panel per feature. Shot-list filming
+    // isn't included: it's already visible in the weekly chart above and
+    // adding it here would mean re-deriving shot titles for little extra
+    // signal.
+    type ActivityLogEntry = {
+      id: string;
+      type: "join" | "completion" | "link" | "flag";
+      at: string;
+      creatorId: string;
+      firstName: string;
+      lastName: string;
+      detail: string;
+      url?: string;
+    };
+    const activityLog: ActivityLogEntry[] = [];
+
+    for (const creator of creators) {
+      if (creator.createdAt) {
+        activityLog.push({
+          id: `join-${creator.id}`,
+          type: "join",
+          at: creator.createdAt,
+          creatorId: creator.id,
+          firstName: creator.firstName,
+          lastName: creator.lastName,
+          detail: "Joined the hub",
+        });
+      }
+    }
+
+    for (const { creator, activity } of perCreator) {
+      for (const c of activity.completionHistory) {
+        if (!c.completedAt) continue;
+        const video = videos.find((v) => v.id === c.videoId);
+        activityLog.push({
+          id: `completion-${creator.id}-${c.videoId}-${c.completedAt}`,
+          type: "completion",
+          at: c.completedAt,
+          creatorId: creator.id,
+          firstName: creator.firstName,
+          lastName: creator.lastName,
+          detail: video ? `Completed "${video.title}"` : "Completed a video no longer in the hub",
+        });
+      }
+      for (const flag of activity.flags) {
+        const labels = flag.selectedOptions
+          .map((id) => COACHING_FLAG_OPTIONS.find((o) => o.id === id)?.label ?? id)
+          .join(", ");
+        activityLog.push({
+          id: `flag-${creator.id}-${flag.submittedAt}`,
+          type: "flag",
+          at: flag.submittedAt,
+          creatorId: creator.id,
+          firstName: creator.firstName,
+          lastName: creator.lastName,
+          detail: labels ? `Raised a coaching flag: ${labels}` : "Raised a coaching flag",
+        });
+      }
+    }
+
+    for (const link of recreationLinks) {
+      activityLog.push({
+        id: link.key,
+        type: "link",
+        at: link.submittedAt,
+        creatorId: link.creatorId,
+        firstName: link.firstName,
+        lastName: link.lastName,
+        detail: `Linked a recreation for ${link.label}`,
+        url: link.url,
+      });
+    }
+
+    activityLog.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+
     return NextResponse.json({
       kpis: {
         totalCreators: creators.length,
@@ -291,6 +370,7 @@ export async function GET(req: NextRequest) {
       opportunityMarkedDone,
       hasWeeklyOpportunity: !!weeklyOpportunity,
       recreationLinks,
+      activityLog,
     });
   } catch {
     return NextResponse.json({ error: "Couldn't reach storage — try again." }, { status: 500 });

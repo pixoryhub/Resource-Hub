@@ -10,8 +10,10 @@ import { useEffect, useState } from "react";
 import type { CoachingFlag, Week } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
 import { COACHING_FLAG_OPTIONS } from "@/lib/data/types";
+import { isWithinDateRange } from "@/lib/dateRange";
 import GroupCard from "@/components/shot-list/GroupCard";
 import AdminOverview from "./AdminOverview";
+import ActivityLogPanel from "./ActivityLogPanel";
 
 interface CreatorSummary {
   id: string;
@@ -21,6 +23,12 @@ interface CreatorSummary {
   videosTotal: number;
   openFlagCount: number;
   lastActiveAt: string | null;
+  createdAt: string | null;
+}
+
+function formatJoinDate(iso: string | null) {
+  if (!iso) return "Join date unknown";
+  return `Joined ${new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
 }
 
 function timeAgo(iso: string | null) {
@@ -323,7 +331,7 @@ function CreatorDetailView({ id, onBack, onDeleted }: { id: string; onBack: () =
   );
 }
 
-type MainTab = "overview" | "creators";
+type MainTab = "overview" | "creators" | "activity";
 
 export default function AdminDashboardClient() {
   const { enabled: adminMode, ready } = useAdminMode();
@@ -332,6 +340,8 @@ export default function AdminDashboardClient() {
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [joinedFrom, setJoinedFrom] = useState("");
+  const [joinedTo, setJoinedTo] = useState("");
 
   useEffect(() => {
     if (!ready || !adminMode || mainTab !== "creators") return;
@@ -375,7 +385,7 @@ export default function AdminDashboardClient() {
       ) : (
         <>
           <div className="flex gap-1 rounded-full border border-border bg-surface p-1">
-            {(["overview", "creators"] as const).map((t) => (
+            {(["overview", "creators", "activity"] as const).map((t) => (
               <button
                 key={t}
                 type="button"
@@ -392,6 +402,8 @@ export default function AdminDashboardClient() {
 
           {mainTab === "overview" ? (
             <AdminOverview onSelectCreator={selectCreator} />
+          ) : mainTab === "activity" ? (
+            <ActivityLogPanel onSelectCreator={selectCreator} />
           ) : (
             <>
               <div>
@@ -403,29 +415,79 @@ export default function AdminDashboardClient() {
               {!error && creators === null && <p className="text-text-muted">Loading…</p>}
               {creators && creators.length === 0 && <p className="text-text-muted">No creators signed up yet.</p>}
 
+              {creators && creators.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold text-text-muted">Joined between</span>
+                  <input
+                    type="date"
+                    value={joinedFrom}
+                    onChange={(e) => setJoinedFrom(e.target.value)}
+                    aria-label="Joined from"
+                    className="rounded-lg border border-border bg-surface px-2 py-1.5 text-text focus:outline-none focus:ring-2 focus:ring-accent"
+                    style={{ fontSize: "16px" }}
+                  />
+                  <span className="text-xs text-text-faint">and</span>
+                  <input
+                    type="date"
+                    value={joinedTo}
+                    onChange={(e) => setJoinedTo(e.target.value)}
+                    aria-label="Joined to"
+                    className="rounded-lg border border-border bg-surface px-2 py-1.5 text-text focus:outline-none focus:ring-2 focus:ring-accent"
+                    style={{ fontSize: "16px" }}
+                  />
+                  {(joinedFrom || joinedTo) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setJoinedFrom("");
+                        setJoinedTo("");
+                      }}
+                      className="text-xs font-semibold text-text-muted hover:text-accent"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {(() => {
+                const filteredCreators = creators?.filter((c) => isWithinDateRange(c.createdAt, joinedFrom, joinedTo)) ?? null;
+                if (creators && (joinedFrom || joinedTo)) {
+                  return (
+                    <p className="text-xs text-text-faint">
+                      {filteredCreators?.length ?? 0} of {creators.length} creators joined in this range
+                    </p>
+                  );
+                }
+                return null;
+              })()}
+
               <div className="space-y-2">
-                {creators?.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setSelectedId(c.id)}
-                    className="card card-hover flex w-full items-center justify-between gap-3 p-4 text-left"
-                  >
-                    <div>
-                      <p className="font-semibold text-text">
-                        {c.firstName} {c.lastName}
-                      </p>
-                      <p className="text-sm text-text-muted">
-                        {c.videosCompleted} / {c.videosTotal} videos · {timeAgo(c.lastActiveAt)}
-                      </p>
-                    </div>
-                    {c.openFlagCount > 0 && (
-                      <span className="shrink-0 rounded-full bg-accent-tint px-2.5 py-1 text-xs font-semibold text-accent">
-                        {c.openFlagCount} open flag{c.openFlagCount > 1 ? "s" : ""}
-                      </span>
-                    )}
-                  </button>
-                ))}
+                {creators
+                  ?.filter((c) => isWithinDateRange(c.createdAt, joinedFrom, joinedTo))
+                  .map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setSelectedId(c.id)}
+                      className="card card-hover flex w-full items-center justify-between gap-3 p-4 text-left"
+                    >
+                      <div>
+                        <p className="font-semibold text-text">
+                          {c.firstName} {c.lastName}
+                        </p>
+                        <p className="text-sm text-text-muted">
+                          {c.videosCompleted} / {c.videosTotal} videos · {timeAgo(c.lastActiveAt)}
+                        </p>
+                        <p className="text-xs text-text-faint">{formatJoinDate(c.createdAt)}</p>
+                      </div>
+                      {c.openFlagCount > 0 && (
+                        <span className="shrink-0 rounded-full bg-accent-tint px-2.5 py-1 text-xs font-semibold text-accent">
+                          {c.openFlagCount} open flag{c.openFlagCount > 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </button>
+                  ))}
               </div>
             </>
           )}
