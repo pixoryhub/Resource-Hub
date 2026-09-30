@@ -130,7 +130,6 @@ export default function ChallengesBody({
   const [oppDone, setOppDone] = useState<{ updatedAt: string } | null>(null);
   const [oppLinkCount, setOppLinkCount] = useState(0);
   const [challengeLinks, setChallengeLinks] = useState<Record<string, RecreationLink[]>>({});
-  const [joinedIds, setJoinedIds] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   // Cross-creator: entrant counts + live activity, loaded once.
@@ -150,8 +149,7 @@ export default function ChallengesBody({
       loadCreatorData<{ updatedAt: string } | null>("opportunity-completion", creator.id, null),
       loadCreatorData<RecreationLink[] | RecreationLink | null>("recreation-link-weekly-opportunity", creator.id, []),
       loadCreatorData<Record<string, RecreationLink[] | RecreationLink>>("recreation-links", creator.id, {}),
-      loadCreatorData<string[]>("challenge-joins", creator.id, []),
-    ]).then(([done, links, allLinks, joins]) => {
+    ]).then(([done, links, allLinks]) => {
       if (cancelled) return;
       setOppDone(done);
       setOppLinkCount(normalizeRecreationLinks(links).length);
@@ -160,7 +158,6 @@ export default function ChallengesBody({
         if (key.startsWith("challenge:")) sliced[key] = normalizeRecreationLinks(value);
       }
       setChallengeLinks(sliced);
-      setJoinedIds(joins);
       setLoaded(true);
     });
     return () => {
@@ -178,13 +175,6 @@ export default function ChallengesBody({
     setChallengeLinks((prev) => ({ ...prev, [key]: links }));
     const fullMap = await loadCreatorData<Record<string, RecreationLink[] | RecreationLink>>("recreation-links", creator.id, {});
     saveCreatorData("recreation-links", creator.id, { ...fullMap, [key]: links });
-  }
-
-  function joinChallenge(challengeId: string) {
-    if (!creator || joinedIds.includes(challengeId)) return;
-    const next = [...joinedIds, challengeId];
-    setJoinedIds(next);
-    saveCreatorData("challenge-joins", creator.id, next);
   }
 
   // Admin CRUD ---------------------------------------------------------
@@ -237,7 +227,6 @@ export default function ChallengesBody({
   const oppStep1 = !!(weeklyOpportunity && oppDone?.updatedAt === weeklyOpportunity.updatedAt);
   const oppStep2 = oppLinkCount > 0;
   const raffleEntrants = raffle ? activity?.entrantCounts[raffle.id] ?? 0 : 0;
-  const featuredJoined = featured ? joinedIds.includes(featured.id) : false;
   const featuredLinks = featured ? challengeLinks[`challenge:${featured.id}`] ?? [] : [];
   const featuredEntrants = featured ? activity?.entrantCounts[featured.id] ?? 0 : 0;
   const featuredDaysLeft = featured ? daysLeft(featured.cycleEnd) : null;
@@ -277,60 +266,13 @@ export default function ChallengesBody({
                 />
               )}
             </div>
-          ) : !featuredJoined ? (
-            <div className="animate-shimmer relative overflow-hidden rounded-[24px] p-6 text-white shadow-lg" style={{ background: "#17130f" }}>
-              <div className="relative flex items-start justify-between gap-3">
-                <span className="rounded-full bg-white/12 px-3 py-1 text-xs font-bold">🔒 Locked</span>
-                {featuredDaysLeft !== null && (
-                  <span className="text-xs font-bold text-accent-light">⏳ {featuredDaysLeft}d left</span>
-                )}
-              </div>
-              <div className="relative mt-4 flex items-center gap-4">
-                <div className="relative h-16 w-16 shrink-0">
-                  {featured.prizeImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- arbitrary uploaded prize photo
-                    <img src={featured.prizeImageUrl} alt="" className="h-16 w-16 rounded-2xl object-cover" style={{ filter: "blur(3px) brightness(0.6) saturate(1.3)" }} />
-                  ) : (
-                    <div className="h-16 w-16 rounded-2xl bg-accent/40" />
-                  )}
-                  <span className="absolute inset-0 flex items-center justify-center text-2xl">🔒</span>
-                </div>
-                <div className="min-w-0">
-                  <p className="text-lg font-extrabold">{featured.title}</p>
-                  <p className="mt-0.5 text-xs text-white/65">Join to reveal the full prize, criteria, and your own tracker.</p>
-                </div>
-              </div>
-              {featuredEntrants > 0 && (
-                <p className="relative mt-4 text-xs text-white/70">
-                  <span className="font-bold text-white">{featuredEntrants} creator{featuredEntrants === 1 ? "" : "s"}</span> already unlocked this one
-                </p>
-              )}
-              {creator && (
-                <button
-                  type="button"
-                  onClick={() => joinChallenge(featured.id)}
-                  className="animate-unlock-glow accent-gradient relative mt-4 w-full rounded-full py-3 text-sm font-bold text-white shadow-sm"
-                >
-                  🔓 Unlock this challenge
-                </button>
-              )}
-              {adminMode && (
-                <EditControls
-                  onEdit={() => setEditingId(featured.id)}
-                  onMove={(d) => moveChallenge(featured.id, d)}
-                  isFirst={allSorted[0]?.id === featured.id}
-                  isLast={allSorted[allSorted.length - 1]?.id === featured.id}
-                  onDelete={() => deleteChallenge(featured.id)}
-                />
-              )}
-            </div>
           ) : (
             <div
               className="relative overflow-hidden rounded-[24px] p-6 text-white shadow-lg"
               style={{ background: "linear-gradient(135deg, var(--accent-light), var(--accent))" }}
             >
               <div className="flex items-start justify-between gap-3">
-                <span className="animate-pop rounded-full bg-white/22 px-3 py-1 text-xs font-bold">✓ You&apos;re in</span>
+                <span className="rounded-full bg-white/22 px-3 py-1 text-xs font-bold">✦ This cycle</span>
                 {featuredDaysLeft !== null && <span className="rounded-full bg-white/18 px-3 py-1 text-xs font-bold">⏳ {featuredDaysLeft}d left</span>}
               </div>
               <h2 className="mt-3 text-xl font-extrabold leading-tight">{featured.title}</h2>
@@ -370,7 +312,12 @@ export default function ChallengesBody({
 
               {creator && (
                 <div className="mt-4">
-                  <RecreationLinkBox value={featuredLinks} onSubmit={(url) => saveChallengeLinks(featured.id, [...featuredLinks, { url, submittedAt: new Date().toISOString() }])} onRemove={(i) => saveChallengeLinks(featured.id, featuredLinks.filter((_, idx) => idx !== i))} />
+                  <RecreationLinkBox
+                    value={featuredLinks}
+                    onSubmit={(entry) => saveChallengeLinks(featured.id, [...featuredLinks, { ...entry, submittedAt: new Date().toISOString() }])}
+                    onRemove={(i) => saveChallengeLinks(featured.id, featuredLinks.filter((_, idx) => idx !== i))}
+                    blueprintTagging
+                  />
                 </div>
               )}
 

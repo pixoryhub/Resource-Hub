@@ -201,13 +201,19 @@ export async function GET(req: NextRequest) {
       submittedAt: string;
       views: number | null;
       reviewed: boolean;
+      // Only set for a featured-challenge link (see
+      // components/RecreationLinkBox.tsx's blueprintTagging) — which 5-in-5
+      // Blueprint week this recreation is of, and which video in it.
+      weekLabel?: string;
+      videoNumber?: number;
     };
+    type StoredLink = { url: string; submittedAt: string; weekLabel?: string; videoNumber?: number };
     const [viewCounts, reviewedLinks] = await Promise.all([getViewCounts(), getReviewedLinks()]);
     const recreationLinks: RecreationLinkEntry[] = (
       await Promise.all(
         creators.map(async (creator) => {
           const [hubLinks, opportunityLinksRaw] = await Promise.all([
-            loadCreatorDataServer<Record<string, { url: string; submittedAt: string }[] | { url: string; submittedAt: string }>>(
+            loadCreatorDataServer<Record<string, StoredLink[] | StoredLink>>(
               "recreation-links",
               creator.id,
               {}
@@ -261,6 +267,8 @@ export async function GET(req: NextRequest) {
                 submittedAt: link.submittedAt,
                 views: viewCounts[key] ?? null,
                 reviewed: !!reviewedLinks[key],
+                ...(link.weekLabel ? { weekLabel: link.weekLabel } : {}),
+                ...(link.videoNumber ? { videoNumber: link.videoNumber } : {}),
               });
             }
           }
@@ -335,6 +343,7 @@ export async function GET(req: NextRequest) {
     }
 
     for (const link of recreationLinks) {
+      const blueprintTag = link.weekLabel ? ` (${link.weekLabel}${link.videoNumber ? `, Video ${link.videoNumber}` : ""})` : "";
       activityLog.push({
         id: link.key,
         type: "link",
@@ -342,7 +351,7 @@ export async function GET(req: NextRequest) {
         creatorId: link.creatorId,
         firstName: link.firstName,
         lastName: link.lastName,
-        detail: `Linked a recreation for ${link.label}`,
+        detail: `Linked a recreation for ${link.label}${blueprintTag}`,
         url: link.url,
       });
     }

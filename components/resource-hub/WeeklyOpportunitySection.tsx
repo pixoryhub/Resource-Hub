@@ -369,7 +369,7 @@ export default function WeeklyOpportunitySection({ initial }: { initial: WeeklyO
                 <div className="mt-4 rounded-2xl bg-bg p-1">
                   <RecreationLinkBox
                     value={recreationLinks ?? []}
-                    onSubmit={submitRecreationLink}
+                    onSubmit={(entry) => submitRecreationLink(entry.url)}
                     onRemove={removeRecreationLink}
                   />
                 </div>

@@ -301,7 +301,7 @@ export default function VideoRow({
             <div className="mt-3">
               <RecreationLinkBox
                 value={recreationLinks}
-                onSubmit={onSubmitRecreationLink}
+                onSubmit={(entry) => onSubmitRecreationLink(entry.url)}
                 onRemove={onRemoveRecreationLink}
               />
             </div>

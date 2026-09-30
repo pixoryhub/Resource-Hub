@@ -111,6 +111,8 @@ interface RecreationLinkEntry {
   submittedAt: string;
   views: number | null;
   reviewed: boolean;
+  weekLabel?: string;
+  videoNumber?: number;
 }
 
 interface DashboardData {
@@ -249,6 +251,12 @@ function RecreationLinkRow({
           </button>
           <span className="shrink-0 text-[11px] text-text-faint">{timeAgo(entry.submittedAt)}</span>
         </div>
+        {entry.weekLabel && (
+          <p className="text-[11px] font-bold text-text-muted">
+            {entry.weekLabel}
+            {entry.videoNumber ? ` · Video ${entry.videoNumber}` : ""}
+          </p>
+        )}
         <a
           href={entry.url}
           target="_blank"

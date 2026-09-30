@@ -14,6 +14,17 @@ import { useState } from "react";
 export interface RecreationLink {
   url: string;
   submittedAt: string;
+  // Only set when submitted through the featured challenge's box
+  // (blueprintTagging below) — which week's 5-in-5 Blueprint the creator
+  // recreated, and which of that week's videos this recreation is of.
+  weekLabel?: string;
+  videoNumber?: number;
+}
+
+export interface RecreationLinkSubmission {
+  url: string;
+  weekLabel?: string;
+  videoNumber?: number;
 }
 
 // Recreation links briefly shipped as a single {url, submittedAt} value per
@@ -31,13 +42,24 @@ export default function RecreationLinkBox({
   value,
   onSubmit,
   onRemove,
+  blueprintTagging,
 }: {
   value: RecreationLink[];
-  onSubmit: (url: string) => void;
+  onSubmit: (entry: RecreationLinkSubmission) => void;
   onRemove: (index: number) => void;
+  // Featured-challenge recreations are of a specific video from a specific
+  // week's 5-in-5 Blueprint, not a free-standing post — turning this on
+  // asks for that week/video number alongside the link, and requires both
+  // before Submit enables. Off (the default) for every other use of this
+  // box, which stays exactly as before.
+  blueprintTagging?: boolean;
 }) {
   const [draft, setDraft] = useState("");
+  const [weekLabel, setWeekLabel] = useState("");
+  const [videoNumber, setVideoNumber] = useState("");
   const [duplicateError, setDuplicateError] = useState(false);
+
+  const canSubmit = !!draft.trim() && (!blueprintTagging || (!!weekLabel.trim() && !!videoNumber.trim()));
 
   // A creator can reach the same underlying link list from more than one
   // place (e.g. the weekly opportunity's own page and this same challenge
@@ -45,22 +67,28 @@ export default function RecreationLinkBox({
   // the list here instead of silently double-counting it.
   function handleSubmit() {
     const url = draft.trim();
-    if (!url) return;
+    if (!canSubmit) return;
     if (value.some((l) => l.url.trim() === url)) {
       setDuplicateError(true);
       return;
     }
     setDuplicateError(false);
-    onSubmit(url);
+    onSubmit({
+      url,
+      ...(blueprintTagging ? { weekLabel: weekLabel.trim(), videoNumber: Number(videoNumber) } : {}),
+    });
     setDraft("");
+    setWeekLabel("");
+    setVideoNumber("");
   }
 
   return (
     <div className="rounded-xl border border-dashed border-accent/40 bg-accent-tint/40 p-4">
       <p className="text-sm font-bold text-text">🎥 Link your recreations</p>
       <p className="mt-0.5 text-xs leading-relaxed text-text-muted">
-        Paste a link each time you post one — you could qualify for a raffle entry or one of our
-        upcoming challenges (details coming soon!). Add as many as you like.
+        {blueprintTagging
+          ? "Each recreation is of one video from a week's 5-in-5 Blueprint — say which week and which video, then paste the link. Add as many as you like."
+          : "Paste a link each time you post one — you could qualify for a raffle entry or one of our upcoming challenges (details coming soon!). Add as many as you like."}
       </p>
 
       {value.length > 0 && (
@@ -68,14 +96,22 @@ export default function RecreationLinkBox({
           {value.map((link, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="shrink-0 text-xs font-semibold text-accent">✓</span>
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="min-w-0 flex-1 truncate text-sm font-medium text-text hover:underline"
-              >
-                {link.url}
-              </a>
+              <div className="min-w-0 flex-1">
+                {(link.weekLabel || link.videoNumber) && (
+                  <p className="text-[11px] font-bold text-text-muted">
+                    {link.weekLabel || "Week —"}
+                    {link.videoNumber ? ` · Video ${link.videoNumber}` : ""}
+                  </p>
+                )}
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block truncate text-sm font-medium text-text hover:underline"
+                >
+                  {link.url}
+                </a>
+              </div>
               <button
                 type="button"
                 onClick={() => onRemove(i)}
@@ -86,6 +122,34 @@ export default function RecreationLinkBox({
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {blueprintTagging && (
+        <div className="mt-2.5 flex gap-2">
+          <input
+            type="text"
+            value={weekLabel}
+            onChange={(e) => {
+              setWeekLabel(e.target.value);
+              if (duplicateError) setDuplicateError(false);
+            }}
+            placeholder="Week (e.g. Week 2)"
+            className="min-w-0 flex-1 rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
+            style={{ fontSize: "16px" }}
+          />
+          <input
+            type="number"
+            min={1}
+            value={videoNumber}
+            onChange={(e) => {
+              setVideoNumber(e.target.value);
+              if (duplicateError) setDuplicateError(false);
+            }}
+            placeholder="Video #"
+            className="w-24 shrink-0 rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
+            style={{ fontSize: "16px" }}
+          />
         </div>
       )}
 
@@ -110,7 +174,7 @@ export default function RecreationLinkBox({
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!draft.trim()}
+          disabled={!canSubmit}
           className="shrink-0 rounded-full bg-text px-4 py-2 text-xs font-semibold text-bg disabled:cursor-not-allowed disabled:opacity-40"
         >
           {value.length > 0 ? "Add another" : "Submit"}
