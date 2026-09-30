@@ -202,12 +202,12 @@ export async function GET(req: NextRequest) {
       views: number | null;
       reviewed: boolean;
       // Only set for a featured-challenge link (see
-      // components/RecreationLinkBox.tsx's blueprintTagging) — which 5-in-5
-      // Blueprint week this recreation is of, and which video in it.
-      weekLabel?: string;
-      videoNumber?: number;
+      // components/RecreationLinkBox.tsx's opportunityTagging) — which
+      // numbered opportunity in the creator's weekly blueprint this
+      // recreation is of.
+      opportunityNumber?: number;
     };
-    type StoredLink = { url: string; submittedAt: string; weekLabel?: string; videoNumber?: number };
+    type StoredLink = { url: string; submittedAt: string; opportunityNumber?: number };
     const [viewCounts, reviewedLinks] = await Promise.all([getViewCounts(), getReviewedLinks()]);
     const recreationLinks: RecreationLinkEntry[] = (
       await Promise.all(
@@ -267,8 +267,7 @@ export async function GET(req: NextRequest) {
                 submittedAt: link.submittedAt,
                 views: viewCounts[key] ?? null,
                 reviewed: !!reviewedLinks[key],
-                ...(link.weekLabel ? { weekLabel: link.weekLabel } : {}),
-                ...(link.videoNumber ? { videoNumber: link.videoNumber } : {}),
+                ...(link.opportunityNumber ? { opportunityNumber: link.opportunityNumber } : {}),
               });
             }
           }
@@ -343,7 +342,7 @@ export async function GET(req: NextRequest) {
     }
 
     for (const link of recreationLinks) {
-      const blueprintTag = link.weekLabel ? ` (${link.weekLabel}${link.videoNumber ? `, Video ${link.videoNumber}` : ""})` : "";
+      const blueprintTag = link.opportunityNumber ? ` (Opportunity ${link.opportunityNumber})` : "";
       activityLog.push({
         id: link.key,
         type: "link",

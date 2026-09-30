@@ -316,7 +316,7 @@ export default function ChallengesBody({
                     value={featuredLinks}
                     onSubmit={(entry) => saveChallengeLinks(featured.id, [...featuredLinks, { ...entry, submittedAt: new Date().toISOString() }])}
                     onRemove={(i) => saveChallengeLinks(featured.id, featuredLinks.filter((_, idx) => idx !== i))}
-                    blueprintTagging
+                    opportunityTagging
                   />
                 </div>
               )}

@@ -15,16 +15,14 @@ export interface RecreationLink {
   url: string;
   submittedAt: string;
   // Only set when submitted through the featured challenge's box
-  // (blueprintTagging below) — which week's 5-in-5 Blueprint the creator
-  // recreated, and which of that week's videos this recreation is of.
-  weekLabel?: string;
-  videoNumber?: number;
+  // (opportunityTagging below) — which numbered opportunity in the
+  // creator's weekly blueprint this recreation is of.
+  opportunityNumber?: number;
 }
 
 export interface RecreationLinkSubmission {
   url: string;
-  weekLabel?: string;
-  videoNumber?: number;
+  opportunityNumber?: number;
 }
 
 // Recreation links briefly shipped as a single {url, submittedAt} value per
@@ -42,24 +40,23 @@ export default function RecreationLinkBox({
   value,
   onSubmit,
   onRemove,
-  blueprintTagging,
+  opportunityTagging,
 }: {
   value: RecreationLink[];
   onSubmit: (entry: RecreationLinkSubmission) => void;
   onRemove: (index: number) => void;
-  // Featured-challenge recreations are of a specific video from a specific
-  // week's 5-in-5 Blueprint, not a free-standing post — turning this on
-  // asks for that week/video number alongside the link, and requires both
-  // before Submit enables. Off (the default) for every other use of this
-  // box, which stays exactly as before.
-  blueprintTagging?: boolean;
+  // Featured-challenge recreations are of a specific numbered opportunity
+  // from the creator's weekly blueprint, not a free-standing post —
+  // turning this on asks for that number alongside the link, and requires
+  // it before Submit enables. Off (the default) for every other use of
+  // this box, which stays exactly as before.
+  opportunityTagging?: boolean;
 }) {
   const [draft, setDraft] = useState("");
-  const [weekLabel, setWeekLabel] = useState("");
-  const [videoNumber, setVideoNumber] = useState("");
+  const [opportunityNumber, setOpportunityNumber] = useState("");
   const [duplicateError, setDuplicateError] = useState(false);
 
-  const canSubmit = !!draft.trim() && (!blueprintTagging || (!!weekLabel.trim() && !!videoNumber.trim()));
+  const canSubmit = !!draft.trim() && (!opportunityTagging || !!opportunityNumber.trim());
 
   // A creator can reach the same underlying link list from more than one
   // place (e.g. the weekly opportunity's own page and this same challenge
@@ -75,19 +72,18 @@ export default function RecreationLinkBox({
     setDuplicateError(false);
     onSubmit({
       url,
-      ...(blueprintTagging ? { weekLabel: weekLabel.trim(), videoNumber: Number(videoNumber) } : {}),
+      ...(opportunityTagging ? { opportunityNumber: Number(opportunityNumber) } : {}),
     });
     setDraft("");
-    setWeekLabel("");
-    setVideoNumber("");
+    setOpportunityNumber("");
   }
 
   return (
     <div className="rounded-xl border border-dashed border-accent/40 bg-accent-tint/40 p-4">
       <p className="text-sm font-bold text-text">🎥 Link your recreations</p>
       <p className="mt-0.5 text-xs leading-relaxed text-text-muted">
-        {blueprintTagging
-          ? "Each recreation is of one video from a week's 5-in-5 Blueprint — say which week and which video, then paste the link. Add as many as you like."
+        {opportunityTagging
+          ? "Add the opportunity number, then paste your link. Add as many as you like."
           : "Paste a link each time you post one — you could qualify for a raffle entry or one of our upcoming challenges (details coming soon!). Add as many as you like."}
       </p>
 
@@ -97,11 +93,8 @@ export default function RecreationLinkBox({
             <div key={i} className="flex items-center gap-2">
               <span className="shrink-0 text-xs font-semibold text-accent">✓</span>
               <div className="min-w-0 flex-1">
-                {(link.weekLabel || link.videoNumber) && (
-                  <p className="text-[11px] font-bold text-text-muted">
-                    {link.weekLabel || "Week —"}
-                    {link.videoNumber ? ` · Video ${link.videoNumber}` : ""}
-                  </p>
+                {!!link.opportunityNumber && (
+                  <p className="text-[11px] font-bold text-text-muted">Opportunity {link.opportunityNumber}</p>
                 )}
                 <a
                   href={link.url}
@@ -125,29 +118,18 @@ export default function RecreationLinkBox({
         </div>
       )}
 
-      {blueprintTagging && (
-        <div className="mt-2.5 flex gap-2">
-          <input
-            type="text"
-            value={weekLabel}
-            onChange={(e) => {
-              setWeekLabel(e.target.value);
-              if (duplicateError) setDuplicateError(false);
-            }}
-            placeholder="Week (e.g. Week 2)"
-            className="min-w-0 flex-1 rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
-            style={{ fontSize: "16px" }}
-          />
+      {opportunityTagging && (
+        <div className="mt-2.5">
           <input
             type="number"
             min={1}
-            value={videoNumber}
+            value={opportunityNumber}
             onChange={(e) => {
-              setVideoNumber(e.target.value);
+              setOpportunityNumber(e.target.value);
               if (duplicateError) setDuplicateError(false);
             }}
-            placeholder="Video #"
-            className="w-24 shrink-0 rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
+            placeholder="Opportunity #"
+            className="w-32 rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent"
             style={{ fontSize: "16px" }}
           />
         </div>
