@@ -32,6 +32,9 @@ const ALL_NAMESPACES = [
   "recreation-links",
   "recreation-link-weekly-opportunity",
   "challenge-joins",
+  "new-creator-track",
+  "new-creator-audits",
+  "new-creator-checklist",
 ];
 
 export async function deleteAllCreatorData(creatorId: string): Promise<void> {

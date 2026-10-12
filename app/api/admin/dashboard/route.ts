@@ -12,6 +12,7 @@ import { getHubVideos, getWeeklyOpportunity, getChallenges } from "@/lib/data";
 import { getViewCounts, recreationLinkKey } from "@/lib/recreationViewCounts";
 import { getReviewedLinks } from "@/lib/recreationReviewed";
 import { COACHING_FLAG_OPTIONS } from "@/lib/data/types";
+import { loadChecklistItems, loadNewCreatorTrackSummary } from "@/lib/newCreatorTrackServer";
 
 // Recreation links briefly shipped as a single {url, submittedAt} value per
 // item before becoming a list (so a creator could add more than one) — a
@@ -357,6 +358,26 @@ export async function GET(req: NextRequest) {
 
     activityLog.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
 
+    // Everyone marked new (plus anyone who's started the track), most
+    // recently started first, not-yet-started last — shown at the top of
+    // the Overview so coaches don't have to dig for it.
+    const checklistItems = await loadChecklistItems();
+    const newCreators = (
+      await Promise.all(
+        creators.map(async (creator) => {
+          if (!creator.isNew) return null;
+          const track = await loadNewCreatorTrackSummary(creator.id, videos, checklistItems);
+          return { id: creator.id, firstName: creator.firstName, lastName: creator.lastName, signedUpAt: creator.createdAt, ...track };
+        })
+      )
+    )
+      .filter((c): c is NonNullable<typeof c> => c !== null)
+      .sort((a, b) => {
+        // Audits due first, then whoever signed up most recently.
+        const due = (c: typeof a) => (c.stage === "audit1-due" || c.stage === "audit2-due" ? 0 : 1);
+        return due(a) - due(b) || (b.signedUpAt ?? "").localeCompare(a.signedUpAt ?? "");
+      });
+
     return NextResponse.json({
       kpis: {
         totalCreators: creators.length,
@@ -379,6 +400,9 @@ export async function GET(req: NextRequest) {
       hasWeeklyOpportunity: !!weeklyOpportunity,
       recreationLinks,
       activityLog,
+      newCreators,
+      // Active videos, for the admin "track mix" shortlist picker.
+      videos: activeVideos.map((v) => ({ id: v.id, position: v.position, title: v.title, desiredCategory: v.desiredCategory })),
     });
   } catch {
     return NextResponse.json({ error: "Couldn't reach storage — try again." }, { status: 500 });

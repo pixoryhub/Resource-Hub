@@ -18,6 +18,11 @@ export interface Profile {
   // it — treat as "unknown" (never assume a fallback date), not as "just
   // signed up".
   createdAt?: string;
+  // Set at signup ("I'm new to the program") or flipped by a coach in the
+  // admin dashboard — decides who sees the new creator track and its
+  // video unlock tiers. Profiles from before this field existed are
+  // simply "not new", so nothing changes for existing creators.
+  isNew?: boolean;
 }
 
 export interface PublicCreator {
@@ -25,10 +30,21 @@ export interface PublicCreator {
   firstName: string;
   lastName: string;
   createdAt: string | null;
+  isNew: boolean;
 }
 
 export function toPublicCreator(p: Profile): PublicCreator {
-  return { id: p.id, firstName: p.firstName, lastName: p.lastName, createdAt: p.createdAt ?? null };
+  return {
+    id: p.id,
+    firstName: p.firstName,
+    lastName: p.lastName,
+    createdAt: p.createdAt ?? null,
+    isNew: !!p.isNew,
+  };
+}
+
+export async function saveProfile(profile: Profile): Promise<void> {
+  await getBlobStore(PROFILES_STORE).set(profile.nameKey, JSON.stringify(profile));
 }
 
 export async function loadProfileByNameKey(nameKey: string): Promise<Profile | null> {

@@ -20,6 +20,7 @@ export default function VideoRow({
   recreationLinks,
   onSubmitRecreationLink,
   onRemoveRecreationLink,
+  trackBadge,
 }: {
   video: HubVideo;
   completed: boolean;
@@ -32,6 +33,9 @@ export default function VideoRow({
   recreationLinks: RecreationLink[];
   onSubmitRecreationLink: (url: string) => void;
   onRemoveRecreationLink: (index: number) => void;
+  // Shown as a small pill in the header — used when this row is rendered
+  // inside a new creator's track (e.g. "2 / 5").
+  trackBadge?: string;
 }) {
   const { enabled: adminMode } = useAdminMode();
   const { creator } = useAuth();
@@ -91,6 +95,9 @@ export default function VideoRow({
               <span className="rounded-full bg-border px-2 py-0.5 font-semibold text-text-muted">
                 Retired
               </span>
+            )}
+            {trackBadge && (
+              <span className="rounded-full bg-accent-tint px-2 py-0.5 font-bold text-accent">{trackBadge}</span>
             )}
             {completed && (
               <span

@@ -46,6 +46,7 @@ export default function LoginScreen() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [pin, setPin] = useState("");
+  const [isNew, setIsNew] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -53,7 +54,7 @@ export default function LoginScreen() {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-    const result = tab === "login" ? await logIn(firstName, lastName, pin) : await signUp(firstName, lastName, pin);
+    const result = tab === "login" ? await logIn(firstName, lastName, pin) : await signUp(firstName, lastName, pin, isNew);
     setSubmitting(false);
     if (!result.ok) setError(result.error ?? "Something went wrong.");
   }
@@ -114,6 +115,21 @@ export default function LoginScreen() {
               style={{ fontSize: "16px" }}
             />
             <PinInput value={pin} onChange={setPin} />
+
+            {tab === "signup" && (
+              <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-border bg-bg px-3 py-2.5">
+                <input
+                  type="checkbox"
+                  checked={isNew}
+                  onChange={(e) => setIsNew(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0"
+                />
+                <span className="text-sm text-text">
+                  I&apos;m new to the program
+                  <span className="block text-xs text-text-faint">Turns on your new creator track in the Creator Hub.</span>
+                </span>
+              </label>
+            )}
 
             {error && <p className="text-sm text-accent">{error}</p>}
 

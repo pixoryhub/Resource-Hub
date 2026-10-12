@@ -12,6 +12,8 @@ import VideoRow from "./VideoRow";
 import HubVideoForm, { type HubVideoFormData } from "./HubVideoForm";
 import TopPostsSection from "./TopPostsSection";
 import CreatorHubChallenges from "@/components/challenges/CreatorHubChallenges";
+import NewCreatorTrack from "./NewCreatorTrack";
+import { resolveGuide, type NewCreatorAudits, type NewCreatorChecklist, type NewCreatorTrack as Track } from "@/lib/newCreatorTrack";
 
 type Tab = "all" | "completed" | "unfinished";
 
@@ -28,10 +30,17 @@ export default function CreatorHubClient({
 }) {
   const { enabled: adminMode } = useAdminMode();
   const { creator } = useAuth();
-  const { hiddenNavKeys, creatorHubChallengesSlot, ready: settingsReady } = useSiteSettings();
+  const { hiddenNavKeys, creatorHubChallengesSlot, trackMix, trackNote, trackGuide, ready: settingsReady } = useSiteSettings();
   const [challengesSlot, setChallengesSlot] = useState<CreatorHubChallengesSlot>("middle");
   const challengesSlotSynced = useRef(false);
   const [videos, setVideos] = useState(initialVideos);
+  // The creator's new creator track (only used when they're marked new) —
+  // lives here, not inside the track card, because the picked videos are
+  // hidden from the main list below while the track is active.
+  const [track, setTrack] = useState<Track | null>(null);
+  const [audits, setAudits] = useState<NewCreatorAudits | null>(null);
+  const [tickedChecklist, setTickedChecklist] = useState<string[]>([]);
+  const trackLoadedFor = useRef<string | null>(null);
   // Maps videoId -> when it was ticked (or null for older data saved before
   // completions carried a timestamp — see the admin dashboard's weekly
   // activity chart, which needs completedAt to place a tick in a given
@@ -104,6 +113,22 @@ export default function CreatorHubClient({
   }, [completionHistory, creator]);
 
   useEffect(() => {
+    if (!creator || !(creator.isNew || adminMode) || trackLoadedFor.current === creator.id) return;
+    const id = creator.id;
+    Promise.all([
+      loadCreatorData<Track | null>("new-creator-track", id, null),
+      loadCreatorData<NewCreatorAudits | null>("new-creator-audits", id, null),
+      loadCreatorData<NewCreatorChecklist | null>("new-creator-checklist", id, null),
+    ]).then(([t, a, c]) => {
+      setTickedChecklist(c?.ticked ?? []);
+      // Records saved before "ready" was its own step have startedAt only.
+      setTrack(t ? { readyAt: t.readyAt ?? t.startedAt ?? null, startedAt: t.startedAt ?? null, videoIds: t.videoIds ?? [] } : null);
+      setAudits(a);
+      trackLoadedFor.current = id;
+    });
+  }, [creator, adminMode]);
+
+  useEffect(() => {
     if (!creator || recreationLoadedForCreator.current === creator.id) return;
     const id = creator.id;
     loadCreatorData<Record<string, RecreationLink[] | RecreationLink>>("recreation-links", id, {}).then((map) => {
@@ -139,6 +164,33 @@ export default function CreatorHubClient({
     const next = CHALLENGES_SLOT_ORDER[j];
     setChallengesSlot(next);
     saveContentAction("siteSettings", { action: "save", value: { hiddenNavKeys, creatorHubChallengesSlot: next } });
+  }
+
+  // Admin-only: wipes the logged-in account's new creator track so a demo
+  // can be run again from scratch — the track record, checklist ticks and
+  // audit marks, plus the recreation links posted on the picked videos.
+  // Links on any other video are left alone.
+  function resetTrack() {
+    if (!creator) return;
+    const pickedIds = track?.videoIds ?? [];
+    setRecreationLinks((prev) => {
+      const next = { ...prev };
+      pickedIds.forEach((id) => delete next[id]);
+      return next;
+    });
+    setTrack(null);
+    setAudits(null);
+    setTickedChecklist([]);
+    saveCreatorData("new-creator-track", creator.id, null);
+    saveCreatorData("new-creator-checklist", creator.id, { ticked: [] });
+    saveCreatorData("new-creator-audits", creator.id, null);
+  }
+
+  function toggleChecklistItem(item: string) {
+    if (!creator) return;
+    const next = tickedChecklist.includes(item) ? tickedChecklist.filter((i) => i !== item) : [...tickedChecklist, item];
+    setTickedChecklist(next);
+    saveCreatorData("new-creator-checklist", creator.id, { ticked: next });
   }
 
   function submitRecreationLink(videoId: string, url: string) {
@@ -228,15 +280,26 @@ export default function CreatorHubClient({
   // Admins can see and manage retired videos too; creators only ever see active ones.
   const pool = adminMode ? videos : videos.filter((v) => v.status === "active");
   const active = videos.filter((v) => v.status === "active");
+  // A new creator's picked videos live inside their track (with full info
+  // and link boxes), so they're left out of the main list to avoid showing
+  // the same video twice. In Admin mode the track shows as a preview for
+  // whoever's logged in, so coaches can demo it; admins can still edit those
+  // videos from inside the track.
+  const showsTrack = !!(creator?.isNew || adminMode);
+  const trackVideoIds = showsTrack && track?.startedAt ? track.videoIds : [];
+  const trackTotalLinks = trackVideoIds.reduce((sum, id) => sum + (recreationLinks[id]?.length ?? 0), 0);
+
   const completedCount = active.filter((v) => completed.has(v.id)).length;
   const unfinishedCount = active.length - completedCount;
   const sortedByPosition = useMemo(() => [...videos].sort((a, b) => a.position - b.position), [videos]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const hiddenFromList = (creator?.isNew || adminMode) && track?.startedAt ? track.videoIds : [];
     return [...pool]
       .sort((a, b) => a.position - b.position)
       .filter((v) => {
+        if (hiddenFromList.includes(v.id)) return false;
         if (tab === "completed" && !completed.has(v.id)) return false;
         if (tab === "unfinished" && completed.has(v.id)) return false;
         if (!q) return true;
@@ -246,7 +309,7 @@ export default function CreatorHubClient({
           v.desiredCategory.toLowerCase().includes(q)
         );
       });
-  }, [pool, tab, completed, query]);
+  }, [pool, tab, completed, query, adminMode, creator?.isNew, track]);
 
   const TABS: { key: Tab; label: string; count: number }[] = [
     { key: "all", label: "All", count: active.length },
@@ -269,6 +332,27 @@ export default function CreatorHubClient({
             .map(([videoId, at]) => ({ videoId, completedAt: at }));
     return [...source].sort((a, b) => b.completedAt.localeCompare(a.completedAt));
   }, [completionHistory, completedAt]);
+
+  function renderVideoRow(video: HubVideo, trackBadge?: string) {
+    const posIndex = sortedByPosition.findIndex((v) => v.id === video.id);
+    return (
+      <VideoRow
+        key={video.id}
+        video={video}
+        completed={completed.has(video.id)}
+        onToggleCompleted={toggleCompleted}
+        onUpdate={(data) => updateVideo(video.id, data)}
+        onDelete={() => deleteVideo(video.id)}
+        onMove={(direction) => moveVideo(video.id, direction)}
+        isFirst={posIndex === 0}
+        isLast={posIndex === sortedByPosition.length - 1}
+        recreationLinks={recreationLinks[video.id] ?? []}
+        onSubmitRecreationLink={(url) => submitRecreationLink(video.id, url)}
+        onRemoveRecreationLink={(index) => removeRecreationLink(video.id, index)}
+        trackBadge={trackBadge}
+      />
+    );
+  }
 
   const challengesBlock = (
     <CreatorHubChallenges
@@ -460,31 +544,30 @@ export default function CreatorHubClient({
         </div>
       </div>
 
+      <NewCreatorTrack
+        track={track}
+        onChangeTrack={setTrack}
+        audits={audits}
+        totalLinks={trackTotalLinks}
+        renderVideo={renderVideoRow}
+        mix={trackMix}
+        mixReady={settingsReady}
+        note={trackNote}
+        guide={settingsReady ? resolveGuide(trackGuide) : null}
+        ticked={tickedChecklist}
+        onToggleChecklist={toggleChecklistItem}
+        onReset={resetTrack}
+        videos={active}
+        recreationLinks={recreationLinks}
+      />
+
       {challengesSlot === "middle" && challengesBlock}
 
       <div className="space-y-3">
         {filtered.length === 0 && (
           <p className="card p-5 text-center text-text-muted">No videos match.</p>
         )}
-        {filtered.map((video) => {
-          const posIndex = sortedByPosition.findIndex((v) => v.id === video.id);
-          return (
-            <VideoRow
-              key={video.id}
-              video={video}
-              completed={completed.has(video.id)}
-              onToggleCompleted={toggleCompleted}
-              onUpdate={(data) => updateVideo(video.id, data)}
-              onDelete={() => deleteVideo(video.id)}
-              onMove={(direction) => moveVideo(video.id, direction)}
-              isFirst={posIndex === 0}
-              isLast={posIndex === sortedByPosition.length - 1}
-              recreationLinks={recreationLinks[video.id] ?? []}
-              onSubmitRecreationLink={(url) => submitRecreationLink(video.id, url)}
-              onRemoveRecreationLink={(index) => removeRecreationLink(video.id, index)}
-            />
-          );
-        })}
+        {filtered.map((video) => renderVideoRow(video))}
       </div>
 
       {challengesSlot === "bottom" && challengesBlock}

@@ -8,7 +8,7 @@
 
 import { getBlobStore } from "@/lib/serverStore";
 import * as fixtures from "./fixtures";
-import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial, TopPost, SiteSettings, Challenge } from "./types";
+import type { Resource, CalendarEvent, HubVideo, WeeklyOpportunity, Testimonial, TopPost, SiteSettings, Challenge, TrackMix, TrackGuide, TrackStepKey } from "./types";
 
 const noSeed = async () => [];
 
@@ -299,6 +299,52 @@ export function setChallengePositions(updates: { id: string; position: number }[
 
 const CHALLENGES_SLOTS = new Set(["top", "middle", "bottom"]);
 
+const GUIDE_STEP_KEYS: TrackStepKey[] = ["getReady", "film", "post15", "audit1", "refilmPost10", "audit2", "plan"];
+
+// Validate/trim a stored or submitted recreation guide. Anything malformed
+// becomes "no custom guide" (the built-in default); text parts left blank
+// are kept blank here and fall back to their default when read
+// (see resolveGuide in lib/newCreatorTrack.ts).
+function parseTrackGuide(raw: unknown): TrackGuide | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const text = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+  const steps = {} as TrackGuide["steps"];
+  const rawSteps = (r.steps && typeof r.steps === "object" ? r.steps : {}) as Record<string, unknown>;
+  for (const key of GUIDE_STEP_KEYS) {
+    const s = (rawSteps[key] && typeof rawSteps[key] === "object" ? rawSteps[key] : {}) as Record<string, unknown>;
+    steps[key] = { title: text(s.title, 120), body: text(s.body, 2000) };
+  }
+  const checklist = Array.isArray(r.checklist)
+    ? r.checklist
+        .filter((i): i is string => typeof i === "string")
+        .map((i) => i.trim().slice(0, 240))
+        .filter(Boolean)
+        .slice(0, 40)
+    : [];
+  return { checklist, steps, tips: text(r.tips, 6000), keywords: text(r.keywords, 3000) };
+}
+
+// Blank (or non-text) means "use the default wording".
+function parseTrackNote(raw: unknown): string | null {
+  return typeof raw === "string" && raw.trim() ? raw.trim().slice(0, 800) : null;
+}
+
+// Clamp/validate a stored or submitted track mix — anything malformed (or
+// asking for zero videos) means "no rule", never a half-broken one.
+function parseTrackMix(raw: unknown): TrackMix | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const count = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.min(6, Math.floor(v))) : 0);
+  const mix = {
+    product: count(r.product),
+    lifestyle: count(r.lifestyle),
+    hybrid: count(r.hybrid),
+    videoIds: Array.isArray(r.videoIds) ? r.videoIds.filter((id): id is string => typeof id === "string") : [],
+  };
+  return mix.product + mix.lifestyle + mix.hybrid > 0 ? mix : null;
+}
+
 export async function getSiteSettings(): Promise<SiteSettings> {
   try {
     const raw = await getBlobStore(CONTENT_STORE).get(SITE_SETTINGS_KEY, { type: "text" });
@@ -310,15 +356,30 @@ export async function getSiteSettings(): Promise<SiteSettings> {
           creatorHubChallengesSlot: CHALLENGES_SLOTS.has(parsed?.creatorHubChallengesSlot)
             ? parsed.creatorHubChallengesSlot
             : "middle",
+          trackMix: parseTrackMix(parsed?.trackMix),
+          trackNote: parseTrackNote(parsed?.trackNote),
+          trackGuide: parseTrackGuide(parsed?.trackGuide),
         };
       }
     }
   } catch {
     // fall through to default
   }
-  return { hiddenNavKeys: [], creatorHubChallengesSlot: "middle" };
+  return { hiddenNavKeys: [], creatorHubChallengesSlot: "middle", trackMix: null, trackNote: null, trackGuide: null };
 }
 
-export async function saveSiteSettings(value: SiteSettings): Promise<void> {
-  await getBlobStore(CONTENT_STORE).set(SITE_SETTINGS_KEY, JSON.stringify(value));
+// Merges into what's already saved instead of replacing it — each settings
+// control (page visibility, Challenges position, track mix) only knows its
+// own field, so a whole-object replace let one control silently reset the
+// others.
+export async function saveSiteSettings(value: Partial<SiteSettings>): Promise<void> {
+  const current = await getSiteSettings();
+  const next: SiteSettings = {
+    ...current,
+    ...value,
+    trackMix: "trackMix" in value ? parseTrackMix(value.trackMix) : current.trackMix,
+    trackNote: "trackNote" in value ? parseTrackNote(value.trackNote) : current.trackNote,
+    trackGuide: "trackGuide" in value ? parseTrackGuide(value.trackGuide) : current.trackGuide,
+  };
+  await getBlobStore(CONTENT_STORE).set(SITE_SETTINGS_KEY, JSON.stringify(next));
 }

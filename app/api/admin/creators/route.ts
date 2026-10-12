@@ -7,6 +7,7 @@ import { isAdminRequest } from "@/lib/adminAuth";
 import { listAllCreators } from "@/lib/creatorRegistry";
 import { loadCreatorActivity } from "@/lib/adminAnalytics";
 import { getHubVideos } from "@/lib/data";
+import { loadChecklistItems, loadNewCreatorTrackSummary } from "@/lib/newCreatorTrackServer";
 
 export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) {
@@ -14,14 +15,18 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const [creators, videos] = await Promise.all([listAllCreators(), getHubVideos()]);
+    const [creators, videos, checklistItems] = await Promise.all([listAllCreators(), getHubVideos(), loadChecklistItems()]);
     const activeVideoCount = videos.filter((v) => v.status === "active").length;
 
     const summaries = await Promise.all(
       creators.map(async (creator) => {
-        const activity = await loadCreatorActivity(creator.id);
+        const [activity, newCreatorTrack] = await Promise.all([
+          loadCreatorActivity(creator.id),
+          loadNewCreatorTrackSummary(creator.id, videos, checklistItems),
+        ]);
         return {
           ...creator,
+          newCreatorTrack,
           videosCompleted: activity.completions.length,
           videosTotal: activeVideoCount,
           openFlagCount: activity.flags.filter((f) => f.status === "open").length,

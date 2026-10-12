@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { saveContentAction } from "@/lib/adminContentClient";
 import { useSiteSettings } from "@/lib/useSiteSettings";
+import { STUCK_AFTER_DAYS, stuckDays, type NewCreatorTrackSummary } from "@/lib/newCreatorTrack";
 
 // Kept in sync with components/Header.tsx's NAV_ITEMS keys by hand — small,
 // fixed list, not worth sharing a module for.
@@ -135,7 +136,36 @@ interface DashboardData {
   opportunityMarkedDone: OpportunityMarkedEntry[];
   hasWeeklyOpportunity: boolean;
   recreationLinks: RecreationLinkEntry[];
+  newCreators: SummaryEntry[];
 }
+
+// One line on the Overview pointing at the New creators tab — the detail
+// (audits due, who's stuck, the weekly mix) lives there so this page stays light.
+function NewCreatorsSummary({ creators, onOpen }: { creators: SummaryEntry[]; onOpen: () => void }) {
+  const due = creators.filter((c) => c.stage === "audit1-due" || c.stage === "audit2-due").length;
+  const stuck = creators.filter((c) => stuckDays(c, c.signedUpAt) !== null).length;
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="card card-hover flex w-full items-center justify-between gap-3 p-4 text-left"
+    >
+      <span className="min-w-0">
+        <span className="block font-semibold text-text">
+          🌱 {creators.length} new creator{creators.length === 1 ? "" : "s"}
+        </span>
+        <span className="block text-xs text-text-muted">
+          {creators.length === 0
+            ? "Nobody marked new yet."
+            : `${due} audit${due === 1 ? "" : "s"} due · ${stuck} idle for ${STUCK_AFTER_DAYS}+ days`}
+        </span>
+      </span>
+      <span className="shrink-0 text-xs font-bold text-accent">Open →</span>
+    </button>
+  );
+}
+
+type SummaryEntry = NewCreatorTrackSummary & { signedUpAt: string | null };
 
 function timeAgo(iso: string): string {
   const ms = Date.now() - new Date(iso).getTime();
@@ -487,7 +517,13 @@ function CategoryBar({ stat, maxCompletions }: { stat: CategoryStat; maxCompleti
   );
 }
 
-export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (id: string) => void }) {
+export default function AdminOverview({
+  onSelectCreator,
+  onOpenNewCreators,
+}: {
+  onSelectCreator: (id: string) => void;
+  onOpenNewCreators: () => void;
+}) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -532,6 +568,8 @@ export default function AdminOverview({ onSelectCreator }: { onSelectCreator: (i
 
   return (
     <div className="space-y-6">
+      <NewCreatorsSummary creators={data.newCreators ?? []} onOpen={onOpenNewCreators} />
+
       <PageVisibilityPanel />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">

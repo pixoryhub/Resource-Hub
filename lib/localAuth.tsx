@@ -12,6 +12,7 @@ interface Creator {
   id: string;
   firstName: string;
   lastName: string;
+  isNew?: boolean;
 }
 
 // Showcase-only escape hatch: set NEXT_PUBLIC_DEMO_MODE=true in a *local*
@@ -21,12 +22,12 @@ interface Creator {
 // so it can only ever be on if someone deliberately builds it that way —
 // it will never turn on by accident on a real deploy.
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
-const DEMO_CREATOR: Creator = { id: "demo", firstName: "Demo", lastName: "Creator" };
+const DEMO_CREATOR: Creator = { id: "demo", firstName: "Demo", lastName: "Creator", isNew: true };
 
 interface AuthState {
   creator: Creator | null;
   ready: boolean;
-  signUp: (firstName: string, lastName: string, pin: string) => Promise<{ ok: boolean; error?: string }>;
+  signUp: (firstName: string, lastName: string, pin: string, isNew?: boolean) => Promise<{ ok: boolean; error?: string }>;
   logIn: (firstName: string, lastName: string, pin: string) => Promise<{ ok: boolean; error?: string }>;
   logOut: () => void;
 }
@@ -62,12 +63,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  async function submit(action: "signup" | "login", firstName: string, lastName: string, pin: string) {
+  async function submit(action: "signup" | "login", firstName: string, lastName: string, pin: string, isNew?: boolean) {
     try {
       const res = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, firstName, lastName, pin }),
+        body: JSON.stringify({ action, firstName, lastName, pin, isNew }),
       });
       const data = await res.json();
       if (res.ok && data.ok) {
@@ -80,8 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function signUp(firstName: string, lastName: string, pin: string) {
-    return submit("signup", firstName, lastName, pin);
+  async function signUp(firstName: string, lastName: string, pin: string, isNew?: boolean) {
+    return submit("signup", firstName, lastName, pin, isNew);
   }
 
   async function logIn(firstName: string, lastName: string, pin: string) {

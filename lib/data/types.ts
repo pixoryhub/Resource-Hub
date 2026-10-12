@@ -185,8 +185,40 @@ export interface Testimonial {
 // its nav link disappear for everyone except admins, who can still open it
 // directly to keep working. `key` matches NAV_ITEMS' href with the leading
 // slash stripped ("" for the Resource Hub root).
+// This week's rule for what a new creator picks when they start the new
+// creator track (see lib/newCreatorTrack.ts) — exactly this many videos from
+// each desired category, optionally from a shortlist you choose. Only
+// affects creators who haven't picked yet; picks already made stay as they
+// are.
+export interface TrackMix {
+  product: number;
+  lifestyle: number;
+  hybrid: number;
+  // Empty means any active video of the right category is allowed.
+  videoIds: string[];
+}
+
+// The new creator track's "recreation guide" — instructions coaches edit in
+// the admin dashboard (see lib/newCreatorTrack.ts for the built-in defaults
+// and what each part is). Any part left unset falls back to its default.
+export type TrackStepKey = "getReady" | "film" | "post15" | "audit1" | "refilmPost10" | "audit2" | "plan";
+
+export interface TrackGuide {
+  checklist: string[];
+  steps: Record<TrackStepKey, { title: string; body: string }>;
+  tips: string;
+  keywords: string;
+}
+
 export interface SiteSettings {
   hiddenNavKeys: string[];
+  // Unset/null = the default guide.
+  trackGuide?: TrackGuide | null;
+  // Unset/null = no rule, creators pick freely.
+  trackMix?: TrackMix | null;
+  // Coach-editable note shown to new creators on their track (e.g. the
+  // "keep it varied" reminder). Unset/null = the default wording.
+  trackNote?: string | null;
   // Where the collapsible Challenges row sits within Creator Hub, relative
   // to the fixed content around it — "top" is right under the leaderboard,
   // "middle" (default) is right after the welcome/progress card, "bottom"

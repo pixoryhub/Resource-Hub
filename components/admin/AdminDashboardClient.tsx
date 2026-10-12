@@ -11,9 +11,17 @@ import type { CoachingFlag, Week } from "@/lib/data/types";
 import { useAdminMode } from "@/lib/adminMode";
 import { COACHING_FLAG_OPTIONS } from "@/lib/data/types";
 import { isWithinDateRange } from "@/lib/dateRange";
+import {
+  AUDIT_1_AT,
+  AUDIT_2_AT,
+  STAGE_LABELS,
+  TRACK_RECREATIONS_PER_VIDEO,
+  type NewCreatorTrackSummary,
+} from "@/lib/newCreatorTrack";
 import GroupCard from "@/components/shot-list/GroupCard";
 import AdminOverview from "./AdminOverview";
 import ActivityLogPanel from "./ActivityLogPanel";
+import NewCreatorsTab from "./NewCreatorsTab";
 
 interface CreatorSummary {
   id: string;
@@ -24,6 +32,8 @@ interface CreatorSummary {
   openFlagCount: number;
   lastActiveAt: string | null;
   createdAt: string | null;
+  isNew: boolean;
+  newCreatorTrack: NewCreatorTrackSummary;
 }
 
 function formatJoinDate(iso: string | null) {
@@ -40,7 +50,8 @@ function timeAgo(iso: string | null) {
 }
 
 interface CreatorDetail {
-  creator: { id: string; firstName: string; lastName: string };
+  creator: { id: string; firstName: string; lastName: string; isNew: boolean; createdAt: string | null };
+  newCreatorTrack: NewCreatorTrackSummary;
   completedVideos: { id: string; position: number; title: string }[];
   videosTotal: number;
   currentWeek: Week | null;
@@ -229,6 +240,39 @@ function CreatorDetailView({ id, onBack, onDeleted }: { id: string; onBack: () =
     };
   }, [id]);
 
+  function markAudit(which: "first" | "second") {
+    const now = new Date().toISOString();
+    setDetail((d) =>
+      d
+        ? {
+            ...d,
+            newCreatorTrack: {
+              ...d.newCreatorTrack,
+              auditsDone: { ...d.newCreatorTrack.auditsDone, [which]: now },
+            },
+          }
+        : d
+    );
+    fetch(`/api/admin/creators/${id}/audit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ audit: which, done: true }),
+    }).catch(() => {
+      // fire-and-forget — worst case it reverts on reload and can be ticked again
+    });
+  }
+
+  function setIsNew(next: boolean) {
+    setDetail((d) => (d ? { ...d, creator: { ...d.creator, isNew: next } } : d));
+    fetch(`/api/admin/creators/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isNew: next }),
+    }).catch(() => {
+      // fire-and-forget — worst case it reverts on reload and can be flipped again
+    });
+  }
+
   function handleReplied(updated: CoachingFlag) {
     setDetail((d) => (d ? { ...d, flags: d.flags.map((f) => (f.id === updated.id ? updated : f)) } : d));
   }
@@ -259,6 +303,96 @@ function CreatorDetailView({ id, onBack, onDeleted }: { id: string; onBack: () =
               onDeleted={onDeleted}
             />
           </div>
+
+          <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-border bg-surface px-3 py-2.5">
+            <input
+              type="checkbox"
+              checked={detail.creator.isNew}
+              onChange={(e) => setIsNew(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0"
+            />
+            <span className="text-sm text-text">
+              New creator
+              <span className="block text-xs text-text-faint">
+                Shows them the new creator track in the hub, with the ready step, round-by-round posting and audits.
+              </span>
+            </span>
+          </label>
+
+          {(detail.creator.isNew || detail.newCreatorTrack.startedAt) && (
+            <div>
+              <p className="eyebrow mb-2">🌱 New creator track</p>
+              <p className="mb-2 text-sm font-semibold text-text">
+                {detail.newCreatorTrack.stage === "posting"
+                  ? `Posting · ${detail.newCreatorTrack.totalLinks} of ${AUDIT_2_AT}`
+                  : STAGE_LABELS[detail.newCreatorTrack.stage]}
+              </p>
+              <ul className="mb-3 space-y-1">
+                {[
+                  { label: "Signed up", at: detail.creator.createdAt },
+                  { label: "Clicked ready to recreate", at: detail.newCreatorTrack.readyAt },
+                  { label: "Picked their videos", at: detail.newCreatorTrack.startedAt },
+                  { label: "Posted first recreation", at: detail.newCreatorTrack.firstLinkAt },
+                  { label: `Reached ${AUDIT_1_AT} links`, at: detail.newCreatorTrack.milestoneAt.first },
+                  { label: `Reached ${AUDIT_2_AT} links`, at: detail.newCreatorTrack.milestoneAt.second },
+                ].map((step) => (
+                  <li key={step.label} className="flex items-center justify-between gap-3 text-sm">
+                    <span className={step.at ? "text-text" : "text-text-faint"}>
+                      {step.at ? "✓" : "○"} {step.label}
+                    </span>
+                    <span className="shrink-0 text-xs text-text-faint">{step.at ? formatDate(step.at) : "—"}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mb-3 flex flex-wrap gap-2">
+                {(
+                  [
+                    { key: "first", label: "First audit", reached: detail.newCreatorTrack.milestoneAt.first },
+                    { key: "second", label: "Second audit", reached: detail.newCreatorTrack.milestoneAt.second },
+                  ] as const
+                ).map((a) => {
+                  const done = detail.newCreatorTrack.auditsDone[a.key];
+                  return done ? (
+                    <span key={a.key} className="rounded-full bg-accent-tint px-3 py-1.5 text-xs font-bold text-accent">
+                      ✓ {a.label} done {formatDate(done)}
+                    </span>
+                  ) : a.reached ? (
+                    <button
+                      key={a.key}
+                      type="button"
+                      onClick={() => markAudit(a.key)}
+                      className="rounded-full bg-accent px-3.5 py-1.5 text-xs font-bold text-white hover:opacity-90"
+                    >
+                      Mark {a.label.toLowerCase()} done
+                    </button>
+                  ) : (
+                    <span key={a.key} className="rounded-full bg-border px-3 py-1.5 text-xs font-semibold text-text-muted">
+                      {a.label} — not reached yet
+                    </span>
+                  );
+                })}
+              </div>
+
+              {detail.newCreatorTrack.videos.length > 0 && (
+                <ul className="space-y-1.5">
+                  {detail.newCreatorTrack.videos.map((v) => (
+                    <li
+                      key={v.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text"
+                    >
+                      <span className="min-w-0 truncate">
+                        #{v.position} &ldquo;{v.title}&rdquo;
+                      </span>
+                      <span className="shrink-0 text-xs font-bold text-accent">
+                        {v.linkCount} / {TRACK_RECREATIONS_PER_VIDEO}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           <div>
             <p className="eyebrow mb-2">Completed videos</p>
@@ -331,7 +465,7 @@ function CreatorDetailView({ id, onBack, onDeleted }: { id: string; onBack: () =
   );
 }
 
-type MainTab = "overview" | "creators" | "activity";
+type MainTab = "overview" | "creators" | "newcreators" | "activity";
 
 export default function AdminDashboardClient() {
   const { enabled: adminMode, ready } = useAdminMode();
@@ -342,6 +476,7 @@ export default function AdminDashboardClient() {
   const [refreshTick, setRefreshTick] = useState(0);
   const [joinedFrom, setJoinedFrom] = useState("");
   const [joinedTo, setJoinedTo] = useState("");
+  const [newOnly, setNewOnly] = useState(false);
 
   useEffect(() => {
     if (!ready || !adminMode || mainTab !== "creators") return;
@@ -365,6 +500,10 @@ export default function AdminDashboardClient() {
     );
   }
 
+  const visibleCreators = creators?.filter(
+    (c) => (!newOnly || c.isNew) && isWithinDateRange(c.createdAt, joinedFrom, joinedTo)
+  );
+
   function selectCreator(id: string) {
     setSelectedId(id);
     setMainTab("creators");
@@ -385,23 +524,25 @@ export default function AdminDashboardClient() {
       ) : (
         <>
           <div className="flex gap-1 rounded-full border border-border bg-surface p-1">
-            {(["overview", "creators", "activity"] as const).map((t) => (
+            {(["overview", "creators", "newcreators", "activity"] as const).map((t) => (
               <button
                 key={t}
                 type="button"
                 onClick={() => setMainTab(t)}
                 className={
-                  "flex-1 rounded-full px-3 py-2 text-sm font-semibold capitalize transition-colors " +
+                  "flex-1 whitespace-nowrap rounded-full px-2 py-2 text-xs font-semibold capitalize transition-colors sm:px-3 sm:text-sm " +
                   (mainTab === t ? "bg-text text-bg" : "text-text-muted hover:bg-accent-tint")
                 }
               >
-                {t}
+                {t === "newcreators" ? "New creators" : t}
               </button>
             ))}
           </div>
 
           {mainTab === "overview" ? (
-            <AdminOverview onSelectCreator={selectCreator} />
+            <AdminOverview onSelectCreator={selectCreator} onOpenNewCreators={() => setMainTab("newcreators")} />
+          ) : mainTab === "newcreators" ? (
+            <NewCreatorsTab onSelectCreator={selectCreator} />
           ) : mainTab === "activity" ? (
             <ActivityLogPanel onSelectCreator={selectCreator} />
           ) : (
@@ -414,6 +555,24 @@ export default function AdminDashboardClient() {
               {error && <p className="text-accent">{error}</p>}
               {!error && creators === null && <p className="text-text-muted">Loading…</p>}
               {creators && creators.length === 0 && <p className="text-text-muted">No creators signed up yet.</p>}
+
+              {creators && creators.length > 0 && (
+                <div className="flex gap-1 rounded-full border border-border bg-surface p-1 sm:w-fit">
+                  {([false, true] as const).map((only) => (
+                    <button
+                      key={String(only)}
+                      type="button"
+                      onClick={() => setNewOnly(only)}
+                      className={
+                        "flex-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors sm:flex-none " +
+                        (newOnly === only ? "bg-text text-bg" : "text-text-muted hover:bg-accent-tint")
+                      }
+                    >
+                      {only ? `🌱 New creators (${creators.filter((c) => c.isNew).length})` : "All creators"}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {creators && creators.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2">
@@ -450,22 +609,15 @@ export default function AdminDashboardClient() {
                 </div>
               )}
 
-              {(() => {
-                const filteredCreators = creators?.filter((c) => isWithinDateRange(c.createdAt, joinedFrom, joinedTo)) ?? null;
-                if (creators && (joinedFrom || joinedTo)) {
-                  return (
-                    <p className="text-xs text-text-faint">
-                      {filteredCreators?.length ?? 0} of {creators.length} creators joined in this range
-                    </p>
-                  );
-                }
-                return null;
-              })()}
+              {creators && (joinedFrom || joinedTo || newOnly) && (
+                <p className="text-xs text-text-faint">
+                  Showing {visibleCreators?.length ?? 0} of {creators.length} creators
+                </p>
+              )}
 
               <div className="space-y-2">
-                {creators
-                  ?.filter((c) => isWithinDateRange(c.createdAt, joinedFrom, joinedTo))
-                  .map((c) => (
+                {visibleCreators
+                  ?.map((c) => (
                     <button
                       key={c.id}
                       type="button"
@@ -475,10 +627,22 @@ export default function AdminDashboardClient() {
                       <div>
                         <p className="font-semibold text-text">
                           {c.firstName} {c.lastName}
+                          {c.isNew && (
+                            <span className="ml-2 rounded-full bg-accent-tint px-2 py-0.5 align-middle text-[11px] font-bold text-accent">
+                              🌱 New
+                            </span>
+                          )}
                         </p>
                         <p className="text-sm text-text-muted">
                           {c.videosCompleted} / {c.videosTotal} videos · {timeAgo(c.lastActiveAt)}
                         </p>
+                        {c.isNew && (
+                          <p className="text-xs font-semibold text-accent">
+                            {c.newCreatorTrack.stage === "posting"
+                              ? `Track: posting · ${c.newCreatorTrack.totalLinks} / ${AUDIT_2_AT}`
+                              : `Track: ${STAGE_LABELS[c.newCreatorTrack.stage].toLowerCase()}`}
+                          </p>
+                        )}
                         <p className="text-xs text-text-faint">{formatJoinDate(c.createdAt)}</p>
                       </div>
                       {c.openFlagCount > 0 && (

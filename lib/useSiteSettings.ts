@@ -8,12 +8,16 @@
 // don't show it for now," not meant as a hard security boundary.
 
 import { useEffect, useState } from "react";
+import type { TrackGuide, TrackMix } from "@/lib/data/types";
 
 export type CreatorHubChallengesSlot = "top" | "middle" | "bottom";
 
 export function useSiteSettings() {
   const [hiddenNavKeys, setHiddenNavKeys] = useState<string[]>([]);
   const [creatorHubChallengesSlot, setCreatorHubChallengesSlot] = useState<CreatorHubChallengesSlot>("middle");
+  const [trackMix, setTrackMix] = useState<TrackMix | null>(null);
+  const [trackNote, setTrackNote] = useState<string | null>(null);
+  const [trackGuide, setTrackGuide] = useState<TrackGuide | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -23,6 +27,9 @@ export function useSiteSettings() {
       .then((data) => {
         if (cancelled) return;
         if (Array.isArray(data.hiddenNavKeys)) setHiddenNavKeys(data.hiddenNavKeys);
+        if (data.trackMix && typeof data.trackMix === "object") setTrackMix(data.trackMix);
+        if (typeof data.trackNote === "string" && data.trackNote) setTrackNote(data.trackNote);
+        if (data.trackGuide && typeof data.trackGuide === "object") setTrackGuide(data.trackGuide);
         if (["top", "middle", "bottom"].includes(data.creatorHubChallengesSlot)) {
           setCreatorHubChallengesSlot(data.creatorHubChallengesSlot);
         }
@@ -38,5 +45,5 @@ export function useSiteSettings() {
     };
   }, []);
 
-  return { hiddenNavKeys, creatorHubChallengesSlot, ready };
+  return { hiddenNavKeys, creatorHubChallengesSlot, trackMix, trackNote, trackGuide, ready };
 }
